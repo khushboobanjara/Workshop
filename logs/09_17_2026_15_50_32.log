@@ -1,0 +1,22 @@
+[2026-09-17 15:50:32,510] 11 __main__ -INFO -TRAINING PIPELINE STARTED....
+[2026-09-17 15:50:32,511] 23 src.components.data_ingestion -INFO -Data Ingestion started....
+[2026-09-17 15:50:32,516] 26 src.components.data_ingestion -INFO -Data read successfullywith shape: (100, 6)
+[2026-09-17 15:50:32,525] 31 src.components.data_ingestion -INFO -Performing train-test-split
+[2026-09-17 15:50:32,619] 37 src.components.data_ingestion -INFO -Data Ingestion completed successfully...
+[2026-09-17 15:50:32,619] 38 src.components.data_ingestion -INFO -Jo log online class le rhe h , unko bhi congration , unka bhi data ingestion ho chuka h , leptop per apna hath rkh kr apne aap ko pawan kare.
+[2026-09-17 15:50:32,637] 39 src.components.data_ingestion -INFO -----------
+[2026-09-17 15:50:32,637] 40 src.components.data_ingestion -INFO -Jinka net nhi chl rha online me , unka bhi data ingestion complete
+[2026-09-17 15:50:32,642] 61 src.components.data_transformation -INFO -Train and test data loaded for transformation
+[2026-09-17 15:50:32,646] 51 src.components.data_transformation -INFO -preprocessor object created successfully...
+[2026-09-17 15:50:32,647] 70 src.components.data_transformation -INFO -Applying preprocessing oon train and test data
+[2026-09-17 15:50:32,686] 15 src.utils -INFO -Object saved successfully at : artifacts\preprocessor.pkl
+[2026-09-17 15:50:32,686] 81 src.components.data_transformation -INFO -Preprcoessor bject saved as preprocessor.pkl
+[2026-09-17 15:50:32,687] 23 src.components.model_trainer -INFO -Spliting train and test input data
+[2026-09-17 15:50:32,779] 34 src.utils -INFO -LogisiticRegression -> Test Accuracy: 0.45
+[2026-09-17 15:50:32,794] 34 src.utils -INFO -DecisionTree -> Test Accuracy: 0.47
+[2026-09-17 15:50:32,939] 34 src.utils -INFO -RandomForest -> Test Accuracy: 0.38
+[2026-09-17 15:50:32,971] 34 src.utils -INFO -KNeighboursClassifier -> Test Accuracy: 0.47
+[2026-09-17 15:50:32,972] 43 src.components.model_trainer -INFO -Best Model saved as model.pkl ::: DecisionTree
+[2026-09-17 15:50:32,975] 15 src.utils -INFO -Object saved successfully at : artifacts\model.pkl
+[2026-09-17 15:50:32,975] 46 src.components.model_trainer -INFO -Best Model saved: DecisionTree
+[2026-09-17 15:50:32,976] 25 __main__ -INFO -TRAINING PIPELINE COMPLETED | BEST MODEL: DecisionTree, Accuracy: 0.47

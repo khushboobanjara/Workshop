@@ -16,3 +16,23 @@ notebook folder --> data folder ---> covid_toy.csv
 src ---> compoents ---> __init__.py 
 
 src ----> compoents ---> data_ingestion.py 
+
+src ---> compoents ---> data_transformation.py 
+
+src ---> components ---> model_trainer.py 
+
+src ---> pipeline ---> train_pipeline.py
+
+
+src ---> pipeline ---> predict_pipeline.py
+
+Main.py  --> for fastapi backend
+
+templates/index.html ---> home page 
+templates/predict.html ---> form page 
+
+static/style.css 
+
+for running the server on terminal 
+
+uvicorn main:app --reload --host 0.0.0.0 --port 8000

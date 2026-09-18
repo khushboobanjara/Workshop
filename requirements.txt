@@ -1,4 +1,7 @@
-pandas 
+pandas
 numpy
 scikit-learn
-joblib
+fastapi 
+uvicorn 
+Jinja2
+python-multipart 

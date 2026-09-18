@@ -1,0 +1,7 @@
+[2026-09-17 15:46:21,731] 23 __main__ -INFO -Data Ingestion started....
+[2026-09-17 15:46:21,740] 26 __main__ -INFO -Data read successfullywith shape: (100, 6)
+[2026-09-17 15:46:21,752] 31 __main__ -INFO -Performing train-test-split
+[2026-09-17 15:46:21,874] 37 __main__ -INFO -Data Ingestion completed successfully...
+[2026-09-17 15:46:21,875] 38 __main__ -INFO -Jo log online class le rhe h , unko bhi congration , unka bhi data ingestion ho chuka h , leptop per apna hath rkh kr apne aap ko pawan kare.
+[2026-09-17 15:46:21,876] 39 __main__ -INFO -----------
+[2026-09-17 15:46:21,876] 40 __main__ -INFO -Jinka net nhi chl rha online me , unka bhi data ingestion complete
