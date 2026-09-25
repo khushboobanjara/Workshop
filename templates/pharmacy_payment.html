@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Payment - Sanjeevani Clinic</title>
+
+    <script
+        src="https://sdk.cashfree.com/js/v3/cashfree.js">
+    </script>
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+
+            box-shadow:
+                0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #1769aa;
+        }
+
+        .amount {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 25px 0;
+        }
+
+        #payment-button {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 7px;
+
+            background: #198754;
+            color: white;
+
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        #payment-button:hover {
+            background: #157347;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>
+            Complete Payment
+        </h1>
+
+        <p>
+            Pharmacy Order #{{ order.order_id }}
+        </p>
+
+        <div class="amount">
+
+            ₹{{ "%.2f"|format(order.total_amount) }}
+
+        </div>
+
+        <p>
+            You will be redirected to
+            Cashfree secure payment.
+        </p>
+
+        <button
+            id="payment-button"
+        >
+            Pay Now
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const cashfree = Cashfree({
+        mode: "sandbox"
+    });
+
+
+    document
+        .getElementById("payment-button")
+        .addEventListener(
+            "click",
+            function () {
+
+                cashfree.checkout({
+
+                    paymentSessionId:
+                        "{{ payment_session_id }}",
+
+                    redirectTarget: "_self"
+
+                });
+
+            }
+        );
+
+</script>
+
+
+</body>
+
+</html>

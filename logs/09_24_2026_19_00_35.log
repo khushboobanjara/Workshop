@@ -1,0 +1,16 @@
+[2026-09-24 19:02:59,054] 225 main -INFO -Home page accessed...
+[2026-09-24 19:04:14,205] 1013 main -INFO -Appointment 18 created for user 1
+[2026-09-24 19:04:14,739] 1108 main -INFO -Cashfree order created: appointment_18
+[2026-09-24 19:04:57,972] 1194 main -INFO -Cashfree returned order: appointment_18
+[2026-09-24 19:04:57,991] 1224 main -INFO -Appointment found: 18
+[2026-09-24 19:04:58,069] 1259 main -INFO -Cashfree payments received for order appointment_18: [PaymentEntity(cf_payment_id='1456641874549860864', order_id='appointment_18', entity='payment', error_details=None, is_captured=True, order_amount=800.0, payment_group='net_banking', payment_currency='INR', payment_amount=800.0, payment_time='2026-09-24T19:04:46+05:30', payment_completion_time='2026-09-24T19:04:56+05:30', payment_status='SUCCESS', payment_message='Simulated response message', bank_reference='1456641874549860864', auth_id=None, order_currency='INR', authorization=None, payment_method=PaymentEntityPaymentMethod(oneof_schema_1_validator=None, oneof_schema_2_validator=None, oneof_schema_3_validator=None, oneof_schema_4_validator=None, oneof_schema_5_validator=None, oneof_schema_6_validator=None, oneof_schema_7_validator=None, oneof_schema_8_validator=None, one_of_schemas=typing.Literal[['PaymentMethodAppInPaymentsEntity', 'PaymentMethodBankTransferInPaymentsEntity', 'PaymentMethodCardEMIInPaymentsEntity', 'PaymentMethodCardInPaymentsEntity', 'PaymentMethodCardlessEMIInPaymentsEntity', 'PaymentMethodNetBankingInPaymentsEntity', 'PaymentMethodPaylaterInPaymentsEntity', 'PaymentMethodUPIInPaymentsEntity']], actual_instance=PaymentMethodNetBankingInPaymentsEntity(netbanking=PaymentMethodNetBankingInPaymentsEntityNetbanking(channel='link', netbanking_bank_code=3038, netbanking_bank_name='Punjab National Bank - Retail Banking', netbanking_ifsc='', netbanking_account_number=''))), international_payment=InternationalPaymentEntity(international=False), payment_gateway_details=PaymentGatewayDetails(gateway_name='CASHFREE', gateway_order_id=None, gateway_payment_id=None, gateway_order_reference_id=None, gateway_status_code=None, gateway_settlement='cashfree', gateway_reference_name=None), payment_surcharge=PaymentEntityPaymentSurcharge(payment_surcharge_service_charge=0, payment_surcharge_service_tax=0))]
+[2026-09-24 19:04:58,070] 1298 main -INFO -Cashfree payment status: SUCCESS
+[2026-09-24 19:06:14,349] 225 main -INFO -Home page accessed...
+[2026-09-24 19:06:43,085] 1013 main -INFO -Appointment 19 created for user 1
+[2026-09-24 19:06:43,250] 1108 main -INFO -Cashfree order created: appointment_19
+[2026-09-24 19:10:28,139] 1013 main -INFO -Appointment 20 created for user 1
+[2026-09-24 19:10:28,305] 1108 main -INFO -Cashfree order created: appointment_20
+[2026-09-24 19:13:35,071] 225 main -INFO -Home page accessed...
+[2026-09-24 19:13:37,087] 225 main -INFO -Home page accessed...
+[2026-09-24 19:14:16,697] 1013 main -INFO -Appointment 21 created for user 1
+[2026-09-24 19:14:16,835] 1108 main -INFO -Cashfree order created: appointment_21

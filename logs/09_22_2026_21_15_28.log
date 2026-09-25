@@ -1,0 +1,10 @@
+[2026-09-22 21:16:31,649] 29 main -INFO -Home page accessed...
+[2026-09-22 21:16:32,329] 29 main -INFO -Home page accessed...
+[2026-09-22 21:16:55,377] 188 main -INFO -Chatbot message received: hi
+[2026-09-22 21:16:56,202] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-22 21:17:17,125] 188 main -INFO -Chatbot message received: I have stomach pain and vomiting.
+[2026-09-22 21:17:18,679] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-22 21:18:31,207] 188 main -INFO -Chatbot message received: I want to see a neurologist.
+[2026-09-22 21:18:32,219] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-22 21:19:10,646] 188 main -INFO -Chatbot message received: What can you help me with?
+[2026-09-22 21:19:11,743] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

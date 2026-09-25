@@ -1,0 +1,20 @@
+[2026-09-24 10:25:45,737] 201 main -INFO -Home page accessed...
+[2026-09-24 10:26:51,873] 990 main -INFO -Appointment 14 created for user 1
+[2026-09-24 10:26:51,877] 1133 main -ERROR -Cashfree order creation failed: 2 validation errors for CustomerDetails
+customer_id
+  String should have at least 3 characters [type=string_too_short, input_value='1', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+customer_phone
+  String should have at most 10 characters [type=string_too_long, input_value='06378066951', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_long
+[2026-09-24 11:49:07,248] 201 main -INFO -Home page accessed...
+[2026-09-24 11:50:35,128] 990 main -INFO -Appointment 15 created for user 1
+[2026-09-24 11:50:35,142] 1133 main -ERROR -Cashfree order creation failed: 2 validation errors for CustomerDetails
+customer_id
+  String should have at least 3 characters [type=string_too_short, input_value='1', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_short
+customer_phone
+  String should have at most 10 characters [type=string_too_long, input_value='06378066951', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.13/v/string_too_long
+[2026-09-24 11:51:35,026] 201 main -INFO -Home page accessed...
+[2026-09-24 11:59:37,116] 638 main -ERROR -Chatbot error: process_message() missing 1 required positional argument: 'conversation_history'

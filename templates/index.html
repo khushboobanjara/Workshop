@@ -1,110 +1,3161 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sanjeevani Screening Clinic</title>
-  <link rel="stylesheet" href="/static/style.css" />
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sanjeevani | Healthcare AI</title>
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         OPTIONAL EXTERNAL CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+
+    <!-- =====================================================
+         PAGE CSS
+    ====================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
+            background: #f5f8f7;
+            color: #20312e;
+        }
+
+
+        body {
+            min-height: 100vh;
+        }
+
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+
+        button,
+        input {
+            font-family: inherit;
+        }
+
+
+        button {
+            border: none;
+        }
+
+
+        /* =====================================================
+           MAIN APP
+        ====================================================== */
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+            background: #f5f8f7;
+        }
+
+
+        /* =====================================================
+           SIDEBAR
+        ====================================================== */
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: #0f4c45;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 10px 28px;
+        }
+
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+
+        .brand-text h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+
+        .brand-text span {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: #b9d8d1;
+        }
+
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+
+        .nav-item {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 13px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #cce2dd;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.09);
+            color: #ffffff;
+        }
+
+
+        .nav-item.active {
+            background: #ffffff;
+            color: #0f4c45;
+            font-weight: 700;
+        }
+
+
+        .nav-button {
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+        }
+
+
+        .nav-icon {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+
+        .logout-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #cce2dd;
+            font-size: 13px;
+            padding: 10px;
+        }
+
+
+        .logout-link:hover {
+            color: #ffffff;
+        }
+
+
+        /* =====================================================
+           MAIN CONTENT
+        ====================================================== */
+
+        .main-content {
+            width: calc(100% - 250px);
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+
+        /* =====================================================
+           TOPBAR
+        ====================================================== */
+
+        .topbar {
+            height: 78px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2ebe8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 34px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+
+        .mobile-brand {
+            display: none;
+        }
+
+
+        .search-box {
+            width: 390px;
+            height: 43px;
+            background: #f4f8f7;
+            border: 1px solid #e1ebe8;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 9px;
+        }
+
+
+        .search-box span {
+            color: #78908a;
+            font-size: 20px;
+        }
+
+
+        .search-box input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 12px;
+            color: #20312e;
+        }
+
+
+        .search-box input::placeholder {
+            color: #8da09b;
+        }
+
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+
+        .notification-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: #f4f8f7;
+            color: #42615b;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+
+        .user-avatar {
+            width: 39px;
+            height: 39px;
+            border-radius: 50%;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+
+        .user-details strong {
+            font-size: 12px;
+            color: #20312e;
+        }
+
+
+        .user-details span {
+            font-size: 10px;
+            color: #81918d;
+        }
+
+
+        /* =====================================================
+           DASHBOARD
+        ====================================================== */
+
+        .dashboard-container {
+            padding: 32px 34px 50px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+
+        /* =====================================================
+           WELCOME
+        ====================================================== */
+
+        .welcome-section {
+            min-height: 270px;
+            border-radius: 22px;
+            background: linear-gradient(
+                120deg,
+                #dcefe9 0%,
+                #eef7f4 55%,
+                #f9fbfa 100%
+            );
+            border: 1px solid #dceae6;
+            padding: 35px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+
+        .welcome-content {
+            max-width: 650px;
+        }
+
+
+        .welcome-label,
+        .section-label {
+            display: inline-block;
+            color: #0f8175;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+        }
+
+
+        .welcome-content h1 {
+            margin: 11px 0 10px;
+            font-size: 32px;
+            line-height: 1.2;
+            color: #183c37;
+        }
+
+
+        .welcome-content p {
+            margin: 0;
+            max-width: 590px;
+            color: #647873;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+
+        .welcome-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+
+        .primary-btn,
+        .secondary-btn {
+            border-radius: 11px;
+            padding: 12px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+
+        .primary-btn {
+            background: #0f4c45;
+            color: #ffffff;
+        }
+
+
+        .primary-btn:hover {
+            background: #0a403a;
+        }
+
+
+        .secondary-btn {
+            background: #ffffff;
+            color: #0f4c45;
+            border: 1px solid #cbded9;
+        }
+
+
+        .welcome-visual {
+            width: 270px;
+            height: 210px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .health-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #0f8175;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 18px 40px rgba(15,76,69,0.18);
+        }
+
+
+        .health-circle span {
+            color: #ffffff;
+            font-size: 58px;
+            font-weight: 300;
+        }
+
+
+        .health-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #0f4c45;
+            position: absolute;
+        }
+
+
+        .dot-one {
+            top: 20px;
+            right: 45px;
+        }
+
+
+        .dot-two {
+            bottom: 25px;
+            left: 38px;
+            width: 10px;
+            height: 10px;
+        }
+
+
+        .dot-three {
+            top: 48px;
+            left: 30px;
+            width: 8px;
+            height: 8px;
+        }
+
+
+        /* =====================================================
+           SECTION
+        ====================================================== */
+
+        .section-heading {
+            margin: 34px 0 17px;
+        }
+
+
+        .section-heading h2 {
+            margin: 5px 0 0;
+            font-size: 20px;
+            color: #20312e;
+        }
+
+
+        /* =====================================================
+           QUICK ACTIONS
+        ====================================================== */
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+
+        .quick-card {
+            min-height: 170px;
+            background: #ffffff;
+            border: 1px solid #e1ebe8;
+            border-radius: 17px;
+            padding: 21px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: 0.2s ease;
+        }
+
+
+        .quick-card:hover {
+            transform: translateY(-3px);
+            border-color: #bcd8d2;
+            box-shadow: 0 12px 28px rgba(15,76,69,0.07);
+        }
+
+
+        .quick-card-button {
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+
+
+        .quick-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+
+        .quick-content h3 {
+            margin: 0 0 7px;
+            font-size: 14px;
+            color: #20312e;
+        }
+
+
+        .quick-content p {
+            margin: 0;
+            color: #778984;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+
+        .quick-arrow {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            color: #0f8175;
+            font-size: 17px;
+        }
+
+
+        /* =====================================================
+           DASHBOARD GRID
+        ====================================================== */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+
+        .dashboard-card {
+            background: #ffffff;
+            border: 1px solid #e1ebe8;
+            border-radius: 18px;
+            padding: 24px;
+        }
+
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+
+        .card-header h2 {
+            margin: 5px 0 0;
+            font-size: 18px;
+            color: #20312e;
+        }
+
+
+        .view-link {
+            color: #0f8175;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           APPOINTMENTS
+        ====================================================== */
+
+        .appointment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+
+
+        .appointment-item {
+            border: 1px solid #e5eeeb;
+            border-radius: 13px;
+            padding: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+
+        .appointment-icon {
+            width: 39px;
+            height: 39px;
+            flex-shrink: 0;
+            border-radius: 11px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+
+        .appointment-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+
+        .appointment-info strong {
+            display: block;
+            font-size: 12px;
+            color: #20312e;
+        }
+
+
+        .appointment-info > span {
+            display: block;
+            margin-top: 3px;
+            font-size: 10px;
+            color: #84948f;
+        }
+
+
+        .appointment-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 7px;
+            font-size: 9px;
+            color: #748681;
+        }
+
+
+        .appointment-status {
+            padding: 5px 8px;
+            border-radius: 20px;
+            background: #e5f4ee;
+            color: #16715f;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+
+        .empty-state {
+            text-align: center;
+            padding: 20px 10px;
+        }
+
+
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            margin: 0 auto 12px;
+            background: #eef6f4;
+            color: #0f8175;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+
+        .empty-state h3 {
+            margin: 0;
+            font-size: 13px;
+        }
+
+
+        .empty-state p {
+            margin: 7px 0 14px;
+            color: #82928e;
+            font-size: 10px;
+        }
+
+
+        .small-primary-btn {
+            display: inline-block;
+            padding: 9px 13px;
+            border-radius: 9px;
+            background: #0f4c45;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           HEALTH OVERVIEW
+        ====================================================== */
+
+        .health-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+
+        .health-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f7faf9;
+            border-radius: 12px;
+        }
+
+
+        .health-stat-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+
+        .health-stat strong {
+            display: block;
+            font-size: 11px;
+        }
+
+
+        .health-stat span {
+            display: block;
+            margin-top: 3px;
+            font-size: 9px;
+            color: #82928e;
+            line-height: 1.4;
+        }
+
+
+        /* =====================================================
+           AI BANNER
+        ====================================================== */
+
+        .ai-banner {
+            margin-top: 20px;
+            border-radius: 18px;
+            background: #0f4c45;
+            color: #ffffff;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+
+        .ai-banner-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.13);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+
+        .ai-banner-content {
+            flex: 1;
+        }
+
+
+        .ai-banner-content span {
+            font-size: 9px;
+            letter-spacing: 1.2px;
+            font-weight: 800;
+            color: #a8d9d0;
+        }
+
+
+        .ai-banner-content h2 {
+            margin: 5px 0;
+            font-size: 18px;
+        }
+
+
+        .ai-banner-content p {
+            margin: 0;
+            color: #c4ded9;
+            font-size: 11px;
+        }
+
+
+        .ai-banner-btn {
+            background: #ffffff;
+            color: #0f4c45;
+            border-radius: 10px;
+            padding: 11px 15px;
+            font-weight: 700;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+
+        /* =====================================================
+           HEALTH NOTE
+        ====================================================== */
+
+        .health-note {
+            margin-top: 15px;
+            border: 1px solid #eadfd3;
+            background: #fffaf4;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+
+        .health-note-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            background: #f2dfca;
+            color: #a56636;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+
+        .health-note strong {
+            display: block;
+            font-size: 11px;
+        }
+
+
+        .health-note p {
+            margin: 4px 0 0;
+            font-size: 9px;
+            color: #887c70;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ====================================================== */
+
+        .dashboard-footer {
+            padding: 18px 34px;
+            border-top: 1px solid #e1ebe8;
+            display: flex;
+            justify-content: space-between;
+            color: #899893;
+            font-size: 9px;
+        }
+
+
+        /* =====================================================
+           FLOATING CHAT BUTTON
+        ====================================================== */
+
+        .chatbot-floating-btn {
+            position: fixed;
+            right: 28px;
+            bottom: 24px;
+            height: 54px;
+            padding: 0 19px;
+            border-radius: 28px;
+            background: #0f8175;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(15,76,69,0.25);
+            z-index: 900;
+            font-weight: 700;
+        }
+
+
+        .chatbot-icon {
+            font-size: 17px;
+        }
+
+
+        .chatbot-label {
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           CHATBOT WINDOW
+        ====================================================== */
+
+        .chatbot {
+            position: fixed;
+            right: 28px;
+            bottom: 88px;
+            width: 390px;
+            height: 570px;
+            background: #f8fbfa;
+            border: 1px solid #dce9e5;
+            border-radius: 22px;
+            box-shadow: 0 22px 60px rgba(15,76,69,0.22);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(15px) scale(0.98);
+            transition: 0.2s ease;
+        }
+
+
+        .chatbot.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+
+        /* =====================================================
+           CHAT HEADER
+        ====================================================== */
+
+        .chatbot-header {
+            min-height: 86px;
+            padding: 18px 20px;
+            background: #0f8175;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+
+        .chatbot-header strong {
+            display: block;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+
+        .chatbot-header span {
+            display: block;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #d0ece7;
+        }
+
+
+        .chatbot-header button {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.13);
+            color: #ffffff;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+
+        .chatbot-header button:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+
+        /* =====================================================
+           CHAT MESSAGES
+        ====================================================== */
+
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f7faf9;
+        }
+
+
+        .chatbot-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+
+        .chatbot-messages::-webkit-scrollbar-thumb {
+            background: #a9c2bc;
+            border-radius: 10px;
+        }
+
+
+        .chat-message {
+            max-width: 84%;
+            padding: 12px 15px;
+            border-radius: 15px;
+            font-size: 13px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+
+        .bot-message {
+            align-self: flex-start;
+            background: #ffffff;
+            border: 1px solid #dce8e4;
+            color: #243a36;
+            border-top-left-radius: 5px;
+        }
+
+
+        .user-message {
+            align-self: flex-end;
+            background: #0f8175;
+            color: #ffffff;
+            border-top-right-radius: 5px;
+        }
+
+
+        /* =====================================================
+           CHATBOT OPTIONS
+        ====================================================== */
+
+        .chatbot-options {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            margin: 2px 0 7px;
+        }
+
+
+        .chatbot-option {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border: 1px solid #d8e6e2;
+            background: #ffffff;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: 0.18s ease;
+        }
+
+
+        .chatbot-option:hover {
+            border-color: #0f8175;
+            background: #f5fbf9;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(15,76,69,0.08);
+        }
+
+
+        .chatbot-option:disabled {
+            cursor: default;
+            opacity: 0.58;
+            transform: none;
+            box-shadow: none;
+        }
+
+
+        .chatbot-option strong {
+            color: #20312e;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+
+        .chatbot-option-subtitle {
+            color: #71827d;
+            font-size: 11px;
+        }
+
+
+        .chatbot-option-price {
+            color: #0f8175;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           CHAT INPUT
+        ====================================================== */
+
+        .chatbot-input-area {
+            padding: 12px;
+            display: flex;
+            gap: 8px;
+            background: #ffffff;
+            border-top: 1px solid #dce8e4;
+            flex-shrink: 0;
+        }
+
+
+        .chatbot-input-area input {
+            flex: 1;
+            min-width: 0;
+            height: 47px;
+            padding: 0 14px;
+            border-radius: 13px;
+            border: 1px solid #cbded9;
+            outline: none;
+            font-size: 13px;
+            color: #20312e;
+        }
+
+
+        .chatbot-input-area input:focus {
+            border-color: #0f8175;
+            box-shadow: 0 0 0 3px rgba(15,129,117,0.08);
+        }
+
+
+        .chatbot-input-area button {
+            width: 48px;
+            height: 47px;
+            border-radius: 13px;
+            background: #0f8175;
+            color: #ffffff;
+            font-size: 19px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+
+        .chatbot-input-area button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 1100px) {
+
+            .sidebar {
+                width: 220px;
+            }
+
+            .main-content {
+                width: calc(100% - 220px);
+                margin-left: 220px;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            .sidebar {
+                width: 70px;
+                padding: 18px 10px;
+            }
+
+
+            .brand {
+                justify-content: center;
+                padding: 5px 0 25px;
+            }
+
+
+            .brand-text,
+            .nav-item span:last-child,
+            .logout-link {
+                display: none;
+            }
+
+
+            .nav-item {
+                justify-content: center;
+                padding: 0;
+            }
+
+
+            .main-content {
+                width: calc(100% - 70px);
+                margin-left: 70px;
+            }
+
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+
+            .search-box {
+                width: 260px;
+            }
+
+
+            .user-details {
+                display: none;
+            }
+
+
+            .dashboard-container {
+                padding: 22px 18px 40px;
+            }
+
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .welcome-section {
+                padding: 28px;
+            }
+
+
+            .welcome-visual {
+                display: none;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .sidebar {
+                display: none;
+            }
+
+
+            .main-content {
+                width: 100%;
+                margin-left: 0;
+            }
+
+
+            .topbar {
+                height: 66px;
+                padding: 0 14px;
+            }
+
+
+            .mobile-brand {
+                display: flex;
+            }
+
+
+            .mobile-brand .brand-logo {
+                width: 32px;
+                height: 32px;
+                border-radius: 9px;
+                font-size: 15px;
+            }
+
+
+            .mobile-brand strong {
+                font-size: 14px;
+                margin-left: 7px;
+            }
+
+
+            .search-box {
+                display: none;
+            }
+
+
+            .topbar-right {
+                margin-left: auto;
+            }
+
+
+            .dashboard-container {
+                padding: 15px 13px 30px;
+            }
+
+
+            .welcome-section {
+                min-height: auto;
+                padding: 24px 20px;
+                border-radius: 18px;
+            }
+
+
+            .welcome-content h1 {
+                font-size: 25px;
+            }
+
+
+            .welcome-actions {
+                flex-direction: column;
+            }
+
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+
+            .health-overview {
+                grid-template-columns: 1fr;
+            }
+
+
+            .ai-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+
+            .dashboard-footer {
+                padding: 15px;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+
+            .chatbot {
+                right: 10px;
+                bottom: 78px;
+                width: calc(100% - 20px);
+                height: 72vh;
+            }
+
+
+            .chatbot-floating-btn {
+                right: 14px;
+                bottom: 14px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
 
-  <header class="site-header">
-    <a href="/" class="brand">
-      <span class="brand-mark">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M12 21s-7.5-4.6-9.8-9.4C.6 7.9 2.4 4.5 6 4.1c2-.2 3.6.9 6 3 2.4-2.1 4-3.2 6-3 3.6.4 5.4 3.8 3.8 7.5C19.5 16.4 12 21 12 21z" fill="#F6F3EC"/>
-        </svg>
-      </span>
-      Sanjeevani Clinic
-    </a>
-    <nav>
-      <a href="/predict">Start screening</a>
+
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+
+        <a
+            href="/"
+            class="nav-item active"
+        >
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                AI Health Chat
+            </span>
+
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Find Doctor
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Appointments
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                □
+            </span>
+
+            <span>
+                My Profile
+            </span>
+
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Pharmacy
+            </span>
+
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ◌
+            </span>
+
+            <span>
+                Health Screening
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ?
+            </span>
+
+            <span>
+                Help &amp; Support
+            </span>
+
+        </a>
+
     </nav>
-  </header>
 
-  <main>
-    <section class="hero">
-      <div>
-        <h1>A quick covid check, before your visit even begins.</h1>
-        <p class="lede">
-          Tell us your age, temperature and a couple of symptoms — our
-          screening desk gives you an instant read on your covid risk,
-          so the doctor's time goes where it's needed most.
-        </p>
-        <div class="cta-row">
-          <a href="/predict" class="btn-primary">
-            Start screening
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#F6F3EC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
-          <span class="hint-text">Takes under a minute</span>
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+
+            <span>
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+====================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
+
+    <header class="topbar">
+
+
+        <div class="mobile-brand">
+
+            <div class="brand-logo">
+                S
+            </div>
+
+            <strong>
+                Sanjeevani
+            </strong>
+
         </div>
 
-        <div class="stat-row">
-          <div>
-            <div class="stat-num">4</div>
-            <div class="stat-label">quick questions</div>
-          </div>
-          <div>
-            <div class="stat-num">&lt;1 min</div>
-            <div class="stat-label">to a result</div>
-          </div>
-          <div>
-            <div class="stat-num">24×7</div>
-            <div class="stat-label">desk open</div>
-          </div>
-        </div>
-      </div>
 
-      <div class="hero-panel">
-        <span class="badge">Screening desk · Now open</span>
-        <div class="vitals-card">
-          <div>
-            <div class="label">Temperature</div>
-            <div class="value">101.2°F</div>
-          </div>
-          <div>
-            <div class="label">Cough</div>
-            <div class="value">Mild</div>
-          </div>
+        <div class="search-box">
+
+            <span>
+                ⌕
+            </span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
         </div>
-        <div class="vitals-card">
-          <div>
-            <div class="label">City</div>
-            <div class="value">Jaipur</div>
-          </div>
-          <div>
-            <div class="label">Age</div>
-            <div class="value">34</div>
-          </div>
+
+
+        <div class="topbar-right">
+
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+
+                    {{ user.full_name[0] | upper }}
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
         </div>
-        <div class="vitals-card">
-          <div>
-            <div class="label">Screening result</div>
-            <div class="value">Ready in seconds</div>
-          </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         DASHBOARD
+    ================================================== -->
+
+    <section class="dashboard-container">
+
+
+        <!-- =================================================
+             WELCOME
+        ================================================== -->
+
+        <div class="welcome-section">
+
+
+            <div class="welcome-content">
+
+
+                <span class="welcome-label">
+                    YOUR HEALTHCARE COMPANION
+                </span>
+
+
+                <h1>
+
+                    Good to see you,
+                    {{ user.full_name }}
+
+                </h1>
+
+
+                <p>
+
+                    Manage your health, appointments,
+                    doctors and medicines from one place.
+
+                </p>
+
+
+                <div class="welcome-actions">
+
+
+                    <a
+                        href="/doctors"
+                        class="primary-btn"
+                    >
+                        Find a Doctor
+                    </a>
+
+
+                    <button
+                        type="button"
+                        class="secondary-btn"
+                        onclick="openChatbot()"
+                    >
+                        Ask AI Assistant
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="welcome-visual">
+
+                <div class="health-circle">
+
+                    <span>
+                        +
+                    </span>
+
+                </div>
+
+
+                <div class="health-dot dot-one"></div>
+
+                <div class="health-dot dot-two"></div>
+
+                <div class="health-dot dot-three"></div>
+
+            </div>
+
         </div>
-      </div>
+
+
+
+        <!-- =================================================
+             QUICK ACTIONS
+        ================================================== -->
+
+        <div class="section-heading">
+
+            <span class="section-label">
+                QUICK ACCESS
+            </span>
+
+            <h2>
+                What would you like to do?
+            </h2>
+
+        </div>
+
+
+        <div class="quick-actions">
+
+
+            <!-- SCREENING -->
+
+            <a
+                href="/predict"
+                class="quick-card"
+            >
+
+                <div class="quick-icon">
+                    ◌
+                </div>
+
+
+                <div class="quick-content">
+
+                    <h3>
+                        Health Screening
+                    </h3>
+
+
+                    <p>
+                        Check your health condition
+                        using our screening system.
+                    </p>
+
+                </div>
+
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </a>
+
+
+
+            <!-- DOCTOR -->
+
+            <a
+                href="/doctors"
+                class="quick-card"
+            >
+
+                <div class="quick-icon">
+                    +
+                </div>
+
+
+                <div class="quick-content">
+
+                    <h3>
+                        Find a Doctor
+                    </h3>
+
+
+                    <p>
+                        Search doctors and book
+                        an appointment.
+                    </p>
+
+                </div>
+
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </a>
+
+
+
+            <!-- PHARMACY -->
+
+            <a
+                href="/pharmacy"
+                class="quick-card"
+            >
+
+                <div class="quick-icon">
+                    Rx
+                </div>
+
+
+                <div class="quick-content">
+
+                    <h3>
+                        Pharmacy
+                    </h3>
+
+
+                    <p>
+                        Find medicines and place
+                        your pharmacy order.
+                    </p>
+
+                </div>
+
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </a>
+
+
+
+            <!-- AI -->
+
+            <button
+                type="button"
+                class="quick-card quick-card-button"
+                onclick="openChatbot()"
+            >
+
+                <div class="quick-icon">
+                    ◉
+                </div>
+
+
+                <div class="quick-content">
+
+                    <h3>
+                        AI Health Assistant
+                    </h3>
+
+
+                    <p>
+                        Ask questions about symptoms
+                        and healthcare.
+                    </p>
+
+                </div>
+
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             DASHBOARD GRID
+        ================================================== -->
+
+        <div class="dashboard-grid">
+
+
+            <!-- APPOINTMENTS -->
+
+            <div class="dashboard-card">
+
+
+                <div class="card-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            CARE PLAN
+                        </span>
+
+                        <h2>
+                            Upcoming Appointments
+                        </h2>
+
+                    </div>
+
+
+                    <a
+                        href="/profile#appointments"
+                        class="view-link"
+                    >
+                        View all →
+                    </a>
+
+                </div>
+
+
+                {% if upcoming_appointments %}
+
+
+                    <div class="appointment-list">
+
+
+                        {% for appointment in upcoming_appointments %}
+
+
+                            <div class="appointment-item">
+
+
+                                <div class="appointment-icon">
+                                    +
+                                </div>
+
+
+                                <div class="appointment-info">
+
+                                    <strong>
+                                        {{ appointment["doctor_name"] }}
+                                    </strong>
+
+
+                                    <span>
+                                        {{ appointment["specialization"] }}
+                                    </span>
+
+
+                                    <div class="appointment-meta">
+
+                                        <span>
+                                            📅
+                                            {{ appointment["appointment_date"] }}
+                                        </span>
+
+
+                                        <span>
+                                            🕐
+                                            {{ appointment["appointment_time"] }}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="appointment-status">
+
+                                    {{ appointment["status"] }}
+
+                                </div>
+
+                            </div>
+
+
+                        {% endfor %}
+
+
+                    </div>
+
+
+                {% else %}
+
+
+                    <div class="empty-state">
+
+
+                        <div class="empty-icon">
+                            ▣
+                        </div>
+
+
+                        <h3>
+                            No upcoming appointments
+                        </h3>
+
+
+                        <p>
+                            You don't have any upcoming
+                            appointments.
+                        </p>
+
+
+                        <a
+                            href="/doctors"
+                            class="small-primary-btn"
+                        >
+                            Find a Doctor
+                        </a>
+
+
+                    </div>
+
+
+                {% endif %}
+
+
+            </div>
+
+
+
+            <!-- HEALTH OVERVIEW -->
+
+            <div class="dashboard-card">
+
+
+                <div class="card-header">
+
+                    <div>
+
+                        <span class="section-label">
+                            HEALTH
+                        </span>
+
+                        <h2>
+                            Health Overview
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <div class="health-overview">
+
+
+                    <div class="health-stat">
+
+                        <div class="health-stat-icon">
+                            +
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Doctor Care
+                            </strong>
+
+                            <span>
+                                Book and manage appointments
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="health-stat">
+
+                        <div class="health-stat-icon">
+                            ◌
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Health Screening
+                            </strong>
+
+                            <span>
+                                Run your health assessment
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="health-stat">
+
+                        <div class="health-stat-icon">
+                            Rx
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Medicines
+                            </strong>
+
+                            <span>
+                                Manage your pharmacy orders
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="health-stat">
+
+                        <div class="health-stat-icon">
+                            ◉
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                AI Assistant
+                            </strong>
+
+                            <span>
+                                Get healthcare guidance
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             AI BANNER
+        ================================================== -->
+
+        <div class="ai-banner">
+
+
+            <div class="ai-banner-icon">
+                ◉
+            </div>
+
+
+            <div class="ai-banner-content">
+
+                <span>
+                    SANJEEVANI AI
+                </span>
+
+
+                <h2>
+                    Need help with your health?
+                </h2>
+
+
+                <p>
+                    Talk to our AI Health Assistant
+                    about your symptoms, appointments
+                    or healthcare services.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="ai-banner-btn"
+                onclick="openChatbot()"
+            >
+
+                Start Chat →
+
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             HEALTH NOTE
+        ================================================== -->
+
+        <div class="health-note">
+
+
+            <div class="health-note-icon">
+                !
+            </div>
+
+
+            <div>
+
+                <strong>
+                    Important health reminder
+                </strong>
+
+
+                <p>
+                    Sanjeevani provides healthcare
+                    assistance and screening support.
+                    For emergencies or serious symptoms,
+                    consult a qualified medical professional
+                    immediately.
+                </p>
+
+            </div>
+
+
+        </div>
+
+
     </section>
 
-    <section class="reasons">
-      <div class="reason-card">
-        <h3>No queue, no waiting</h3>
-        <p>Fill the form from home or the waiting room — the result comes back the moment you submit it.</p>
-      </div>
-      <div class="reason-card">
-        <h3>Built on real intake data</h3>
-        <p>The screening model learns from patient records of age, fever, cough type and city to gauge risk.</p>
-      </div>
-      <div class="reason-card">
-        <h3>A guide, not a diagnosis</h3>
-        <p>Treat this as a first read. A positive result still means the doctor should examine you properly.</p>
-      </div>
-    </section>
-  </main>
 
-  <footer class="site-footer">
-    Sanjeevani Screening Clinic — this tool assists triage, it does not replace medical diagnosis.
-  </footer>
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <div>
+            © 2026 Sanjeevani Clinic
+        </div>
+
+        <div>
+            Digital Healthcare Assistance Platform
+        </div>
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FLOATING AI BUTTON
+====================================================== -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+    aria-label="Open AI Health Assistant"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<!-- =====================================================
+     CHATBOT
+====================================================== -->
+
+<div
+    id="chatbot"
+    class="chatbot"
+>
+
+
+    <!-- HEADER -->
+
+    <div class="chatbot-header">
+
+
+        <div>
+
+            <strong>
+                Sanjeevani AI
+            </strong>
+
+            <span>
+                Health Assistant
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            onclick="closeChatbot()"
+            aria-label="Close chatbot"
+        >
+            ×
+        </button>
+
+
+    </div>
+
+
+
+    <!-- MESSAGES -->
+
+    <div
+        id="chatMessages"
+        class="chatbot-messages"
+    >
+
+
+        <div class="chat-message bot-message">
+
+            Hello {{ user.full_name }}.
+
+            <br><br>
+
+            How can I help you today?
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- INPUT -->
+
+    <div class="chatbot-input-area">
+
+
+        <input
+            type="text"
+            id="chatInput"
+            placeholder="Type your message..."
+            autocomplete="off"
+        >
+
+
+        <button
+            type="button"
+            id="chatSendButton"
+            onclick="sendMessage()"
+            aria-label="Send message"
+        >
+
+            →
+
+        </button>
+
+
+    </div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
+<script>
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const chatbot =
+    document.getElementById("chatbot");
+
+const chatMessages =
+    document.getElementById("chatMessages");
+
+const chatInput =
+    document.getElementById("chatInput");
+
+const chatSendButton =
+    document.getElementById("chatSendButton");
+
+
+/* =====================================================
+   OPEN CHATBOT
+===================================================== */
+
+function openChatbot() {
+
+    chatbot.classList.add("open");
+
+    setTimeout(
+        function() {
+
+            chatInput.focus();
+
+            scrollChat();
+
+        },
+        150
+    );
+}
+
+
+/* =====================================================
+   CLOSE CHATBOT
+===================================================== */
+
+function closeChatbot() {
+
+    chatbot.classList.remove("open");
+}
+
+
+/* =====================================================
+   SCROLL
+===================================================== */
+
+function scrollChat() {
+
+    chatMessages.scrollTop =
+        chatMessages.scrollHeight;
+}
+
+
+/* =====================================================
+   ADD MESSAGE
+===================================================== */
+
+function addMessage(
+    message,
+    type
+) {
+
+    const messageDiv =
+        document.createElement("div");
+
+
+    messageDiv.classList.add(
+        "chat-message"
+    );
+
+
+    if (type === "user") {
+
+        messageDiv.classList.add(
+            "user-message"
+        );
+
+    } else {
+
+        messageDiv.classList.add(
+            "bot-message"
+        );
+
+    }
+
+
+    /*
+       textContent prevents
+       HTML injection.
+    */
+
+    messageDiv.textContent =
+        message || "";
+
+
+    chatMessages.appendChild(
+        messageDiv
+    );
+
+
+    scrollChat();
+}
+
+
+/* =====================================================
+   ADD OPTIONS
+===================================================== */
+
+function addOptions(data) {
+
+
+    console.log(
+        "Chatbot data:",
+        data
+    );
+
+
+    if (
+        !data ||
+        !Array.isArray(data.options) ||
+        data.options.length === 0
+    ) {
+
+        return;
+    }
+
+
+    const optionsContainer =
+        document.createElement("div");
+
+
+    optionsContainer.className =
+        "chatbot-options";
+
+
+    data.options.forEach(
+        function(option) {
+
+
+            const button =
+                document.createElement("button");
+
+
+            button.type =
+                "button";
+
+
+            button.className =
+                "chatbot-option";
+
+
+            /* =========================================
+               TITLE
+            ========================================== */
+
+            const title =
+                document.createElement("strong");
+
+
+            title.textContent =
+                option.title ||
+                "Option";
+
+
+            button.appendChild(
+                title
+            );
+
+
+            /* =========================================
+               SUBTITLE
+            ========================================== */
+
+            if (
+                option.subtitle
+            ) {
+
+                const subtitle =
+                    document.createElement("span");
+
+
+                subtitle.className =
+                    "chatbot-option-subtitle";
+
+
+                subtitle.textContent =
+                    option.subtitle;
+
+
+                button.appendChild(
+                    subtitle
+                );
+
+            }
+
+
+            /* =========================================
+               PRICE
+            ========================================== */
+
+            if (
+                option.price
+            ) {
+
+                const price =
+                    document.createElement("span");
+
+
+                price.className =
+                    "chatbot-option-price";
+
+
+                price.textContent =
+                    option.price;
+
+
+                button.appendChild(
+                    price
+                );
+
+            }
+
+
+            /* =========================================
+               CLICK
+            ========================================== */
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    if (
+                        button.disabled
+                    ) {
+
+                        return;
+                    }
+
+
+                    /*
+                       Disable all buttons
+                       in this option group.
+                    */
+
+                    const buttons =
+                        optionsContainer.querySelectorAll(
+                            "button"
+                        );
+
+
+                    buttons.forEach(
+                        function(btn) {
+
+                            btn.disabled =
+                                true;
+
+                        }
+                    );
+
+
+                    /*
+                       IMPORTANT:
+
+                       Backend receives:
+
+                       option.value
+
+                       Example:
+
+                       "2"
+
+                       User sees:
+
+                       "Dr. Priya Mehta"
+
+                       Therefore 2 is NEVER
+                       displayed as a message.
+                    */
+
+                    sendOption(
+                        option.value,
+                        option.title ||
+                        option.value
+                    );
+
+
+                }
+            );
+
+
+            optionsContainer.appendChild(
+                button
+            );
+
+
+        }
+    );
+
+
+    chatMessages.appendChild(
+        optionsContainer
+    );
+
+
+    scrollChat();
+}
+
+
+/* =====================================================
+   SEND SELECTED OPTION
+===================================================== */
+
+async function sendOption(
+    value,
+    displayText
+) {
+
+
+    /*
+       Show only the title.
+
+       Example:
+
+       Dr. Priya Mehta
+
+       NOT:
+
+       2
+    */
+
+    addMessage(
+        displayText,
+        "user"
+    );
+
+
+    setLoading(true);
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/chat",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    /*
+                       Internal selection value.
+                    */
+
+                    body: JSON.stringify(
+                        {
+                            message:
+                                String(value)
+                        }
+                    )
+                }
+            );
+
+
+        /* =============================================
+           LOGIN EXPIRED
+        ============================================== */
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/login";
+
+            return;
+        }
+
+
+        /* =============================================
+           HTTP ERROR
+        ============================================== */
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                "Chat request failed: " +
+                response.status
+            );
+        }
+
+
+        /* =============================================
+           JSON
+        ============================================== */
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Internal selected value:",
+            value
+        );
+
+
+        console.log(
+            "Backend response:",
+            data
+        );
+
+
+        /* =============================================
+           BOT MESSAGE
+        ============================================== */
+
+        if (
+            data.response
+        ) {
+
+            addMessage(
+                data.response,
+                "bot"
+            );
+
+        }
+
+
+        /* =============================================
+           NEXT OPTIONS
+        ============================================== */
+
+        addOptions(
+            data
+        );
+
+
+    } catch (error) {
+
+
+        console.error(
+            "Chatbot error:",
+            error
+        );
+
+
+        addMessage(
+            "Unable to connect to the AI assistant right now.",
+            "bot"
+        );
+
+
+    } finally {
+
+
+        setLoading(false);
+
+
+        chatInput.focus();
+
+    }
+}
+
+
+/* =====================================================
+   SEND TYPED MESSAGE
+===================================================== */
+
+async function sendMessage() {
+
+
+    const message =
+        chatInput.value.trim();
+
+
+    if (!message) {
+
+        return;
+    }
+
+
+    /*
+       Display exactly what
+       the user typed.
+    */
+
+    addMessage(
+        message,
+        "user"
+    );
+
+
+    chatInput.value =
+        "";
+
+
+    setLoading(true);
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/chat",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify(
+                        {
+                            message:
+                                message
+                        }
+                    )
+                }
+            );
+
+
+        /* =============================================
+           LOGIN
+        ============================================== */
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/login";
+
+            return;
+        }
+
+
+        /* =============================================
+           ERROR
+        ============================================== */
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                "Chat request failed: " +
+                response.status
+            );
+        }
+
+
+        /* =============================================
+           JSON
+        ============================================== */
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Chat response:",
+            data
+        );
+
+
+        /* =============================================
+           BOT RESPONSE
+        ============================================== */
+
+        if (
+            data.response
+        ) {
+
+            addMessage(
+                data.response,
+                "bot"
+            );
+
+        }
+
+
+        /* =============================================
+           DOCTOR / DATE / TIME / PAYMENT BUTTONS
+        ============================================== */
+
+        addOptions(
+            data
+        );
+
+
+    } catch (error) {
+
+
+        console.error(
+            "Chatbot error:",
+            error
+        );
+
+
+        addMessage(
+            "Unable to connect to the AI assistant right now.",
+            "bot"
+        );
+
+
+    } finally {
+
+
+        setLoading(false);
+
+
+        chatInput.focus();
+
+    }
+}
+
+
+/* =====================================================
+   LOADING
+===================================================== */
+
+function setLoading(
+    loading
+) {
+
+
+    chatInput.disabled =
+        loading;
+
+
+    chatSendButton.disabled =
+        loading;
+
+
+    if (loading) {
+
+        chatSendButton.textContent =
+            "…";
+
+    } else {
+
+        chatSendButton.textContent =
+            "→";
+
+    }
+}
+
+
+/* =====================================================
+   ENTER KEY
+===================================================== */
+
+chatInput.addEventListener(
+    "keydown",
+    function(event) {
+
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeChatbot();
+
+        }
+
+    }
+);
+
+
+</script>
+
 
 </body>
+
 </html>

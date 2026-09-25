@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile | Sanjeevani Clinic</title>
+
+    <link rel="stylesheet"
+          href="/static/style.css">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f7f8f5;
+            color: #20312e;
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .sidebar {
+            width: 250px;
+            background: #0f4c45;
+            color: white;
+            padding: 28px 18px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px 30px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+        }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .nav-section {
+            margin-top: 20px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            letter-spacing: 1.2px;
+            opacity: 0.55;
+            padding: 0 12px;
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 24px;
+            text-align: center;
+        }
+
+        .logout {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 25px;
+        }
+
+        /* ================= MAIN ================= */
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        /* ================= TOPBAR ================= */
+
+        .topbar {
+            height: 72px;
+            background: white;
+            border-bottom: 1px solid #e6ebe8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+        }
+
+        .search-box {
+            width: 330px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 11px 15px;
+            border: 1px solid #e0e7e4;
+            border-radius: 10px;
+            outline: none;
+            background: #f7f9f8;
+        }
+
+        .top-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #f2f6f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        /* ================= CONTENT ================= */
+
+        .content {
+            padding: 35px;
+            max-width: 1400px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header small {
+            color: #6b7c77;
+            font-size: 13px;
+        }
+
+        .page-header h1 {
+            margin: 6px 0;
+            font-size: 30px;
+        }
+
+        .page-header p {
+            color: #6b7c77;
+            margin: 0;
+        }
+
+        /* ================= PROFILE CARD ================= */
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 330px 1fr;
+            gap: 22px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e4ebe8;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 5px 20px rgba(15,76,69,0.04);
+        }
+
+        .profile-card {
+            text-align: center;
+        }
+
+        .large-avatar {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .profile-card h2 {
+            margin: 5px 0;
+            font-size: 21px;
+        }
+
+        .profile-role {
+            color: #6b7c77;
+            font-size: 13px;
+        }
+
+        .profile-info {
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .info-row {
+            padding: 13px 0;
+            border-bottom: 1px solid #edf1ef;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #7a8985;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        /* ================= QUICK STATS ================= */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e4ebe8;
+            border-radius: 15px;
+            padding: 22px;
+        }
+
+        .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 11px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .stat-number {
+            font-size: 29px;
+            font-weight: 700;
+            margin-top: 17px;
+        }
+
+        .stat-title {
+            color: #6b7c77;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        /* ================= SECTION ================= */
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .section-header span {
+            font-size: 13px;
+            color: #6b7c77;
+        }
+
+        /* ================= APPOINTMENTS ================= */
+
+        .appointment-card {
+            background: white;
+            border: 1px solid #e4ebe8;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+        }
+
+        .doctor-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .specialization {
+            color: #6b7c77;
+            font-size: 13px;
+        }
+
+        .appointment-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .detail-badge {
+            background: #f2f6f4;
+            padding: 7px 10px;
+            border-radius: 7px;
+            font-size: 12px;
+            color: #40524e;
+        }
+
+        .appointment-right {
+            text-align: right;
+            min-width: 150px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .status-confirmed,
+        .status-booked,
+        .status-paid {
+            background: #dcefe9;
+            color: #0f4c45;
+        }
+
+        .status-pending {
+            background: #fff3d6;
+            color: #8a6415;
+        }
+
+        .status-failed,
+        .status-cancelled {
+            background: #fde5df;
+            color: #a34d38;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #0f4c45;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #eef3f1;
+            color: #30433f;
+        }
+
+        .btn-danger {
+            background: #fde5df;
+            color: #a34d38;
+        }
+
+        /* ================= PHARMACY ================= */
+
+        .order-card {
+            background: white;
+            border: 1px solid #e4ebe8;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 12px;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-weight: 700;
+        }
+
+        .order-date {
+            font-size: 12px;
+            color: #7a8985;
+        }
+
+        .order-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .order-field label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #8a9894;
+            margin-bottom: 5px;
+        }
+
+        .order-field span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ================= EMPTY ================= */
+
+        .empty-state {
+            background: white;
+            border: 1px dashed #cfdad6;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #6b7c77;
+        }
+
+        .empty-icon {
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state h3 {
+            color: #30433f;
+            margin: 5px 0;
+        }
+
+        /* ================= FOOTER ================= */
+
+        .footer {
+            margin-top: 40px;
+            padding: 25px 0;
+            color: #87938f;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 1000px) {
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 750px) {
+
+            .sidebar {
+                width: 70px;
+                padding: 20px 10px;
+            }
+
+            .brand-title,
+            .brand-subtitle,
+            .nav-label,
+            .nav-link span:not(.nav-icon) {
+                display: none;
+            }
+
+            .brand {
+                justify-content: center;
+                padding: 0 0 25px;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+
+            .logout {
+                left: 10px;
+                right: 10px;
+            }
+
+            .main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .search-box {
+                width: 180px;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .appointment-card {
+                grid-template-columns: 1fr;
+            }
+
+            .appointment-right {
+                text-align: left;
+            }
+
+            .action-buttons {
+                justify-content: flex-start;
+            }
+
+            .order-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="dashboard">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                S
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    Sanjeevani
+                </div>
+
+                <div class="brand-subtitle">
+                    Healthcare AI
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="nav-section">
+
+            <div class="nav-label">
+                MAIN MENU
+            </div>
+
+
+            <a href="/" class="nav-link">
+
+                <span class="nav-icon">⌂</span>
+
+                <span>Dashboard</span>
+
+            </a>
+
+
+            <a href="/predict" class="nav-link">
+
+                <span class="nav-icon">+</span>
+
+                <span>Screening</span>
+
+            </a>
+
+
+            <a href="/doctors" class="nav-link">
+
+                <span class="nav-icon">D</span>
+
+                <span>Find Doctor</span>
+
+            </a>
+
+
+            <a href="/profile#appointments"
+               class="nav-link">
+
+                <span class="nav-icon">▣</span>
+
+                <span>Appointments</span>
+
+            </a>
+
+
+            <a href="/pharmacy"
+               class="nav-link">
+
+                <span class="nav-icon">Rx</span>
+
+                <span>Pharmacy</span>
+
+            </a>
+
+
+            <a href="/profile"
+               class="nav-link active">
+
+                <span class="nav-icon">●</span>
+
+                <span>My Profile</span>
+
+            </a>
+
+        </div>
+
+
+        <div class="logout">
+
+            <a href="/logout"
+               class="nav-link">
+
+                <span class="nav-icon">↪</span>
+
+                <span>Logout</span>
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <div class="main">
+
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    placeholder="Search healthcare services..."
+                >
+
+            </div>
+
+
+            <div class="top-user">
+
+                <div class="notification">
+                    ♢
+                </div>
+
+
+                <div class="avatar">
+
+                    {{ user.full_name[0]|upper }}
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- CONTENT -->
+
+        <main class="content">
+
+
+            <!-- PAGE HEADER -->
+
+            <div class="page-header">
+
+                <small>
+                    ACCOUNT
+                </small>
+
+                <h1>
+                    My Profile
+                </h1>
+
+                <p>
+                    Manage your personal information,
+                    appointments and pharmacy orders.
+                </p>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PROFILE + STATS
+            ================================================== -->
+
+            <div class="profile-grid">
+
+
+                <!-- PROFILE -->
+
+                <div class="card profile-card">
+
+                    <div class="large-avatar">
+
+                        {{ user.full_name[0]|upper }}
+
+                    </div>
+
+
+                    <h2>
+                        {{ user.full_name }}
+                    </h2>
+
+
+                    <div class="profile-role">
+                        Patient
+                    </div>
+
+
+                    <div class="profile-info">
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Email
+                            </div>
+
+                            <div class="info-value">
+                                {{ user.email }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Phone
+                            </div>
+
+                            <div class="info-value">
+                                {{ user.phone }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Account Role
+                            </div>
+
+                            <div class="info-value">
+                                {{ user.role }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- STATS -->
+
+                <div class="stats-grid">
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-top">
+
+                            <div>
+
+                                <div class="stat-title">
+                                    Appointments
+                                </div>
+
+                                <div class="stat-number">
+                                    {{ appointments|length }}
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                A
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-top">
+
+                            <div>
+
+                                <div class="stat-title">
+                                    Pharmacy Orders
+                                </div>
+
+                                <div class="stat-number">
+                                    {{ pharmacy_orders|length }}
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                Rx
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-top">
+
+                            <div>
+
+                                <div class="stat-title">
+                                    Active Appointments
+                                </div>
+
+                                <div class="stat-number">
+
+                                    {{
+                                        appointments
+                                        |selectattr(
+                                            "status",
+                                            "in",
+                                            ["BOOKED", "CONFIRMED"]
+                                        )
+                                        |list
+                                        |length
+                                    }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                ✓
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-top">
+
+                            <div>
+
+                                <div class="stat-title">
+                                    Clinic Services
+                                </div>
+
+                                <div class="stat-number">
+                                    5
+                                </div>
+
+                            </div>
+
+                            <div class="stat-icon">
+                                +
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 APPOINTMENTS
+            ================================================== -->
+
+            <section
+                class="section"
+                id="appointments"
+            >
+
+                <div class="section-header">
+
+                    <h2>
+                        My Appointments
+                    </h2>
+
+                    <span>
+                        Appointment history
+                    </span>
+
+                </div>
+
+
+                {% if appointments %}
+
+
+                    {% for appointment in appointments %}
+
+                    <div class="appointment-card">
+
+
+                        <div>
+
+                            <div class="doctor-name">
+
+                                Dr.
+                                {{ appointment.doctor_name }}
+
+                            </div>
+
+
+                            <div class="specialization">
+
+                                {{ appointment.specialization }}
+
+                            </div>
+
+
+                            <div class="appointment-details">
+
+
+                                <span class="detail-badge">
+
+                                    📅
+                                    {{ appointment.appointment_date }}
+
+                                </span>
+
+
+                                <span class="detail-badge">
+
+                                    ⏰
+                                    {{ appointment.appointment_time }}
+
+                                </span>
+
+
+                                <span class="detail-badge">
+
+                                    ₹
+                                    {{ appointment.consultation_fee }}
+
+                                </span>
+
+
+                                <span class="detail-badge">
+
+                                    Payment:
+                                    {{ appointment.payment_status }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="appointment-right">
+
+
+                            {% set status =
+                                appointment.status|upper
+                            %}
+
+
+                            <span
+                                class="status
+                                {% if status == 'CONFIRMED' %}
+                                    status-confirmed
+                                {% elif status == 'BOOKED' %}
+                                    status-booked
+                                {% elif status == 'CANCELLED' %}
+                                    status-cancelled
+                                {% else %}
+                                    status-pending
+                                {% endif %}"
+                            >
+
+                                {{ appointment.status }}
+
+                            </span>
+
+
+                            {% if status in ['BOOKED', 'CONFIRMED'] %}
+
+                            <div class="action-buttons">
+
+
+                                <a
+                                    href="/appointments/{{ appointment.appointment_id }}/reschedule"
+                                    class="btn btn-secondary"
+                                >
+                                    Reschedule
+                                </a>
+
+
+                                <form
+                                    method="POST"
+                                    action="/appointments/{{ appointment.appointment_id }}/cancel"
+                                    onsubmit="return confirm('Are you sure you want to cancel this appointment?');"
+                                >
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-danger"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                </form>
+
+
+                            </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                    </div>
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            📅
+                        </div>
+
+                        <h3>
+                            No appointments yet
+                        </h3>
+
+                        <p>
+                            Book an appointment with one
+                            of our available doctors.
+                        </p>
+
+                        <a
+                            href="/doctors"
+                            class="btn btn-primary"
+                        >
+                            Find a Doctor
+                        </a>
+
+                    </div>
+
+
+                {% endif %}
+
+            </section>
+
+
+
+            <!-- =================================================
+                 PHARMACY ORDERS
+            ================================================== -->
+
+            <section class="section">
+
+
+                <div class="section-header">
+
+                    <h2>
+                        Pharmacy Orders
+                    </h2>
+
+                    <span>
+                        Your medicine orders
+                    </span>
+
+                </div>
+
+
+                {% if pharmacy_orders %}
+
+
+                    {% for order in pharmacy_orders %}
+
+                    <div class="order-card">
+
+
+                        <div class="order-top">
+
+                            <div>
+
+                                <div class="order-id">
+
+                                    Order #{{ order.order_id }}
+
+                                </div>
+
+                                <div class="order-date">
+
+                                    {{ order.created_at }}
+
+                                </div>
+
+                            </div>
+
+
+                            <div>
+
+                                {% set order_status =
+                                    order.order_status|upper
+                                %}
+
+                                <span
+                                    class="status
+                                    {% if order_status == 'CONFIRMED' %}
+                                        status-confirmed
+                                    {% elif order_status == 'CANCELLED' %}
+                                        status-cancelled
+                                    {% else %}
+                                        status-pending
+                                    {% endif %}"
+                                >
+
+                                    {{ order.order_status }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="order-grid">
+
+
+                            <div class="order-field">
+
+                                <label>
+                                    Total Amount
+                                </label>
+
+                                <span>
+                                    ₹{{ order.total_amount }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-field">
+
+                                <label>
+                                    Delivery
+                                </label>
+
+                                <span>
+                                    {{ order.delivery_method }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-field">
+
+                                <label>
+                                    Payment
+                                </label>
+
+                                <span>
+                                    {{ order.payment_method }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-field">
+
+                                <label>
+                                    Payment Status
+                                </label>
+
+                                <span>
+
+                                    {{ order.payment_status }}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-field">
+
+                                <label>
+                                    Phone
+                                </label>
+
+                                <span>
+                                    {{ order.phone }}
+                                </span>
+
+                            </div>
+
+
+                            {% if order.address %}
+
+                            <div
+                                class="order-field"
+                                style="grid-column: span 2;"
+                            >
+
+                                <label>
+                                    Address
+                                </label>
+
+                                <span>
+                                    {{ order.address }}
+                                </span>
+
+                            </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <div class="empty-state">
+
+                        <div class="empty-icon">
+                            💊
+                        </div>
+
+                        <h3>
+                            No pharmacy orders
+                        </h3>
+
+                        <p>
+                            Search for medicines and place
+                            your first pharmacy order.
+                        </p>
+
+                        <a
+                            href="/pharmacy"
+                            class="btn btn-primary"
+                        >
+                            Open Pharmacy
+                        </a>
+
+                    </div>
+
+
+                {% endif %}
+
+            </section>
+
+
+
+            <!-- FOOTER -->
+
+            <footer class="footer">
+
+                © Sanjeevani Clinic —
+                Digital healthcare assistance platform
+
+            </footer>
+
+
+        </main>
+
+    </div>
+
+</div>
+
+
+</body>
+
+</html>

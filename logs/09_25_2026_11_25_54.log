@@ -1,0 +1,2 @@
+[2026-09-25 11:28:09,685] 713 main -ERROR -Chatbot error: object dict can't be used in 'await' expression
+[2026-09-25 11:28:32,012] 713 main -ERROR -Chatbot error: object dict can't be used in 'await' expression

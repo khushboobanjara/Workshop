@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | Sanjeevani Clinic</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Inter, Arial, sans-serif;
+        }
+
+        body {
+            background: #f7f8f5;
+            color: #20312e;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 245px;
+            background: #0f4c45;
+            color: white;
+            padding: 25px 16px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px;
+            margin-bottom: 35px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .brand h2 {
+            font-size: 19px;
+        }
+
+        .brand span {
+            display: block;
+            font-size: 11px;
+            color: #b8d4ce;
+        }
+
+        .nav-title {
+            font-size: 11px;
+            color: #9fc1ba;
+            padding: 0 12px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 10px;
+            color: #d8ebe7;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255,255,255,0.12);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 22px;
+            text-align: center;
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 245px;
+            width: calc(100% - 245px);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 76px;
+            background: white;
+            border-bottom: 1px solid #e6ece9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+        }
+
+        .search {
+            width: 350px;
+            background: #f5f7f6;
+            border: 1px solid #e6ebe8;
+            border-radius: 10px;
+            padding: 11px 15px;
+            outline: none;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-avatar {
+            width: 38px;
+            height: 38px;
+            background: #dcefe9;
+            color: #0f4c45;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .profile-info strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .profile-info span {
+            font-size: 11px;
+            color: #7b8985;
+        }
+
+        /* CONTENT */
+        .content {
+            max-width: 1050px;
+            margin: auto;
+            padding: 40px 35px;
+        }
+
+        /* SUCCESS */
+        .success-card {
+            background: white;
+            border: 1px solid #e5ece9;
+            border-radius: 18px;
+            padding: 35px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .success-icon {
+            width: 70px;
+            height: 70px;
+            margin: auto;
+            border-radius: 50%;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            font-weight: bold;
+            margin-bottom: 18px;
+        }
+
+        .success-card h1 {
+            font-size: 27px;
+            margin-bottom: 8px;
+        }
+
+        .success-card p {
+            color: #6b7c77;
+            font-size: 14px;
+        }
+
+        .order-number {
+            display: inline-block;
+            margin-top: 18px;
+            background: #f0f8f5;
+            color: #0f4c45;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 22px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e5ece9;
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* ITEMS */
+        .item {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px solid #edf1ef;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .item-meta {
+            color: #7a8985;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .item-price {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* DETAILS */
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 11px 0;
+            border-bottom: 1px solid #edf1ef;
+            font-size: 13px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #74827e;
+        }
+
+        .detail-value {
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* STATUS */
+        .status {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-confirmed,
+        .status-paid {
+            background: #dcefe9;
+            color: #0f4c45;
+        }
+
+        .status-pending {
+            background: #fff4d9;
+            color: #896514;
+        }
+
+        .status-failed {
+            background: #fde7e4;
+            color: #a33e34;
+        }
+
+        /* TOTAL */
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #e3eae7;
+            margin-top: 15px;
+            padding-top: 18px;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        /* BUTTONS */
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            text-align: center;
+            padding: 13px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #0f4c45;
+            color: white;
+        }
+
+        .btn-secondary {
+            border: 1px solid #d7e1de;
+            color: #0f4c45;
+            background: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* PAYMENT */
+        .payment-box {
+            margin-top: 20px;
+            padding: 14px;
+            background: #f6faf8;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #58706a;
+        }
+
+        /* CHAT */
+        .chat-button {
+            position: fixed;
+            right: 28px;
+            bottom: 28px;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #0f4c45;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(15,76,69,0.25);
+        }
+
+        @media (max-width: 850px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+
+            .search {
+                width: 180px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">+</div>
+
+            <div>
+                <h2>Sanjeevani</h2>
+                <span>Healthcare AI</span>
+            </div>
+        </div>
+
+        <div class="nav-title">Main Menu</div>
+
+        <a href="/" class="nav-item">
+            <span class="nav-icon">⌂</span>
+            Dashboard
+        </a>
+
+        <a href="/doctors" class="nav-item">
+            <span class="nav-icon">♟</span>
+            Find Doctor
+        </a>
+
+        <a href="/profile#appointments" class="nav-item">
+            <span class="nav-icon">▣</span>
+            Appointments
+        </a>
+
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon">◉</span>
+            My Profile
+        </a>
+
+        <a href="/pharmacy" class="nav-item active">
+            <span class="nav-icon">⚕</span>
+            Pharmacy
+        </a>
+
+        <a href="/predict" class="nav-item">
+            <span class="nav-icon">⌁</span>
+            Health Screening
+        </a>
+
+        <div class="nav-title" style="margin-top:25px;">
+            Account
+        </div>
+
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon">?</span>
+            Help & Support
+        </a>
+
+        <a href="/logout" class="nav-item">
+            <span class="nav-icon">↪</span>
+            Logout
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <input
+                type="text"
+                class="search"
+                placeholder="Search healthcare services..."
+            >
+
+            <div class="profile">
+
+                <div class="profile-avatar">
+                    {{ user["full_name"][0]|upper }}
+                </div>
+
+                <div class="profile-info">
+                    <strong>{{ user["full_name"] }}</strong>
+                    <span>Patient</span>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+        <section class="content">
+
+            <!-- SUCCESS -->
+            <div class="success-card">
+
+                <div class="success-icon">
+                    ✓
+                </div>
+
+                {% if order["payment_status"] == "PAID" or order["order_status"] == "CONFIRMED" %}
+
+                    <h1>Order Confirmed</h1>
+
+                    <p>
+                        Your pharmacy order has been successfully confirmed.
+                    </p>
+
+                {% elif order["payment_status"] == "PENDING" %}
+
+                    <h1>Order Pending</h1>
+
+                    <p>
+                        Your order has been created and payment is pending.
+                    </p>
+
+                {% else %}
+
+                    <h1>Order Details</h1>
+
+                    <p>
+                        Here are the details of your pharmacy order.
+                    </p>
+
+                {% endif %}
+
+
+                <div class="order-number">
+                    Order #{{ order["order_id"] }}
+                </div>
+
+            </div>
+
+
+            <!-- DETAILS -->
+            <div class="grid">
+
+                <!-- ITEMS -->
+                <div class="card">
+
+                    <h2 class="card-title">
+                        Ordered Medicines
+                    </h2>
+
+
+                    {% for item in order["items"] %}
+
+                    <div class="item">
+
+                        <div>
+
+                            <div class="item-name">
+                                {{ item["medicine_name"] }}
+                            </div>
+
+                            <div class="item-meta">
+
+                                Quantity:
+                                {{ item["quantity"] }}
+
+                                {% if item.get("generic_name") %}
+                                    • {{ item["generic_name"] }}
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="item-price">
+                            ₹{{ "%.2f"|format(item["item_total"]|float) }}
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                    <div class="total-row">
+
+                        <span>Total</span>
+
+                        <span>
+                            ₹{{ "%.2f"|format(order["total_amount"]|float) }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORDER INFORMATION -->
+                <div class="card">
+
+                    <h2 class="card-title">
+                        Order Information
+                    </h2>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Order ID
+                        </span>
+
+                        <span class="detail-value">
+                            #{{ order["order_id"] }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Patient
+                        </span>
+
+                        <span class="detail-value">
+                            {{ order["patient_name"] }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Phone
+                        </span>
+
+                        <span class="detail-value">
+                            {{ order["phone"] }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Delivery
+                        </span>
+
+                        <span class="detail-value">
+
+                            {% if order["delivery_method"] == "HOME_DELIVERY" %}
+                                Home Delivery
+                            {% else %}
+                                Clinic Pickup
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    {% if order["delivery_method"] == "HOME_DELIVERY" %}
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Address
+                        </span>
+
+                        <span class="detail-value">
+                            {{ order["delivery_address"] }}
+                        </span>
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Payment
+                        </span>
+
+                        <span class="detail-value">
+
+                            {% if order["payment_method"] == "ONLINE" %}
+                                Online
+                            {% else %}
+                                Cash
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Payment Status
+                        </span>
+
+                        <span class="detail-value">
+
+                            {% if order["payment_status"] == "PAID" %}
+
+                                <span class="status status-paid">
+                                    PAID
+                                </span>
+
+                            {% elif order["payment_status"] == "PENDING" %}
+
+                                <span class="status status-pending">
+                                    PENDING
+                                </span>
+
+                            {% else %}
+
+                                <span class="status status-failed">
+                                    {{ order["payment_status"] }}
+                                </span>
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-row">
+
+                        <span class="detail-label">
+                            Order Status
+                        </span>
+
+                        <span class="detail-value">
+
+                            {% if order["order_status"] == "CONFIRMED" %}
+
+                                <span class="status status-confirmed">
+                                    CONFIRMED
+                                </span>
+
+                            {% elif order["order_status"] == "PENDING" %}
+
+                                <span class="status status-pending">
+                                    PENDING
+                                </span>
+
+                            {% else %}
+
+                                <span class="status">
+                                    {{ order["order_status"] }}
+                                </span>
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    {% if order["payment_method"] == "ONLINE" %}
+
+                    <div class="payment-box">
+                        Online payment is securely processed through Cashfree.
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+            <div class="actions">
+
+                <a href="/pharmacy" class="btn btn-primary">
+                    Continue Shopping
+                </a>
+
+                <a href="/profile#orders" class="btn btn-secondary">
+                    My Orders
+                </a>
+
+                <a href="/" class="btn btn-secondary">
+                    Dashboard
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- AI BUTTON -->
+<a href="#" class="chat-button" title="AI Health Assistant">
+    ✦
+</a>
+
+</body>
+</html>

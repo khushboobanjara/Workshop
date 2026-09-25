@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Reschedule Appointment | Sanjeevani Clinic
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='style.css') }}"
+    >
+
+    <style>
+
+        .reschedule-page {
+            min-height: 100vh;
+            background: var(--paper);
+            padding: 45px 6%;
+        }
+
+        .reschedule-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 25px;
+            color: var(--teal-700);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .reschedule-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 35px;
+            box-shadow:
+                0 10px 30px rgba(20, 56, 50, 0.06);
+        }
+
+        .reschedule-card h1 {
+            margin-top: 0;
+            color: var(--teal-900);
+        }
+
+        .doctor-summary {
+            background: var(--sage-100);
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 25px;
+        }
+
+        .doctor-summary h2 {
+            margin: 0 0 7px;
+            color: var(--teal-900);
+        }
+
+        .doctor-summary p {
+            margin: 5px 0;
+            color: var(--ink-soft);
+        }
+
+        .current-appointment {
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            margin-bottom: 25px;
+        }
+
+        .current-appointment strong {
+            color: var(--teal-900);
+        }
+
+        .error-message {
+            background: var(--clay-100);
+            color: var(--clay-500);
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 14px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+        }
+
+        .availability-note {
+            background: var(--sage-100);
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 25px;
+            color: var(--ink-soft);
+            line-height: 1.6;
+        }
+
+        .reschedule-submit {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            background: var(--teal-700);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .reschedule-submit:hover {
+            background: var(--teal-900);
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header class="site-header">
+
+    <div class="site-nav">
+
+        <a href="/">Home</a>
+
+        <a href="/predict">Screening</a>
+
+        <a href="/doctors">Doctors</a>
+
+        <a href="/pharmacy">Pharmacy</a>
+
+        <a
+            href="/profile"
+            class="active"
+        >
+            My Profile
+        </a>
+
+        <span class="welcome-user">
+            Welcome, {{ user.full_name }}
+        </span>
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+            Logout
+        </a>
+
+    </div>
+
+</header>
+
+
+<main class="reschedule-page">
+
+    <div class="reschedule-container">
+
+        <a
+            href="/profile"
+            class="back-link"
+        >
+            ← Back to My Profile
+        </a>
+
+
+        <div class="reschedule-card">
+
+            <h1>
+                Reschedule Appointment
+            </h1>
+
+
+            <div class="doctor-summary">
+
+                <h2>
+                    Dr. {{ appointment.doctor_name }}
+                </h2>
+
+                <p>
+                    {{ appointment.specialization }}
+                </p>
+
+            </div>
+
+
+            <div class="current-appointment">
+
+                <strong>
+                    Current Appointment
+                </strong>
+
+                <p>
+                    Date:
+                    {{ appointment.appointment_date }}
+                </p>
+
+                <p>
+                    Time:
+                    {{ appointment.appointment_time }}
+                </p>
+
+            </div>
+
+
+            {% if error %}
+
+                <div class="error-message">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+
+            <div class="availability-note">
+
+                Select a new date and time from the
+                doctor's available schedule.
+
+            </div>
+
+
+            <form
+                method="POST"
+                action="/appointments/{{ appointment.appointment_id }}/reschedule"
+            >
+
+                <div class="form-group">
+
+                    <label for="appointment_date">
+                        New Appointment Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="appointment_date"
+                        name="appointment_date"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="appointment_time">
+                        New Appointment Time
+                    </label>
+
+                    <input
+                        type="time"
+                        id="appointment_time"
+                        name="appointment_time"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="reschedule-submit"
+                >
+                    Confirm Reschedule
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+</body>
+
+</html>

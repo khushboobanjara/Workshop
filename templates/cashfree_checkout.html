@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Secure Payment | Sanjeevani
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Cashfree SDK -->
+
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+
+
+    <style>
+
+        /* =====================================================
+           PAYMENT PAGE
+        ===================================================== */
+
+        .payment-page {
+            max-width: 1100px;
+        }
+
+
+        .payment-back {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            margin-bottom: 22px;
+
+            color: var(--primary);
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .payment-header {
+            margin-bottom: 25px;
+        }
+
+
+        .payment-header h1 {
+            font-size: 30px;
+
+            font-weight: 800;
+
+            margin: 5px 0 8px;
+        }
+
+
+        .payment-header p {
+            color: var(--text-light);
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           PAYMENT GRID
+        ===================================================== */
+
+        .payment-layout {
+            display: grid;
+
+            grid-template-columns:
+                0.85fr 1.15fr;
+
+            gap: 22px;
+
+            align-items: start;
+        }
+
+
+        /* =====================================================
+           APPOINTMENT SUMMARY
+        ===================================================== */
+
+        .payment-summary-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            padding: 27px;
+
+            box-shadow: var(--shadow);
+        }
+
+
+        .payment-summary-header {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            padding-bottom: 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .payment-doctor-avatar {
+            width: 60px;
+            height: 60px;
+
+            flex-shrink: 0;
+
+            border-radius: 17px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d8f5ef,
+                    #bde8e0
+                );
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 23px;
+
+            font-weight: 800;
+        }
+
+
+        .payment-doctor-info h2 {
+            font-size: 17px;
+
+            font-weight: 800;
+
+            margin-bottom: 5px;
+        }
+
+
+        .payment-doctor-info span {
+            color: var(--primary);
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           APPOINTMENT DETAILS
+        ===================================================== */
+
+        .payment-details {
+            padding-top: 21px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 15px;
+        }
+
+
+        .payment-detail-row {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+
+        .payment-detail-row span {
+            color: var(--text-light);
+
+            font-size: 11px;
+        }
+
+
+        .payment-detail-row strong {
+            font-size: 12px;
+
+            text-align: right;
+        }
+
+
+        /* =====================================================
+           AMOUNT
+        ===================================================== */
+
+        .payment-amount-box {
+            margin-top: 22px;
+
+            padding: 20px;
+
+            border-radius: 15px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e8f7f4,
+                    #f2faf8
+                );
+
+            border: 1px solid #d7eee9;
+        }
+
+
+        .payment-amount-label {
+            color: var(--text-light);
+
+            font-size: 10px;
+
+            display: block;
+
+            margin-bottom: 6px;
+        }
+
+
+        .payment-amount {
+            color: var(--primary);
+
+            font-size: 28px;
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           PAYMENT ACTION CARD
+        ===================================================== */
+
+        .payment-action-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            box-shadow: var(--shadow);
+
+            text-align: center;
+        }
+
+
+        .secure-payment-icon {
+            width: 65px;
+            height: 65px;
+
+            margin: 0 auto 17px;
+
+            border-radius: 20px;
+
+            background: #e4f5f1;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 26px;
+
+            font-weight: 800;
+        }
+
+
+        .payment-action-card h2 {
+            font-size: 22px;
+
+            font-weight: 800;
+
+            margin-bottom: 8px;
+        }
+
+
+        .payment-action-card > p {
+            max-width: 420px;
+
+            margin: 0 auto 25px;
+
+            color: var(--text-light);
+
+            font-size: 12px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           PAYMENT SESSION
+        ===================================================== */
+
+        .payment-session-box {
+            padding: 13px;
+
+            margin-bottom: 20px;
+
+            border-radius: 11px;
+
+            background: #f5f8f7;
+
+            border: 1px solid var(--border);
+
+            text-align: left;
+        }
+
+
+        .payment-session-box span {
+            display: block;
+
+            color: var(--text-light);
+
+            font-size: 9px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .payment-session-box code {
+            display: block;
+
+            word-break: break-all;
+
+            color: #52645f;
+
+            font-size: 9px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           PAY BUTTON
+        ===================================================== */
+
+        .proceed-payment-btn {
+            width: 100%;
+
+            min-height: 50px;
+
+            border: none;
+
+            border-radius: 11px;
+
+            background: var(--primary);
+
+            color: white;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+
+        .proceed-payment-btn:hover {
+            background: var(--primary-dark);
+
+            transform: translateY(-1px);
+        }
+
+
+        .proceed-payment-btn:disabled {
+            opacity: 0.65;
+
+            cursor: wait;
+
+            transform: none;
+        }
+
+
+        /* =====================================================
+           SECURITY NOTE
+        ===================================================== */
+
+        .payment-security {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 7px;
+
+            margin-top: 15px;
+
+            color: var(--text-light);
+
+            font-size: 9px;
+        }
+
+
+        /* =====================================================
+           ERROR
+        ===================================================== */
+
+        .payment-error {
+            display: none;
+
+            margin-top: 15px;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            background: #fff0ed;
+
+            border: 1px solid #f1cbc2;
+
+            color: #a34f40;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 850px) {
+
+            .payment-layout {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .payment-summary-card,
+            .payment-action-card {
+                padding: 20px;
+            }
+
+            .payment-header h1 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <nav class="sidebar-nav">
+
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                AI Health Chat
+            </span>
+
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item active"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Find Doctor
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Appointments
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                □
+            </span>
+
+            <span>
+                My Profile
+            </span>
+
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Pharmacy
+            </span>
+
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ◌
+            </span>
+
+            <span>
+                Health Screening
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ?
+            </span>
+
+            <span>
+                Help & Support
+            </span>
+
+        </a>
+
+
+    </nav>
+
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+
+            <span>
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
+
+    <header class="topbar">
+
+
+        <div class="search-box">
+
+            <span>
+                ⌕
+            </span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+
+                    {{ user.full_name[0] | upper }}
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =================================================
+         PAYMENT PAGE
+    ================================================== -->
+
+    <section class="dashboard-container payment-page">
+
+
+        <a
+            href="/doctors/{{ doctor['doctor_id'] }}"
+            class="payment-back"
+        >
+
+            ← Back to Doctor
+
+        </a>
+
+
+
+        <div class="payment-header">
+
+            <span class="section-label">
+                SECURE CHECKOUT
+            </span>
+
+            <h1>
+                Complete Your Payment
+            </h1>
+
+            <p>
+                Review your appointment details before
+                proceeding to secure payment.
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PAYMENT LAYOUT
+        ================================================== -->
+
+        <div class="payment-layout">
+
+
+            <!-- =================================================
+                 APPOINTMENT SUMMARY
+            ================================================== -->
+
+            <div class="payment-summary-card">
+
+
+                <div class="payment-summary-header">
+
+
+                    <div class="payment-doctor-avatar">
+
+                        {{ doctor["doctor_name"][0] | upper }}
+
+                    </div>
+
+
+                    <div class="payment-doctor-info">
+
+                        <h2>
+                            {{ doctor["doctor_name"] }}
+                        </h2>
+
+                        <span>
+                            {{ doctor["specialization"] }}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="payment-details">
+
+
+                    <div class="payment-detail-row">
+
+                        <span>
+                            Appointment ID
+                        </span>
+
+                        <strong>
+                            #{{ appointment_id }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-detail-row">
+
+                        <span>
+                            Patient
+                        </span>
+
+                        <strong>
+                            {{ patient_name }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-detail-row">
+
+                        <span>
+                            Date
+                        </span>
+
+                        <strong>
+                            {{ appointment_date }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-detail-row">
+
+                        <span>
+                            Time
+                        </span>
+
+                        <strong>
+                            {{ appointment_time }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-detail-row">
+
+                        <span>
+                            Consultation
+                        </span>
+
+                        <strong>
+                            Doctor Consultation
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="payment-amount-box">
+
+                    <span class="payment-amount-label">
+                        TOTAL AMOUNT
+                    </span>
+
+                    <div class="payment-amount">
+
+                        ₹{{ payment_amount }}
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 PAYMENT ACTION
+            ================================================== -->
+
+            <div class="payment-action-card">
+
+
+                <div class="secure-payment-icon">
+                    ₹
+                </div>
+
+
+                <h2>
+                    Secure Online Payment
+                </h2>
+
+
+                <p>
+                    Your payment will be securely processed
+                    by Cashfree. Click the button below to
+                    continue to the payment gateway.
+                </p>
+
+
+
+                <!-- PAYMENT SESSION -->
+
+                <div class="payment-session-box">
+
+                    <span>
+                        PAYMENT SESSION
+                    </span>
+
+                    <code>
+                        {{ payment_session_id }}
+                    </code>
+
+                </div>
+
+
+
+                <!-- PAYMENT BUTTON -->
+
+                <button
+                    type="button"
+                    id="payButton"
+                    class="proceed-payment-btn"
+                    onclick="proceedToPayment()"
+                >
+
+                    Proceed to Secure Payment
+                    →
+
+                </button>
+
+
+                <div
+                    id="paymentError"
+                    class="payment-error"
+                ></div>
+
+
+                <div class="payment-security">
+
+                    <span>
+                        🔒
+                    </span>
+
+                    <span>
+                        Secure payment powered by Cashfree
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FLOATING AI CHAT
+===================================================== -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+    aria-label="Open AI Health Assistant"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<script>
+
+async function proceedToPayment() {
+
+    const button =
+        document.getElementById("payButton");
+
+    const errorBox =
+        document.getElementById("paymentError");
+
+
+    errorBox.style.display = "none";
+
+    errorBox.textContent = "";
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Opening Secure Payment...";
+
+
+    try {
+
+        const cashfree =
+            Cashfree({
+                mode: "sandbox"
+            });
+
+
+        await cashfree.checkout({
+
+            paymentSessionId:
+                "{{ payment_session_id }}",
+
+            redirectTarget:
+                "_self"
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Cashfree checkout error:",
+            error
+        );
+
+
+        errorBox.textContent =
+            "Unable to open the payment gateway. Please try again.";
+
+        errorBox.style.display =
+            "block";
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "Proceed to Secure Payment →";
+
+    }
+
+}
+
+
+
+function openChatbot() {
+
+    /*
+       Chatbot widget can be connected here
+       when the shared chatbot component is
+       added to this page.
+    */
+
+}
+
+</script>
+
+
+</body>
+
+</html>

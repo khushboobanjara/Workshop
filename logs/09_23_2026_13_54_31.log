@@ -1,0 +1,14 @@
+[2026-09-23 13:54:41,900] 29 main -INFO -Home page accessed...
+[2026-09-23 13:54:43,952] 29 main -INFO -Home page accessed...
+[2026-09-23 13:54:48,261] 186 main -INFO -Chatbot message received: hi
+[2026-09-23 13:54:49,052] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:54:49,487] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:55:02,867] 186 main -INFO -Chatbot message received: book appointment
+[2026-09-23 13:55:03,451] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:55:27,477] 186 main -INFO -Chatbot message received: neurololist
+[2026-09-23 13:55:28,312] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:55:56,715] 186 main -INFO -Chatbot message received: neurologist
+[2026-09-23 13:55:57,693] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:56:16,878] 186 main -INFO -Chatbot message received: yes
+[2026-09-23 13:56:17,577] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-23 13:56:18,374] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"

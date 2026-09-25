@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        My Cart | Sanjeevani
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        .cart-page {
+            max-width: 1150px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .cart-heading {
+            margin-bottom: 25px;
+        }
+
+
+        .cart-heading h1 {
+            font-size: 30px;
+
+            font-weight: 800;
+
+            margin: 6px 0 8px;
+        }
+
+
+        .cart-heading p {
+            color: var(--text-light);
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           CART LAYOUT
+        ===================================================== */
+
+        .cart-layout {
+            display: grid;
+
+            grid-template-columns:
+                1.55fr 0.75fr;
+
+            gap: 22px;
+
+            align-items: start;
+        }
+
+
+        .cart-card,
+        .summary-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            box-shadow: var(--shadow);
+        }
+
+
+        .cart-card {
+            padding: 23px;
+        }
+
+
+        .summary-card {
+            padding: 23px;
+
+            position: sticky;
+
+            top: 20px;
+        }
+
+
+        /* =====================================================
+           CART HEADER
+        ===================================================== */
+
+        .cart-card-header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding-bottom: 18px;
+
+            border-bottom: 1px solid var(--border);
+
+            margin-bottom: 17px;
+        }
+
+
+        .cart-card-header h2 {
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+
+        .cart-count {
+            color: var(--text-light);
+
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           CART ITEM
+        ===================================================== */
+
+        .cart-item {
+            display: grid;
+
+            grid-template-columns:
+                55px 1fr auto;
+
+            gap: 15px;
+
+            align-items: center;
+
+            padding: 17px 0;
+
+            border-bottom: 1px solid #edf1ef;
+        }
+
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+
+        .cart-medicine-icon {
+            width: 55px;
+            height: 55px;
+
+            border-radius: 15px;
+
+            background: #e7f5f1;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+
+        .cart-medicine-info h3 {
+            font-size: 13px;
+
+            font-weight: 800;
+
+            margin-bottom: 4px;
+        }
+
+
+        .cart-medicine-info p {
+            color: var(--primary);
+
+            font-size: 9px;
+
+            font-weight: 600;
+
+            margin-bottom: 7px;
+        }
+
+
+        .cart-price {
+            font-size: 10px;
+
+            color: var(--text-light);
+        }
+
+
+        .cart-price strong {
+            color: var(--text);
+
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           QUANTITY
+        ===================================================== */
+
+        .quantity-section {
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+        }
+
+
+        .quantity-label {
+            display: none;
+        }
+
+
+        .quantity-control {
+            display: flex;
+
+            align-items: center;
+
+            border: 1px solid var(--border);
+
+            border-radius: 9px;
+
+            overflow: hidden;
+
+            background: white;
+        }
+
+
+        .quantity-control button {
+            width: 30px;
+            height: 30px;
+
+            border: none;
+
+            background: #f5f8f7;
+
+            color: var(--primary);
+
+            font-size: 15px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+
+        .quantity-control button:hover {
+            background: #e7f4f0;
+        }
+
+
+        .quantity-control input {
+            width: 35px;
+
+            height: 30px;
+
+            border: none;
+
+            outline: none;
+
+            text-align: center;
+
+            font-family: inherit;
+
+            font-size: 10px;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           ITEM TOTAL
+        ===================================================== */
+
+        .item-total {
+            min-width: 75px;
+
+            text-align: right;
+        }
+
+
+        .item-total strong {
+            display: block;
+
+            font-size: 13px;
+
+            font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+
+        .remove-button {
+            border: none;
+
+            background: transparent;
+
+            color: #b34f40;
+
+            font-family: inherit;
+
+            font-size: 8px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            padding: 0;
+        }
+
+
+        .remove-button:hover {
+            text-decoration: underline;
+        }
+
+
+        /* =====================================================
+           SUMMARY
+        ===================================================== */
+
+        .summary-card h2 {
+            font-size: 18px;
+
+            font-weight: 800;
+
+            margin-bottom: 20px;
+        }
+
+
+        .summary-row {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 10px 0;
+
+            color: var(--text-light);
+
+            font-size: 10px;
+        }
+
+
+        .summary-row strong {
+            color: var(--text);
+
+            font-size: 11px;
+        }
+
+
+        .summary-total {
+            border-top: 1px solid var(--border);
+
+            margin-top: 10px;
+
+            padding-top: 17px;
+        }
+
+
+        .summary-total span {
+            color: var(--text);
+
+            font-weight: 700;
+
+            font-size: 12px;
+        }
+
+
+        .summary-total strong {
+            font-size: 20px;
+
+            color: var(--primary);
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           CHECKOUT BUTTON
+        ===================================================== */
+
+        .checkout-button {
+            width: 100%;
+
+            display: block;
+
+            text-align: center;
+
+            margin-top: 20px;
+
+            padding: 13px;
+
+            border-radius: 10px;
+
+            background: var(--primary);
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        .checkout-button:hover {
+            background: var(--primary-dark);
+        }
+
+
+        .continue-shopping {
+            display: block;
+
+            text-align: center;
+
+            margin-top: 13px;
+
+            color: var(--primary);
+
+            text-decoration: none;
+
+            font-size: 9px;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           CLEAR CART
+        ===================================================== */
+
+        .clear-cart-form {
+            margin-top: 20px;
+
+            padding-top: 15px;
+
+            border-top: 1px solid var(--border);
+
+            text-align: center;
+        }
+
+
+        .clear-cart-button {
+            border: none;
+
+            background: transparent;
+
+            color: #b34f40;
+
+            font-family: inherit;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+
+        /* =====================================================
+           EMPTY CART
+        ===================================================== */
+
+        .empty-cart {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            box-shadow: var(--shadow);
+
+            padding: 75px 20px;
+
+            text-align: center;
+        }
+
+
+        .empty-cart-icon {
+            width: 72px;
+            height: 72px;
+
+            margin: 0 auto 17px;
+
+            border-radius: 21px;
+
+            background: #edf7f5;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 27px;
+        }
+
+
+        .empty-cart h2 {
+            font-size: 18px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .empty-cart p {
+            color: var(--text-light);
+
+            font-size: 10px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .shop-button {
+            display: inline-block;
+
+            padding: 11px 18px;
+
+            border-radius: 9px;
+
+            background: var(--primary);
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           SECURITY NOTE
+        ===================================================== */
+
+        .secure-note {
+            margin-top: 17px;
+
+            padding: 11px;
+
+            border-radius: 9px;
+
+            background: #f5f8f7;
+
+            color: var(--text-light);
+
+            text-align: center;
+
+            font-size: 8px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 850px) {
+
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+
+            .summary-card {
+                position: static;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .cart-item {
+                grid-template-columns:
+                    48px 1fr;
+            }
+
+
+            .cart-medicine-icon {
+                width: 48px;
+                height: 48px;
+            }
+
+
+            .quantity-section {
+                grid-column: 2;
+            }
+
+
+            .item-total {
+                grid-column: 2;
+
+                text-align: left;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <nav class="sidebar-nav">
+
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+            <span class="nav-icon">◉</span>
+            <span>AI Health Chat</span>
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item"
+        >
+            <span class="nav-icon">+</span>
+            <span>Find Doctor</span>
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+            <span class="nav-icon">▣</span>
+            <span>Appointments</span>
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+            <span class="nav-icon">□</span>
+            <span>My Profile</span>
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item active"
+        >
+            <span class="nav-icon">+</span>
+            <span>Pharmacy</span>
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+            <span class="nav-icon">◌</span>
+            <span>Health Screening</span>
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+            <span class="nav-icon">?</span>
+            <span>Help & Support</span>
+        </a>
+
+
+    </nav>
+
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+            <span>↪</span>
+            Logout
+        </a>
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main-content">
+
+
+    <header class="topbar">
+
+
+        <div class="search-box">
+
+            <span>⌕</span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+                    {{ user.full_name[0] | upper }}
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =================================================
+         CONTENT
+    ================================================== -->
+
+    <section class="dashboard-container cart-page">
+
+
+        <div class="cart-heading">
+
+            <span class="section-label">
+                SANJEEVANI PHARMACY
+            </span>
+
+            <h1>
+                My Cart
+            </h1>
+
+            <p>
+                Review your medicines before checkout.
+            </p>
+
+        </div>
+
+
+
+        {% if cart_items %}
+
+
+            <div class="cart-layout">
+
+
+                <!-- =================================================
+                     CART ITEMS
+                ================================================== -->
+
+                <div class="cart-card">
+
+
+                    <div class="cart-card-header">
+
+
+                        <h2>
+                            Cart Items
+                        </h2>
+
+
+                        <span class="cart-count">
+
+                            {{ cart_items|length }}
+
+                            {% if cart_items|length == 1 %}
+                                item
+                            {% else %}
+                                items
+                            {% endif %}
+
+                        </span>
+
+
+                    </div>
+
+
+
+                    {% for item in cart_items %}
+
+
+                        <div class="cart-item">
+
+
+                            <!-- MEDICINE ICON -->
+
+                            <div class="cart-medicine-icon">
+                                Rx
+                            </div>
+
+
+
+                            <!-- MEDICINE INFO -->
+
+                            <div class="cart-medicine-info">
+
+
+                                <h3>
+                                    {{ item["medicine_name"] }}
+                                </h3>
+
+
+                                {% if item["generic_name"] %}
+
+                                    <p>
+                                        {{ item["generic_name"] }}
+                                    </p>
+
+                                {% endif %}
+
+
+                                <div class="cart-price">
+
+                                    ₹{{ item["price"] }}
+
+                                    ×
+
+                                    {{ item["quantity"] }}
+
+                                    =
+
+                                    <strong>
+                                        ₹{{ item["item_total"] }}
+                                    </strong>
+
+                                </div>
+
+
+                            </div>
+
+
+
+                            <!-- QUANTITY -->
+
+                            <div class="quantity-section">
+
+
+                                <form
+                                    action="/pharmacy/cart/update"
+                                    method="POST"
+                                    class="quantity-control"
+                                >
+
+
+                                    <input
+                                        type="hidden"
+                                        name="medicine_id"
+                                        value="{{ item['medicine_id'] }}"
+                                    >
+
+
+                                    <button
+                                        type="button"
+                                        onclick="changeQuantity(
+                                            this,
+                                            -1
+                                        )"
+                                    >
+                                        −
+                                    </button>
+
+
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        value="{{ item['quantity'] }}"
+                                        min="1"
+                                        max="{{ item['stock_quantity'] }}"
+                                        aria-label="Quantity"
+                                    >
+
+
+                                    <button
+                                        type="button"
+                                        onclick="changeQuantity(
+                                            this,
+                                            1
+                                        )"
+                                    >
+                                        +
+                                    </button>
+
+
+                                </form>
+
+
+                            </div>
+
+
+
+                            <!-- TOTAL / REMOVE -->
+
+                            <div class="item-total">
+
+
+                                <strong>
+                                    ₹{{ item["item_total"] }}
+                                </strong>
+
+
+                                <form
+                                    action="/pharmacy/cart/remove"
+                                    method="POST"
+                                >
+
+
+                                    <input
+                                        type="hidden"
+                                        name="medicine_id"
+                                        value="{{ item['medicine_id'] }}"
+                                    >
+
+
+                                    <button
+                                        type="submit"
+                                        class="remove-button"
+                                    >
+                                        Remove
+                                    </button>
+
+
+                                </form>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    {% endfor %}
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     SUMMARY
+                ================================================== -->
+
+                <div class="summary-card">
+
+
+                    <h2>
+                        Order Summary
+                    </h2>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Medicines
+                        </span>
+
+                        <strong>
+                            {{ cart_items|length }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong>
+                            ₹{{ total_amount }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Delivery
+                        </span>
+
+                        <strong>
+                            Calculated at checkout
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row summary-total">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            ₹{{ total_amount }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <a
+                        href="/pharmacy/checkout"
+                        class="checkout-button"
+                    >
+                        Proceed to Checkout
+                    </a>
+
+
+                    <a
+                        href="/pharmacy"
+                        class="continue-shopping"
+                    >
+                        ← Continue Shopping
+                    </a>
+
+
+
+                    <form
+                        action="/pharmacy/cart/clear"
+                        method="POST"
+                        class="clear-cart-form"
+                        onsubmit="return confirmClearCart();"
+                    >
+
+                        <button
+                            type="submit"
+                            class="clear-cart-button"
+                        >
+                            Clear Cart
+                        </button>
+
+                    </form>
+
+
+
+                    <div class="secure-note">
+
+                        🔒 Your order will be securely processed
+                        through Sanjeevani Pharmacy.
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 EMPTY CART
+            ================================================== -->
+
+            <div class="empty-cart">
+
+
+                <div class="empty-cart-icon">
+                    🛒
+                </div>
+
+
+                <h2>
+                    Your cart is empty
+                </h2>
+
+
+                <p>
+                    Add medicines from the pharmacy to
+                    continue with your order.
+                </p>
+
+
+                <a
+                    href="/pharmacy"
+                    class="shop-button"
+                >
+                    Browse Medicines
+                </a>
+
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FLOATING AI
+===================================================== -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<script>
+
+
+function changeQuantity(button, change) {
+
+    const form = button.closest("form");
+
+    const input =
+        form.querySelector(
+            'input[name="quantity"]'
+        );
+
+
+    let quantity =
+        parseInt(input.value) || 1;
+
+
+    const max =
+        parseInt(input.max) || 999;
+
+
+    quantity += change;
+
+
+    if (quantity < 1) {
+        quantity = 1;
+    }
+
+
+    if (quantity > max) {
+        quantity = max;
+    }
+
+
+    input.value = quantity;
+
+
+    form.submit();
+
+}
+
+
+
+function confirmClearCart() {
+
+    return confirm(
+        "Are you sure you want to remove all medicines from your cart?"
+    );
+
+}
+
+
+
+function openChatbot() {
+
+    /*
+       Existing chatbot can be connected here.
+    */
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

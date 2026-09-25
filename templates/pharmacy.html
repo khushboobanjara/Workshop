@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Pharmacy | Sanjeevani</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        .pharmacy-page {
+            max-width: 1200px;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .pharmacy-heading {
+            margin-bottom: 24px;
+        }
+
+        .pharmacy-heading h1 {
+            font-size: 30px;
+            font-weight: 800;
+            margin: 6px 0 8px;
+        }
+
+        .pharmacy-heading p {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           PHARMACY HERO
+        ===================================================== */
+
+        .pharmacy-hero {
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f8f83,
+                    #08766d
+                );
+
+            border-radius: 22px;
+
+            padding: 30px;
+
+            color: white;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 25px;
+
+            margin-bottom: 25px;
+
+            overflow: hidden;
+
+            position: relative;
+        }
+
+
+        .pharmacy-hero::after {
+            content: "";
+
+            position: absolute;
+
+            width: 250px;
+            height: 250px;
+
+            border: 1px solid rgba(255,255,255,0.15);
+
+            border-radius: 50%;
+
+            right: -70px;
+
+            top: -120px;
+        }
+
+
+        .pharmacy-hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        .pharmacy-hero-label {
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: 1.4px;
+
+            opacity: 0.85;
+        }
+
+
+        .pharmacy-hero h2 {
+            font-size: 25px;
+
+            margin: 8px 0;
+
+            font-weight: 800;
+        }
+
+
+        .pharmacy-hero p {
+            font-size: 12px;
+
+            opacity: 0.88;
+
+            max-width: 550px;
+
+            line-height: 1.6;
+        }
+
+
+        .pharmacy-hero-icon {
+            width: 100px;
+            height: 100px;
+
+            border-radius: 28px;
+
+            background: rgba(255,255,255,0.12);
+
+            border: 1px solid rgba(255,255,255,0.18);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 38px;
+
+            font-weight: 800;
+
+            position: relative;
+
+            z-index: 2;
+        }
+
+
+        /* =====================================================
+           SEARCH
+        ===================================================== */
+
+        .pharmacy-search {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 17px;
+
+            padding: 8px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            box-shadow: var(--shadow);
+
+            margin-bottom: 25px;
+        }
+
+
+        .pharmacy-search-icon {
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            color: var(--primary);
+
+            font-size: 17px;
+        }
+
+
+        .pharmacy-search input {
+            flex: 1;
+
+            border: none;
+
+            outline: none;
+
+            font-family: inherit;
+
+            font-size: 12px;
+
+            color: var(--text);
+
+            background: transparent;
+        }
+
+
+        .pharmacy-search input::placeholder {
+            color: #9aa9a5;
+        }
+
+
+        .pharmacy-search button {
+            border: none;
+
+            background: var(--primary);
+
+            color: white;
+
+            padding: 12px 20px;
+
+            border-radius: 10px;
+
+            font-family: inherit;
+
+            font-size: 10px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+
+        .pharmacy-search button:hover {
+            background: var(--primary-dark);
+        }
+
+
+        /* =====================================================
+           TOP ACTIONS
+        ===================================================== */
+
+        .pharmacy-actions {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 18px;
+        }
+
+
+        .pharmacy-actions h2 {
+            font-size: 19px;
+
+            font-weight: 800;
+        }
+
+
+        .cart-button {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            padding: 10px 14px;
+
+            text-decoration: none;
+
+            color: var(--primary);
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        .cart-button:hover {
+            background: #eef8f5;
+        }
+
+
+        /* =====================================================
+           SEARCH RESULT
+        ===================================================== */
+
+        .search-result {
+            color: var(--text-light);
+
+            font-size: 10px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =====================================================
+           MEDICINE GRID
+        ===================================================== */
+
+        .medicine-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 17px;
+        }
+
+
+        .medicine-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 17px;
+
+            padding: 20px;
+
+            box-shadow: var(--shadow);
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+
+        .medicine-card:hover {
+            transform: translateY(-3px);
+
+            box-shadow:
+                0 14px 30px rgba(20,60,50,0.08);
+        }
+
+
+        .medicine-top {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-start;
+
+            gap: 10px;
+
+            margin-bottom: 17px;
+        }
+
+
+        .medicine-icon {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 14px;
+
+            background: #e7f5f1;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 18px;
+
+            font-weight: 800;
+        }
+
+
+        .stock-badge {
+            padding: 5px 8px;
+
+            border-radius: 20px;
+
+            background: #e6f6ee;
+
+            color: #16815f;
+
+            font-size: 8px;
+
+            font-weight: 800;
+        }
+
+
+        .stock-badge.out {
+            background: #fff0ed;
+
+            color: #b34f40;
+        }
+
+
+        .medicine-card h3 {
+            font-size: 14px;
+
+            font-weight: 800;
+
+            margin-bottom: 5px;
+        }
+
+
+        .medicine-generic {
+            color: var(--primary);
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            margin-bottom: 10px;
+        }
+
+
+        .medicine-description {
+            color: var(--text-light);
+
+            font-size: 10px;
+
+            line-height: 1.6;
+
+            min-height: 32px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .medicine-category {
+            display: inline-block;
+
+            padding: 5px 8px;
+
+            border-radius: 6px;
+
+            background: #f1f5f3;
+
+            color: #687873;
+
+            font-size: 8px;
+
+            font-weight: 700;
+
+            margin-bottom: 15px;
+        }
+
+
+        .medicine-bottom {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+            padding-top: 14px;
+
+            border-top: 1px solid var(--border);
+        }
+
+
+        .medicine-price {
+            font-size: 16px;
+
+            font-weight: 800;
+
+            color: var(--text);
+        }
+
+
+        .medicine-price small {
+            display: block;
+
+            color: var(--text-light);
+
+            font-size: 8px;
+
+            font-weight: 500;
+
+            margin-top: 2px;
+        }
+
+
+        .medicine-buttons {
+            display: flex;
+
+            gap: 6px;
+        }
+
+
+        .medicine-details-btn {
+            border: 1px solid var(--border);
+
+            background: white;
+
+            color: var(--primary);
+
+            padding: 8px 9px;
+
+            border-radius: 8px;
+
+            font-family: inherit;
+
+            font-size: 8px;
+
+            font-weight: 700;
+
+            text-decoration: none;
+        }
+
+
+        .medicine-details-btn:hover {
+            background: #eef8f5;
+        }
+
+
+        .add-cart-btn {
+            border: none;
+
+            background: var(--primary);
+
+            color: white;
+
+            padding: 8px 10px;
+
+            border-radius: 8px;
+
+            font-family: inherit;
+
+            font-size: 8px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+
+        .add-cart-btn:hover {
+            background: var(--primary-dark);
+        }
+
+
+        .add-cart-btn:disabled {
+            background: #c4cfcc;
+
+            cursor: not-allowed;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+        ===================================================== */
+
+        .empty-pharmacy {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 18px;
+
+            padding: 60px 20px;
+
+            text-align: center;
+        }
+
+
+        .empty-pharmacy-icon {
+            width: 65px;
+            height: 65px;
+
+            margin: 0 auto 15px;
+
+            border-radius: 18px;
+
+            background: #edf7f5;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 25px;
+        }
+
+
+        .empty-pharmacy h3 {
+            font-size: 16px;
+
+            margin-bottom: 7px;
+        }
+
+
+        .empty-pharmacy p {
+            color: var(--text-light);
+
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 1050px) {
+
+            .medicine-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .pharmacy-hero {
+                padding: 23px;
+            }
+
+
+            .pharmacy-hero-icon {
+                display: none;
+            }
+
+
+            .medicine-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .pharmacy-search {
+                flex-wrap: wrap;
+            }
+
+
+            .pharmacy-search input {
+                min-width: 180px;
+            }
+
+
+            .pharmacy-search button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <nav class="sidebar-nav">
+
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+            <span class="nav-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+            <span class="nav-icon">◉</span>
+            <span>AI Health Chat</span>
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item"
+        >
+            <span class="nav-icon">+</span>
+            <span>Find Doctor</span>
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+            <span class="nav-icon">▣</span>
+            <span>Appointments</span>
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+            <span class="nav-icon">□</span>
+            <span>My Profile</span>
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item active"
+        >
+            <span class="nav-icon">+</span>
+            <span>Pharmacy</span>
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+            <span class="nav-icon">◌</span>
+            <span>Health Screening</span>
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+            <span class="nav-icon">?</span>
+            <span>Help & Support</span>
+        </a>
+
+
+    </nav>
+
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+            <span>↪</span>
+            Logout
+        </a>
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+
+        <div class="search-box">
+
+            <span>⌕</span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+                    {{ user.full_name[0] | upper }}
+                </div>
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =================================================
+         PHARMACY CONTENT
+    ================================================== -->
+
+    <section class="dashboard-container pharmacy-page">
+
+
+        <!-- HEADING -->
+
+        <div class="pharmacy-heading">
+
+            <span class="section-label">
+                SANJEEVANI PHARMACY
+            </span>
+
+            <h1>
+                Medicines & Pharmacy
+            </h1>
+
+            <p>
+                Search medicines, check availability and
+                add them to your cart.
+            </p>
+
+        </div>
+
+
+
+        <!-- HERO -->
+
+        <div class="pharmacy-hero">
+
+
+            <div class="pharmacy-hero-content">
+
+                <span class="pharmacy-hero-label">
+                    DIGITAL PHARMACY
+                </span>
+
+                <h2>
+                    Your medicines, all in one place.
+                </h2>
+
+                <p>
+                    Find available medicines, view their
+                    details and place your pharmacy order
+                    for clinic pickup or home delivery.
+                </p>
+
+            </div>
+
+
+            <div class="pharmacy-hero-icon">
+                Rx
+            </div>
+
+
+        </div>
+
+
+
+        <!-- SEARCH -->
+
+        <form
+            action="/pharmacy/search"
+            method="GET"
+            class="pharmacy-search"
+        >
+
+            <div class="pharmacy-search-icon">
+                ⌕
+            </div>
+
+
+            <input
+                type="text"
+                name="q"
+                value="{{ search_term }}"
+                placeholder="Search medicine, generic name or category..."
+                autocomplete="off"
+            >
+
+
+            <button type="submit">
+                Search Medicine
+            </button>
+
+        </form>
+
+
+
+        <!-- ACTION HEADER -->
+
+        <div class="pharmacy-actions">
+
+
+            <div>
+
+                {% if search_term %}
+
+                    <h2>
+                        Search Results
+                    </h2>
+
+                    <div class="search-result">
+                        Results for "{{ search_term }}"
+                    </div>
+
+                {% else %}
+
+                    <h2>
+                        Available Medicines
+                    </h2>
+
+                {% endif %}
+
+            </div>
+
+
+            <a
+                href="/cart"
+                class="cart-button"
+            >
+                🛒
+                View Cart
+            </a>
+
+
+        </div>
+
+
+
+        <!-- MEDICINES -->
+
+        {% if medicines %}
+
+
+            <div class="medicine-grid">
+
+
+                {% for medicine in medicines %}
+
+
+                    <div class="medicine-card">
+
+
+                        <div class="medicine-top">
+
+
+                            <div class="medicine-icon">
+                                Rx
+                            </div>
+
+
+                            {% if medicine["stock_quantity"] > 0 %}
+
+                                <span class="stock-badge">
+                                    In Stock
+                                </span>
+
+                            {% else %}
+
+                                <span class="stock-badge out">
+                                    Out of Stock
+                                </span>
+
+                            {% endif %}
+
+
+                        </div>
+
+
+
+                        <h3>
+                            {{ medicine["medicine_name"] }}
+                        </h3>
+
+
+                        {% if medicine["generic_name"] %}
+
+                            <div class="medicine-generic">
+                                {{ medicine["generic_name"] }}
+                            </div>
+
+                        {% endif %}
+
+
+
+                        <p class="medicine-description">
+
+                            {% if medicine["description"] %}
+
+                                {{ medicine["description"][:100] }}
+
+                                {% if medicine["description"]|length > 100 %}
+                                    ...
+                                {% endif %}
+
+                            {% else %}
+
+                                Medicine available through
+                                Sanjeevani Pharmacy.
+
+                            {% endif %}
+
+                        </p>
+
+
+
+                        {% if medicine["category"] %}
+
+                            <span class="medicine-category">
+                                {{ medicine["category"] }}
+                            </span>
+
+                        {% endif %}
+
+
+
+                        <div class="medicine-bottom">
+
+
+                            <div class="medicine-price">
+
+                                ₹{{ medicine["price"] }}
+
+                                <small>
+                                    per unit
+                                </small>
+
+                            </div>
+
+
+
+                            <div class="medicine-buttons">
+
+
+                                <a
+                                    href="/pharmacy/medicine/{{ medicine['medicine_id'] }}"
+                                    class="medicine-details-btn"
+                                >
+                                    Details
+                                </a>
+
+
+                                <form
+                                    action="/pharmacy/cart/add"
+                                    method="POST"
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="medicine_id"
+                                        value="{{ medicine['medicine_id'] }}"
+                                    >
+
+
+                                    <input
+                                        type="hidden"
+                                        name="quantity"
+                                        value="1"
+                                    >
+
+
+                                    <button
+                                        type="submit"
+                                        class="add-cart-btn"
+                                        {% if medicine["stock_quantity"] <= 0 %}
+                                            disabled
+                                        {% endif %}
+                                    >
+                                        + Cart
+                                    </button>
+
+                                </form>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="empty-pharmacy">
+
+
+                <div class="empty-pharmacy-icon">
+                    Rx
+                </div>
+
+
+                {% if search_term %}
+
+                    <h3>
+                        No medicines found
+                    </h3>
+
+                    <p>
+                        Try another medicine name,
+                        generic name or category.
+                    </p>
+
+                {% else %}
+
+                    <h3>
+                        No medicines available
+                    </h3>
+
+                    <p>
+                        Pharmacy medicines will appear here
+                        when they are available.
+                    </p>
+
+                {% endif %}
+
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- FLOATING AI -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+    aria-label="Open AI Health Assistant"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<script>
+
+function openChatbot() {
+
+    /*
+       Existing chatbot can be connected here.
+    */
+
+}
+
+</script>
+
+
+</body>
+
+</html>

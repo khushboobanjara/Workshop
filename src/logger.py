@@ -24,8 +24,8 @@ def get_logger(name:str = __name__):
         console_handler.setLevel(logging.INFO)
         formatter = logging.Formatter(
             "[%(asctime)s] %(levelname)s -%(name)s -%(message)s"
-        )
-        console_handler.setFormatter(formatter) 
+        ) 
+        console_handler.setFormatter(formatter)
         logger.addHandler(console_handler) 
     return logger 
 

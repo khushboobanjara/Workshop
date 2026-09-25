@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Book Appointment | Sanjeevani
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           APPOINTMENT BOOKING PAGE
+        ===================================================== */
+
+        .booking-page {
+            max-width: 1150px;
+        }
+
+
+        .booking-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-bottom: 22px;
+
+            color: var(--primary);
+
+            text-decoration: none;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .booking-header {
+            margin-bottom: 25px;
+        }
+
+
+        .booking-header h1 {
+            font-size: 30px;
+
+            font-weight: 800;
+
+            margin: 5px 0 8px;
+        }
+
+
+        .booking-header p {
+            color: var(--text-light);
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           MAIN GRID
+        ===================================================== */
+
+        .booking-layout {
+            display: grid;
+
+            grid-template-columns:
+                0.85fr 1.15fr;
+
+            gap: 22px;
+
+            align-items: start;
+        }
+
+
+        /* =====================================================
+           DOCTOR CARD
+        ===================================================== */
+
+        .booking-doctor-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            padding: 25px;
+
+            box-shadow: var(--shadow);
+
+            position: sticky;
+
+            top: 20px;
+        }
+
+
+        .booking-doctor-top {
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding-bottom: 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .booking-doctor-avatar {
+            width: 65px;
+            height: 65px;
+
+            flex-shrink: 0;
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #d8f5ef,
+                    #bde8e0
+                );
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 25px;
+
+            font-weight: 800;
+        }
+
+
+        .booking-doctor-info h2 {
+            font-size: 18px;
+
+            font-weight: 800;
+
+            margin-bottom: 5px;
+        }
+
+
+        .booking-specialization {
+            color: var(--primary);
+
+            font-size: 11px;
+
+            font-weight: 700;
+        }
+
+
+        .booking-doctor-details {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 14px;
+
+            padding-top: 20px;
+        }
+
+
+        .booking-detail {
+            display: flex;
+
+            align-items: center;
+
+            gap: 11px;
+        }
+
+
+        .booking-detail-icon {
+            width: 36px;
+            height: 36px;
+
+            border-radius: 10px;
+
+            background: #eef7f5;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 13px;
+
+            font-weight: 700;
+        }
+
+
+        .booking-detail-text {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 3px;
+        }
+
+
+        .booking-detail-text span {
+            color: var(--text-light);
+
+            font-size: 9px;
+        }
+
+
+        .booking-detail-text strong {
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           SELECTED SLOT
+        ===================================================== */
+
+        .selected-slot {
+            margin-top: 22px;
+
+            padding: 17px;
+
+            border-radius: 14px;
+
+            background: #e7f6f2;
+
+            border: 1px solid #d1ebe6;
+        }
+
+
+        .selected-slot-label {
+            display: block;
+
+            color: var(--primary);
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.08em;
+
+            margin-bottom: 8px;
+        }
+
+
+        .selected-slot-date {
+            font-size: 15px;
+
+            font-weight: 800;
+
+            margin-bottom: 5px;
+        }
+
+
+        .selected-slot-time {
+            color: var(--text-light);
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           BOOKING FORM CARD
+        ===================================================== */
+
+        .booking-form-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            box-shadow: var(--shadow);
+        }
+
+
+        .booking-form-header {
+            margin-bottom: 25px;
+
+            padding-bottom: 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .booking-form-header h2 {
+            font-size: 20px;
+
+            font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+
+        .booking-form-header p {
+            color: var(--text-light);
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           FORM SECTIONS
+        ===================================================== */
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+
+        .form-section-title {
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .form-section-number {
+            width: 27px;
+            height: 27px;
+
+            border-radius: 8px;
+
+            background: #e4f5f1;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        .form-section-title h3 {
+            font-size: 14px;
+
+            font-weight: 800;
+        }
+
+
+        /* =====================================================
+           FORM GRID
+        ===================================================== */
+
+        .form-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 16px;
+        }
+
+
+        .form-group {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 7px;
+        }
+
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+
+        .form-group label {
+            font-size: 10px;
+
+            font-weight: 700;
+
+            color: #354642;
+        }
+
+
+        .form-group input {
+            width: 100%;
+
+            height: 45px;
+
+            padding: 0 13px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            background: #f8faf9;
+
+            color: var(--text);
+
+            font-family: inherit;
+
+            font-size: 12px;
+
+            outline: none;
+
+            box-sizing: border-box;
+        }
+
+
+        .form-group input:focus {
+            border-color: var(--primary);
+
+            background: white;
+
+            box-shadow:
+                0 0 0 3px rgba(19,127,119,0.08);
+        }
+
+
+        .form-group input[readonly] {
+            background: #f1f6f4;
+
+            color: #566b66;
+
+            cursor: not-allowed;
+        }
+
+
+        /* =====================================================
+           PAYMENT OPTIONS
+        ===================================================== */
+
+        .payment-options {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 12px;
+        }
+
+
+        .payment-option {
+            position: relative;
+        }
+
+
+        .payment-option input {
+            position: absolute;
+
+            opacity: 0;
+
+            pointer-events: none;
+        }
+
+
+        .payment-label {
+            min-height: 78px;
+
+            padding: 15px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 13px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+
+            box-sizing: border-box;
+        }
+
+
+        .payment-label:hover {
+            border-color: #b8dcd5;
+
+            background: #f8fcfb;
+        }
+
+
+        .payment-option input:checked
+        + .payment-label {
+            border-color: var(--primary);
+
+            background: #e9f7f4;
+
+            box-shadow:
+                0 0 0 2px rgba(19,127,119,0.08);
+        }
+
+
+        .payment-icon {
+            width: 39px;
+            height: 39px;
+
+            flex-shrink: 0;
+
+            border-radius: 11px;
+
+            background: #e1f3ef;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 15px;
+
+            font-weight: 800;
+        }
+
+
+        .payment-text {
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 4px;
+        }
+
+
+        .payment-text strong {
+            font-size: 12px;
+        }
+
+
+        .payment-text span {
+            color: var(--text-light);
+
+            font-size: 9px;
+
+            line-height: 1.4;
+        }
+
+
+        /* =====================================================
+           TOTAL
+        ===================================================== */
+
+        .booking-total {
+            margin-top: 8px;
+
+            padding: 16px;
+
+            background: #f5f8f7;
+
+            border-radius: 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+
+        .booking-total span {
+            color: var(--text-light);
+
+            font-size: 11px;
+        }
+
+
+        .booking-total strong {
+            color: var(--primary);
+
+            font-size: 18px;
+        }
+
+
+        /* =====================================================
+           CONFIRM BUTTON
+        ===================================================== */
+
+        .confirm-booking-btn {
+            width: 100%;
+
+            min-height: 48px;
+
+            margin-top: 20px;
+
+            border: none;
+
+            border-radius: 11px;
+
+            background: var(--primary);
+
+            color: white;
+
+            font-family: inherit;
+
+            font-size: 12px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+
+        .confirm-booking-btn:hover {
+            background: var(--primary-dark);
+
+            transform: translateY(-1px);
+        }
+
+
+        .booking-note {
+            margin-top: 12px;
+
+            color: var(--text-light);
+
+            text-align: center;
+
+            font-size: 9px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           ERROR
+        ===================================================== */
+
+        .booking-error {
+            margin-bottom: 20px;
+
+            padding: 12px 14px;
+
+            border-radius: 10px;
+
+            background: #fff0ed;
+
+            border: 1px solid #f1cbc2;
+
+            color: #a34f40;
+
+            font-size: 11px;
+
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .booking-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-doctor-card {
+                position: static;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .booking-form-card,
+            .booking-doctor-card {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full-width {
+                grid-column: auto;
+            }
+
+            .payment-options {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-header h1 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                AI Health Chat
+            </span>
+
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item active"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Find Doctor
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Appointments
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                □
+            </span>
+
+            <span>
+                My Profile
+            </span>
+
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Pharmacy
+            </span>
+
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ◌
+            </span>
+
+            <span>
+                Health Screening
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ?
+            </span>
+
+            <span>
+                Help & Support
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+
+            <span>
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
+
+    <header class="topbar">
+
+        <div class="search-box">
+
+            <span>
+                ⌕
+            </span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+
+                    {{ user.full_name[0] | upper }}
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         BOOKING CONTENT
+    ================================================== -->
+
+    <section class="dashboard-container booking-page">
+
+
+        <a
+            href="/doctors/{{ doctor['doctor_id'] }}"
+            class="booking-back"
+        >
+            ← Back to Doctor
+        </a>
+
+
+        <div class="booking-header">
+
+            <span class="section-label">
+                APPOINTMENT BOOKING
+            </span>
+
+            <h1>
+                Book Appointment
+            </h1>
+
+            <p>
+                Confirm your appointment details and
+                choose your preferred payment method.
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             BOOKING LAYOUT
+        ================================================== -->
+
+        <div class="booking-layout">
+
+
+            <!-- =================================================
+                 DOCTOR SUMMARY
+            ================================================== -->
+
+            <div class="booking-doctor-card">
+
+
+                <div class="booking-doctor-top">
+
+                    <div class="booking-doctor-avatar">
+
+                        {{ doctor["doctor_name"][0] | upper }}
+
+                    </div>
+
+
+                    <div class="booking-doctor-info">
+
+                        <h2>
+                            {{ doctor["doctor_name"] }}
+                        </h2>
+
+                        <span class="booking-specialization">
+
+                            {{ doctor["specialization"] }}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="booking-doctor-details">
+
+
+                    <div class="booking-detail">
+
+                        <div class="booking-detail-icon">
+                            ★
+                        </div>
+
+                        <div class="booking-detail-text">
+
+                            <span>
+                                Experience
+                            </span>
+
+                            <strong>
+                                {{ doctor["experience"] }} years
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="booking-detail">
+
+                        <div class="booking-detail-icon">
+                            ₹
+                        </div>
+
+                        <div class="booking-detail-text">
+
+                            <span>
+                                Consultation Fee
+                            </span>
+
+                            <strong>
+                                ₹{{ doctor["consultation_fee"] }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="booking-detail">
+
+                        <div class="booking-detail-icon">
+                            ●
+                        </div>
+
+                        <div class="booking-detail-text">
+
+                            <span>
+                                Doctor Status
+                            </span>
+
+                            <strong class="available-text">
+                                Available
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- SELECTED SLOT -->
+
+                <div class="selected-slot">
+
+                    <span class="selected-slot-label">
+                        SELECTED SLOT
+                    </span>
+
+
+                    <div class="selected-slot-date">
+
+                        {{ availability["available_date"] }}
+
+                    </div>
+
+
+                    <div class="selected-slot-time">
+
+                        {{ availability["start_time"] }}
+                        –
+                        {{ availability["end_time"] }}
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FORM
+            ================================================== -->
+
+            <div class="booking-form-card">
+
+
+                <div class="booking-form-header">
+
+                    <h2>
+                        Appointment Details
+                    </h2>
+
+                    <p>
+                        Enter your information and complete
+                        your appointment booking.
+                    </p>
+
+                </div>
+
+
+
+                {% if error %}
+
+                    <div class="booking-error">
+
+                        {{ error }}
+
+                    </div>
+
+                {% endif %}
+
+
+
+                <form
+                    method="POST"
+                    action="/appointments/book"
+                >
+
+
+                    <!-- =========================================
+                         HIDDEN VALUES
+                    ========================================== -->
+
+                    <input
+                        type="hidden"
+                        name="doctor_id"
+                        value="{{ doctor['doctor_id'] }}"
+                    >
+
+
+                    <input
+                        type="hidden"
+                        name="availability_id"
+                        value="{{ availability['availability_id'] }}"
+                    >
+
+
+
+                    <!-- =========================================
+                         APPOINTMENT
+                    ========================================== -->
+
+                    <div class="form-section">
+
+
+                        <div class="form-section-title">
+
+                            <div class="form-section-number">
+                                01
+                            </div>
+
+                            <h3>
+                                Appointment Schedule
+                            </h3>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Appointment Date
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="appointment_date"
+                                    value="{{ availability['available_date'] }}"
+                                    readonly
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Appointment Time
+                                </label>
+
+                                <input
+                                    type="time"
+                                    name="appointment_time"
+                                    value="{{ availability['start_time'] }}"
+                                    required
+                                >
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         PATIENT
+                    ========================================== -->
+
+                    <div class="form-section">
+
+
+                        <div class="form-section-title">
+
+                            <div class="form-section-number">
+                                02
+                            </div>
+
+                            <h3>
+                                Patient Details
+                            </h3>
+
+                        </div>
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Patient Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="patient_name"
+                                    value="{{ user['full_name'] }}"
+                                    placeholder="Enter patient name"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Phone Number
+                                </label>
+
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value="{{ user['phone'] }}"
+                                    placeholder="Enter phone number"
+                                    required
+                                >
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         PAYMENT
+                    ========================================== -->
+
+                    <div class="form-section">
+
+
+                        <div class="form-section-title">
+
+                            <div class="form-section-number">
+                                03
+                            </div>
+
+                            <h3>
+                                Payment Method
+                            </h3>
+
+                        </div>
+
+
+                        <div class="payment-options">
+
+
+                            <!-- CASH -->
+
+                            <div class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    id="cash-payment"
+                                    name="payment_method"
+                                    value="CASH"
+                                    required
+                                >
+
+
+                                <label
+                                    for="cash-payment"
+                                    class="payment-label"
+                                >
+
+                                    <div class="payment-icon">
+                                        ₹
+                                    </div>
+
+
+                                    <div class="payment-text">
+
+                                        <strong>
+                                            Cash Payment
+                                        </strong>
+
+                                        <span>
+                                            Pay at the clinic
+                                        </span>
+
+                                    </div>
+
+                                </label>
+
+                            </div>
+
+
+
+                            <!-- ONLINE -->
+
+                            <div class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    id="online-payment"
+                                    name="payment_method"
+                                    value="ONLINE"
+                                >
+
+
+                                <label
+                                    for="online-payment"
+                                    class="payment-label"
+                                >
+
+                                    <div class="payment-icon">
+                                        ◈
+                                    </div>
+
+
+                                    <div class="payment-text">
+
+                                        <strong>
+                                            Online Payment
+                                        </strong>
+
+                                        <span>
+                                            Pay securely using Cashfree
+                                        </span>
+
+                                    </div>
+
+                                </label>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         TOTAL
+                    ========================================== -->
+
+                    <div class="booking-total">
+
+                        <span>
+                            Consultation Fee
+                        </span>
+
+                        <strong>
+                            ₹{{ doctor["consultation_fee"] }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <!-- =========================================
+                         CONFIRM
+                    ========================================== -->
+
+                    <button
+                        type="submit"
+                        class="confirm-booking-btn"
+                    >
+
+                        Confirm Appointment
+                        →
+
+                    </button>
+
+
+                    <p class="booking-note">
+
+                        Your appointment details will be
+                        validated before confirmation.
+
+                        Online payments are securely
+                        processed through Cashfree.
+
+                    </p>
+
+
+                </form>
+
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+</main>
+
+
+
+<!-- =====================================================
+     CHATBOT BUTTON
+===================================================== -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+    aria-label="Open AI Health Assistant"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<script>
+
+function openChatbot() {
+
+    if (
+        typeof window.openChatbotWidget ===
+        "function"
+    ) {
+
+        window.openChatbotWidget();
+
+    }
+
+}
+
+</script>
+
+
+</body>
+
+</html>

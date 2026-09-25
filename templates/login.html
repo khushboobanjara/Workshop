@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Login - Sanjeevani Clinic</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="auth-container">
+
+    <div class="auth-card">
+
+        <h1>Sanjeevani Clinic</h1>
+
+        <h2>Login</h2>
+
+        {% if error %}
+
+            <div class="auth-error">
+                {{ error }}
+            </div>
+
+        {% endif %}
+
+
+        <form method="POST" action="/login">
+
+            <div class="form-group">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Password</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="auth-button"
+            >
+                Login
+            </button>
+
+        </form>
+
+
+        <p class="auth-link">
+
+            Don't have an account?
+
+            <a href="/register">
+                Create Account
+            </a>
+
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
