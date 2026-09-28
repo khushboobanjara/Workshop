@@ -1,93 +1,300 @@
-import os  
-import sys 
-from dataclasses import dataclass 
-import numpy as np 
-import pandas as pd 
-from sklearn.compose import ColumnTransformer 
-from sklearn.impute import SimpleImputer 
-from sklearn.pipeline import Pipeline 
-from sklearn.preprocessing import OneHotEncoder , OrdinalEncoder 
-from src.exception import CustomException 
-from src.logger import get_logger 
-logger = get_logger(__name__) 
-from src.utils import save_object 
+import os
+import sys
+from dataclasses import dataclass
 
-@dataclass 
+import numpy as np
+import pandas as pd
+
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+
+from src.exception import CustomException
+from src.logger import get_logger
+from src.utils import save_object
+
+
+logger = get_logger(__name__)
+
+
+@dataclass
 class DataTransformationConfig:
-    preprocessor_obj_file_path: str = os.path.join("artifacts" , "preprocessor.pkl") 
+    preprocessor_obj_file_path: str = os.path.join(
+        "artifacts", "preprocessor.pkl"
+    )
+
 
 class DataTransformation:
+
     def __init__(self):
-        self.data_transformation_config = DataTransformationConfig() 
+        self.data_transformation_config = DataTransformationConfig()
 
     def get_data_transformer_object(self):
-            try:
-                numerical_column = ['age','fever'] 
-                ordinal_column = ['cough'] 
-                onehot_columns = ['gender','city'] 
-                ##For fill Numerical data 
-                num_pipeline = Pipeline(steps = [('imputer' , SimpleImputer(strategy='mean'))])
-                ##For categorical data 
-                ordinal_pipeline = Pipeline(
-                    steps = [
-                        (
-                            "ordinal_encoder",
-                            OrdinalEncoder(categories = [['Mild','Strong']])
+        try:
+            numerical_columns = ["age", "fever"]
+            ordinal_columns = ["cough"]
+            onehot_columns = ["gender", "city"]
+
+            # Numerical preprocessing
+            numerical_pipeline = Pipeline(
+                steps=[
+                    (
+                        "imputer",
+                        SimpleImputer(strategy="mean")
+                    )
+                ]
+            )
+
+            # Ordinal preprocessing
+            # The order represents increasing cough severity.
+            ordinal_pipeline = Pipeline(
+                steps=[
+                    (
+                        "ordinal_encoder",
+                        OrdinalEncoder(
+                            categories=[
+                                [
+                                    "Mild",
+                                    "Moderate",
+                                    "Strong",
+                                    "Severe"
+                                ]
+                            ],
+                            handle_unknown="use_encoded_value",
+                            unknown_value=-1
                         )
-                    ]
+                    )
+                ]
+            )
+
+            # One-hot encoding for gender and city
+            onehot_pipeline = Pipeline(
+                steps=[
+                    (
+                        "onehot",
+                        OneHotEncoder(
+                            handle_unknown="ignore",
+                            sparse_output=False
+                        )
+                    )
+                ]
+            )
+
+            # Combine all preprocessing pipelines
+            preprocessor = ColumnTransformer(
+                transformers=[
+                    (
+                        "numerical",
+                        numerical_pipeline,
+                        numerical_columns
+                    ),
+                    (
+                        "ordinal",
+                        ordinal_pipeline,
+                        ordinal_columns
+                    ),
+                    (
+                        "categorical",
+                        onehot_pipeline,
+                        onehot_columns
+                    )
+                ],
+                remainder="drop"
+            )
+
+            logger.info(
+                "Preprocessor object created successfully"
+            )
+
+            return preprocessor
+
+        except Exception as e:
+            raise CustomException(e, sys)
+
+    def initiate_data_transformation(
+        self,
+        train_path: str,
+        test_path: str
+    ):
+        try:
+            # Load datasets
+            logger.info("Loading training and testing datasets")
+
+            train_df = pd.read_csv(train_path)
+            test_df = pd.read_csv(test_path)
+
+            logger.info(
+                f"Training data shape: {train_df.shape}"
+            )
+            logger.info(
+                f"Testing data shape: {test_df.shape}"
+            )
+
+            target_column = "has_covid"
+
+            required_columns = [
+                "age",
+                "gender",
+                "fever",
+                "cough",
+                "city",
+                target_column
+            ]
+
+            # Validate required columns
+            for column in required_columns:
+                if column not in train_df.columns:
+                    raise ValueError(
+                        f"Column '{column}' missing from training data"
+                    )
+
+                if column not in test_df.columns:
+                    raise ValueError(
+                        f"Column '{column}' missing from testing data"
+                    )
+
+            # Separate input and target features
+            X_train = train_df.drop(
+                columns=[target_column]
+            )
+
+            X_test = test_df.drop(
+                columns=[target_column]
+            )
+
+            y_train = train_df[target_column].map(
+                {"Yes": 1, "No": 0}
+            )
+
+            y_test = test_df[target_column].map(
+                {"Yes": 1, "No": 0}
+            )
+
+            # Validate target values
+            if y_train.isna().any():
+                raise ValueError(
+                    "Invalid target values in training data. "
+                    "Expected 'Yes' or 'No'."
                 )
-                ##gender ,city -->onehot encoding 
-                onehot_pipeline = Pipeline(
-                    steps = [("onehot", OneHotEncoder(handle_unknown='ignore', sparse_output=False))]
+
+            if y_test.isna().any():
+                raise ValueError(
+                    "Invalid target values in testing data. "
+                    "Expected 'Yes' or 'No'."
                 )
 
-                preprocessor = ColumnTransformer(
-                    transformers = [
-                        ('num_pipeline', num_pipeline, numerical_column),
-                        ('ordinal_pipeline', ordinal_pipeline, ordinal_column),
-                        ('onehot_pipeline', onehot_pipeline, onehot_columns) 
-                    ]
+            # Normalize cough values
+            # This handles differences in capitalization
+            # and accidental whitespace.
+            for dataframe in [X_train, X_test]:
+                dataframe["cough"] = (
+                    dataframe["cough"]
+                    .astype("string")
+                    .str.strip()
+                    .str.capitalize()
                 )
-                logger.info("preprocessor object created successfully...") 
-                return preprocessor 
-               
-            except Exception as e :
-                raise CustomException(e,sys) 
 
-    def initiate_data_transformation(self, train_path:str, test_path:str):
-            try:
-                train_df = pd.read_csv(train_path) 
-                test_df = pd.read_csv(test_path) 
-                logger.info("Train and test data loaded for transformation") 
-                target_column = "has_covid" 
-                input_feature_train_df = train_df.drop(columns=[target_column]) 
-                target_feature_train_df = train_df[target_column].map({"Yes":1 , "No":0}) 
+            logger.info(
+                "Input features and target variables separated"
+            )
 
-                input_feature_test_df = test_df.drop(columns=[target_column]) 
-                target_feature_test_df = test_df[target_column].map({"Yes":1 , "No":0}) 
+            # Create preprocessing object
+            preprocessor = self.get_data_transformer_object()
 
-                preprocessor_obj = self.get_data_transformer_object() 
-                logger.info("Applying preprocessing oon train and test data") 
-                input_feature_train_arr = preprocessor_obj.fit_transform(input_feature_train_df) 
-                input_feature_test_arr = preprocessor_obj.transform(input_feature_test_df) 
+            logger.info(
+                "Fitting preprocessor on training data"
+            )
 
-                train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
-                test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
+            # Fit and transform training data
+            X_train_transformed = preprocessor.fit_transform(
+                X_train
+            )
 
-                save_object(
-                    file_path=self.data_transformation_config.preprocessor_obj_file_path,
-                    obj = preprocessor_obj
-                )
-                logger.info("Preprcoessor bject saved as preprocessor.pkl")  
-                return(
-                    train_arr,
-                    test_arr,
-                    self.data_transformation_config.preprocessor_obj_file_path
-                )
-            except Exception as e :
-                raise  CustomException(e, sys) 
+            # Transform testing data
+            X_test_transformed = preprocessor.transform(
+                X_test
+            )
+
+            # Convert transformed data to NumPy arrays
+            X_train_transformed = np.asarray(
+                X_train_transformed,
+                dtype=float
+            )
+
+            X_test_transformed = np.asarray(
+                X_test_transformed,
+                dtype=float
+            )
+
+            # Combine features and target
+            train_array = np.c_[
+                X_train_transformed,
+                y_train.to_numpy()
+            ]
+
+            test_array = np.c_[
+                X_test_transformed,
+                y_test.to_numpy()
+            ]
+
+            # Create artifacts directory
+            os.makedirs(
+                os.path.dirname(
+                    self.data_transformation_config
+                    .preprocessor_obj_file_path
+                ),
+                exist_ok=True
+            )
+
+            # Save preprocessor
+            save_object(
+                file_path=(
+                    self.data_transformation_config
+                    .preprocessor_obj_file_path
+                ),
+                obj=preprocessor
+            )
+
+            logger.info(
+                "Preprocessor saved successfully"
+            )
+
+            logger.info(
+                f"Transformed training data shape: "
+                f"{train_array.shape}"
+            )
+
+            logger.info(
+                f"Transformed testing data shape: "
+                f"{test_array.shape}"
+            )
+
+            return (
+                train_array,
+                test_array,
+                self.data_transformation_config
+                .preprocessor_obj_file_path
+            )
+
+        except Exception as e:
+            logger.exception(
+                "Error occurred during data transformation"
+            )
+            raise CustomException(e, sys)
+
 
 if __name__ == "__main__":
-    obj = DataTransformation() 
-    obj.initiate_data_transformation('artifacts/train.csv', 'artifacts/test.csv')  
- 
+    obj = DataTransformation()
+
+    train_array, test_array, preprocessor_path = (
+        obj.initiate_data_transformation(
+            "artifacts/train.csv",
+            "artifacts/test.csv"
+        )
+    )
+
+    print("Data transformation completed successfully.")
+    print("Training array shape:", train_array.shape)
+    print("Testing array shape:", test_array.shape)
+    print("Preprocessor saved at:", preprocessor_path)

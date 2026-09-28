@@ -1059,82 +1059,67 @@
 
 
 <script>
+/* Cashfree SDK is loaded in the page head. */
 
 async function proceedToPayment() {
+    const button = document.getElementById("payButton");
+    const errorBox = document.getElementById("paymentError");
 
-    const button =
-        document.getElementById("payButton");
-
-    const errorBox =
-        document.getElementById("paymentError");
-
-
-    errorBox.style.display = "none";
-
-    errorBox.textContent = "";
-
-
-    button.disabled = true;
-
-    button.textContent =
-        "Opening Secure Payment...";
-
-
-    try {
-
-        const cashfree =
-            Cashfree({
-                mode: "sandbox"
-            });
-
-
-        await cashfree.checkout({
-
-            paymentSessionId:
-                "{{ payment_session_id }}",
-
-            redirectTarget:
-                "_self"
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "Cashfree checkout error:",
-            error
-        );
-
-
-        errorBox.textContent =
-            "Unable to open the payment gateway. Please try again.";
-
-        errorBox.style.display =
-            "block";
-
-
-        button.disabled = false;
-
-        button.textContent =
-            "Proceed to Secure Payment →";
-
+    if (!button || !errorBox) {
+        console.error("Payment button or error box is missing.");
+        return;
     }
 
+    errorBox.style.display = "none";
+    errorBox.textContent = "";
+    button.disabled = true;
+    button.textContent = "Opening Secure Payment...";
+
+    // Render the Jinja value safely as a JavaScript string.
+    const paymentSessionId = {{ payment_session_id | tojson }};
+
+    try {
+        if (typeof Cashfree !== "function") {
+            throw new Error("Cashfree SDK did not load. Refresh the page and try again.");
+        }
+
+        if (!paymentSessionId || typeof paymentSessionId !== "string") {
+            throw new Error("Payment session is missing. Please restart checkout.");
+        }
+
+        const cashfree = Cashfree({ mode: "sandbox" });
+
+        const result = await cashfree.checkout({
+            paymentSessionId: paymentSessionId,
+            redirectTarget: "_self"
+        });
+
+        console.log("Cashfree checkout result:", result);
+
+        // Cashfree can return an error without throwing an exception.
+        if (result && result.error) {
+            throw new Error(
+                result.error.message || "Cashfree could not start checkout."
+            );
+        }
+
+        // In hosted checkout, a successful initiation normally redirects
+        // the browser to the return URL configured by the backend.
+        if (result && result.paymentDetails) {
+            console.log("Cashfree payment details:", result.paymentDetails);
+        }
+    } catch (error) {
+        console.error("Cashfree checkout error:", error);
+        errorBox.textContent = error.message || "Unable to open the payment gateway. Please try again.";
+        errorBox.style.display = "block";
+        button.disabled = false;
+        button.textContent = "Proceed to Secure Payment →";
+    }
 }
-
-
 
 function openChatbot() {
-
-    /*
-       Chatbot widget can be connected here
-       when the shared chatbot component is
-       added to this page.
-    */
-
+    // Connect the shared chatbot component here when it is available.
 }
-
 </script>
 
 

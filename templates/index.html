@@ -1229,6 +1229,37 @@
         }
 
 
+
+        /* =====================================================
+           MEDICAL IMAGE ANALYSIS PANEL
+        ====================================================== */
+        .image-analysis-panel {
+            position: fixed; inset: 0; z-index: 1200;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px; background: rgba(10, 35, 31, .55);
+        }
+        .image-analysis-panel.open { display: flex; }
+        .image-analysis-card {
+            width: min(520px, 100%); max-height: 90vh; overflow-y: auto;
+            background: #fff; border-radius: 20px; padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.2);
+        }
+        .image-analysis-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+        .image-analysis-head h2 { margin:0; color:#20312e; font-size:20px; }
+        .image-analysis-close { border:0; background:#eef5f3; border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:20px; }
+        .image-analysis-card p { color:#71827d; font-size:13px; line-height:1.6; }
+        .image-upload-label { display:block; padding:20px; border:2px dashed #b9d8d1; border-radius:14px; text-align:center; cursor:pointer; color:#0f4c45; background:#f7fbfa; }
+        .image-upload-label input { display:block; width:100%; margin-top:12px; }
+        #imagePreview { display:none; max-width:100%; max-height:220px; margin:14px auto; border-radius:12px; }
+        .image-analyze-btn { width:100%; padding:12px; border:0; border-radius:11px; background:#0f8175; color:#fff; font-weight:700; cursor:pointer; margin-top:12px; }
+        .image-analyze-btn:disabled { opacity:.55; cursor:wait; }
+        #imageAnalysisResult { white-space:pre-wrap; color:#20312e; font-size:13px; line-height:1.7; margin-top:16px; }
+        .image-mcq-question { border:1px solid #d7e3df; border-radius:10px; padding:10px 12px; margin:10px 0; }
+        .image-mcq-question legend { color:#20312e; font-weight:700; padding:0 4px; font-size:13px; }
+        .image-mcq-question label { display:flex; align-items:center; gap:8px; padding:6px 2px; color:#334541; font-size:13px; cursor:pointer; }
+        .image-mcq-question input { accent-color:#0f8175; }
+        .image-analysis-warning { font-size:11px !important; background:#fff8ed; border:1px solid #f1dfc3; padding:10px; border-radius:10px; }
+
         /* =====================================================
            RESPONSIVE
         ====================================================== */
@@ -1499,6 +1530,16 @@
                 AI Health Chat
             </span>
 
+        </button>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openImageAnalysis()"
+        >
+            <span class="nav-icon">▧</span>
+            <span>Image Analysis</span>
         </button>
 
 
@@ -2317,6 +2358,32 @@
 
 
 <!-- =====================================================
+     IMAGE ANALYSIS (opened from the main sidebar)
+====================================================== -->
+<div id="imageAnalysisPanel" class="image-analysis-panel" role="dialog" aria-modal="true" aria-labelledby="imageAnalysisTitle">
+    <section class="image-analysis-card">
+        <div class="image-analysis-head">
+            <h2 id="imageAnalysisTitle">Injury &amp; Skin Image Analysis</h2>
+            <button type="button" class="image-analysis-close" onclick="closeImageAnalysis()" aria-label="Close">×</button>
+        </div>
+        <p>Upload a clear photo of an injury, wound, possible infection, or allergic skin reaction.</p>
+        <label class="image-upload-label" for="medicalImage">Choose an image (JPG, PNG, WEBP; max 5 MB)
+            <input id="medicalImage" type="file" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <img id="imagePreview" alt="Selected medical image preview">
+        <button id="analyzeImageButton" class="image-analyze-btn" type="button" onclick="analyzeMedicalImage()">Analyze Image</button>
+        <div id="imageAnalysisResult" aria-live="polite"></div>
+        <div id="imageFollowupArea" style="display:none; margin-top:16px;">
+            <h3 id="imageQuestion" style="margin:0 0 10px; color:#20312e; font-size:16px;"></h3>
+            <div id="imageOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <button id="sendImageFollowupButton" class="image-analyze-btn" type="button" onclick="sendMedicalImageFollowup()" style="display:none; margin-top:12px;">Submit Answer</button>
+        </div>
+        <p class="image-analysis-warning">This tool provides general information, not a medical diagnosis. Seek urgent care for severe symptoms or an emergency.</p>
+    </section>
+</div>
+
+
+<!-- =====================================================
      FLOATING AI BUTTON
 ====================================================== -->
 
@@ -2458,6 +2525,145 @@ const chatInput =
 const chatSendButton =
     document.getElementById("chatSendButton");
 
+
+/* =====================================================
+   DYNAMIC MEDICAL IMAGE ANALYSIS
+===================================================== */
+let initialMedicalImageAnalysis = "";
+let medicalImageHistory = [];
+let currentMedicalImageQuestion = null;
+let medicalImageFinished = false;
+
+function openImageAnalysis() {
+    document.getElementById("imageAnalysisPanel").classList.add("open");
+}
+function closeImageAnalysis() {
+    document.getElementById("imageAnalysisPanel").classList.remove("open");
+}
+function resetMedicalImageConversation() {
+    initialMedicalImageAnalysis = "";
+    medicalImageHistory = [];
+    currentMedicalImageQuestion = null;
+    medicalImageFinished = false;
+    document.getElementById("imageAnalysisResult").textContent = "";
+    document.getElementById("imageFollowupArea").style.display = "none";
+    document.getElementById("imageQuestion").textContent = "";
+    document.getElementById("imageOptions").innerHTML = "";
+    document.getElementById("sendImageFollowupButton").style.display = "none";
+}
+
+const medicalImageInput = document.getElementById("medicalImage");
+medicalImageInput.addEventListener("change", function () {
+    const file = this.files && this.files[0];
+    const preview = document.getElementById("imagePreview");
+    resetMedicalImageConversation();
+    if (!file) { preview.style.display = "none"; return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        this.value = "";
+        preview.style.display = "none";
+        document.getElementById("imageAnalysisResult").textContent = "Please choose a JPG, PNG, or WEBP image smaller than 5 MB.";
+        return;
+    }
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+});
+
+function displayMedicalImageResponse(data) {
+    const resultBox = document.getElementById("imageAnalysisResult");
+    const area = document.getElementById("imageFollowupArea");
+    const questionBox = document.getElementById("imageQuestion");
+    const optionsBox = document.getElementById("imageOptions");
+    const submitButton = document.getElementById("sendImageFollowupButton");
+    resultBox.textContent = data.response || "No response was returned.";
+    optionsBox.innerHTML = "";
+    questionBox.textContent = "";
+    currentMedicalImageQuestion = null;
+    if (data.is_final || !data.question) {
+        medicalImageFinished = true;
+        area.style.display = "none";
+        return;
+    }
+    medicalImageFinished = false;
+    currentMedicalImageQuestion = data.question;
+    questionBox.textContent = data.question;
+    (Array.isArray(data.options) ? data.options : []).forEach(option => {
+        const label = document.createElement("label");
+        label.style.cssText = "display:flex;align-items:center;gap:8px;padding:10px;border:1px solid #d7e3df;border-radius:9px;cursor:pointer;";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "dynamicMedicalAnswer";
+        radio.value = option;
+        const span = document.createElement("span");
+        span.textContent = option;
+        label.append(radio, span);
+        optionsBox.appendChild(label);
+    });
+    area.style.display = "block";
+    submitButton.style.display = "block";
+}
+
+async function analyzeMedicalImage() {
+    const file = medicalImageInput.files && medicalImageInput.files[0];
+    const button = document.getElementById("analyzeImageButton");
+    const resultBox = document.getElementById("imageAnalysisResult");
+    if (!file) { resultBox.textContent = "Please select an image first."; return; }
+    resetMedicalImageConversation();
+    const formData = new FormData();
+    formData.append("image", file);
+    button.disabled = true;
+    button.textContent = "Analyzing...";
+    resultBox.textContent = "Analyzing the image. Please wait...";
+    try {
+        const response = await fetch("/chat/image-analysis", { method: "POST", body: formData });
+        const data = await response.json();
+        if (response.status === 401) { window.location.href = "/login"; return; }
+        if (!response.ok) throw new Error(data.detail || "Unable to analyze the image.");
+        initialMedicalImageAnalysis = data.response || "";
+        displayMedicalImageResponse(data);
+    } catch (error) {
+        resultBox.textContent = error.message || "Image analysis is temporarily unavailable.";
+    } finally {
+        button.disabled = false;
+        button.textContent = "Analyze Image";
+    }
+}
+
+async function sendMedicalImageFollowup() {
+    const file = medicalImageInput.files && medicalImageInput.files[0];
+    const button = document.getElementById("sendImageFollowupButton");
+    const resultBox = document.getElementById("imageAnalysisResult");
+    if (!file || !initialMedicalImageAnalysis) { resultBox.textContent = "Analyze an image first."; return; }
+    if (medicalImageFinished || !currentMedicalImageQuestion) return;
+    const selected = document.querySelector('input[name="dynamicMedicalAnswer"]:checked');
+    if (!selected) { resultBox.textContent = "Please select an answer."; return; }
+    const answer = selected.value;
+    const question = currentMedicalImageQuestion;
+    const previousHistory = medicalImageHistory.slice();
+    medicalImageHistory.push({ role: "assistant", content: question });
+    medicalImageHistory.push({ role: "user", content: answer });
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("answer", answer);
+    formData.append("initial_analysis", initialMedicalImageAnalysis);
+    formData.append("history", JSON.stringify(medicalImageHistory));
+    button.disabled = true;
+    button.textContent = "Reviewing...";
+    resultBox.textContent = "Reviewing your answer...";
+    try {
+        const response = await fetch("/chat/image-followup", { method: "POST", body: formData });
+        const data = await response.json();
+        if (response.status === 401) { window.location.href = "/login"; return; }
+        if (!response.ok) throw new Error(data.detail || "Unable to process your answer.");
+        medicalImageHistory.push({ role: "assistant", content: data.response || "" });
+        displayMedicalImageResponse(data);
+    } catch (error) {
+        medicalImageHistory = previousHistory;
+        resultBox.textContent = error.message || "Follow-up is temporarily unavailable.";
+    } finally {
+        button.disabled = false;
+        button.textContent = "Submit Answer";
+    }
+}
 
 /* =====================================================
    OPEN CHATBOT
@@ -2715,6 +2921,53 @@ function addOptions(data) {
 
 
                     /*
+                       NEARBY PHARMACY:
+
+                       This option needs the browser's current
+                       location. The latitude/longitude are sent
+                       to the backend through the normal /chat
+                       route.
+                    */
+
+                    if (
+                        option.value ===
+                        "NEARBY_PHARMACY"
+                    ) {
+
+                        findNearbyPharmacies(
+                            button,
+                            optionsContainer
+                        );
+
+                        return;
+                    }
+
+
+                    /*
+                       LINK OPTIONS:
+
+                       If the backend attaches a "url"
+                       field (e.g. the chatbot's "Pay Now"
+                       button after creating a Cashfree
+                       order), open that real page instead
+                       of sending the value back into the
+                       chat as a message.
+                    */
+
+                    if (
+                        option.url
+                    ) {
+
+                        window.open(
+                            option.url,
+                            "_blank"
+                        );
+
+                        return;
+                    }
+
+
+                    /*
                        IMPORTANT:
 
                        Backend receives:
@@ -2759,6 +3012,191 @@ function addOptions(data) {
 
 
     scrollChat();
+}
+
+
+/* =====================================================
+   FIND NEARBY PHARMACIES
+===================================================== */
+
+function findNearbyPharmacies(
+    button,
+    optionsContainer
+) {
+
+    if (!navigator.geolocation) {
+
+        addMessage(
+            "Your browser does not support location access. Please open Google Maps manually to find a nearby pharmacy.",
+            "bot"
+        );
+
+        return;
+    }
+
+    const buttons =
+        optionsContainer.querySelectorAll(
+            "button"
+        );
+
+    buttons.forEach(
+        function(btn) {
+            btn.disabled = true;
+        }
+    );
+
+    setLoading(true);
+
+    addMessage(
+        "📍 Getting your current location...",
+        "bot"
+    );
+
+    navigator.geolocation.getCurrentPosition(
+
+        async function(position) {
+
+            const latitude =
+                position.coords.latitude;
+
+            const longitude =
+                position.coords.longitude;
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/chat",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify(
+                                {
+                                    message:
+                                        "__NEARBY_PHARMACY__|" +
+                                        latitude +
+                                        "|" +
+                                        longitude
+                                }
+                            )
+                        }
+                    );
+
+                if (
+                    response.status === 401
+                ) {
+
+                    window.location.href =
+                        "/login";
+
+                    return;
+                }
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Nearby pharmacy request failed: " +
+                        response.status
+                    );
+                }
+
+                const data =
+                    await response.json();
+
+                if (data.response) {
+
+                    addMessage(
+                        data.response,
+                        "bot"
+                    );
+
+                }
+
+                addOptions(data);
+
+            } catch (error) {
+
+                console.error(
+                    "Nearby pharmacy error:",
+                    error
+                );
+
+                addMessage(
+                    "Unable to find nearby pharmacies right now. Please try again.",
+                    "bot"
+                );
+
+            } finally {
+
+                setLoading(false);
+
+                chatInput.focus();
+
+            }
+        },
+
+        function(error) {
+
+            console.error(
+                "Geolocation error:",
+                error
+            );
+
+            let message =
+                "Location permission is required to find nearby pharmacies.";
+
+            if (
+                error.code ===
+                error.PERMISSION_DENIED
+            ) {
+
+                message =
+                    "Please allow location access in your browser and click 'Find Nearby Pharmacy' again.";
+
+            } else if (
+                error.code ===
+                error.TIMEOUT
+            ) {
+
+                message =
+                    "We could not get your location in time. Please make sure location access is allowed for 127.0.0.1 and try again.";
+
+            }
+
+            addMessage(
+                message,
+                "bot"
+            );
+
+            buttons.forEach(
+                function(btn) {
+                    btn.disabled = false;
+                }
+            );
+
+            setLoading(false);
+
+            if (chatInput) {
+                chatInput.focus();
+            }
+
+        },
+
+        {
+            /*
+               Use normal browser/network location first.
+               High-accuracy GPS can take too long on desktops.
+            */
+            enableHighAccuracy: false,
+            timeout: 30000,
+            maximumAge: 300000
+        }
+    );
 }
 
 

@@ -204,6 +204,7 @@ def get_user_appointments(
     query = """
         SELECT
             a.appointment_id,
+            a.doctor_id,
             a.appointment_date,
             a.appointment_time,
             a.status,

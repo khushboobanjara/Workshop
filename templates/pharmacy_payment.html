@@ -1,141 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Complete Payment | Sanjeevani Clinic</title>
 
-    <title>Payment - Sanjeevani Clinic</title>
-
-    <script
-        src="https://sdk.cashfree.com/js/v3/cashfree.js">
-    </script>
+    <!-- Cashfree SDK -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Inter, Arial, sans-serif;
+        }
 
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
+            background: #f7f8f5;
+            color: #20312e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 100px auto;
-            padding: 30px;
-        }
-
-        .card {
+        .payment-card {
+            width: 100%;
+            max-width: 480px;
             background: white;
-            padding: 40px;
-            border-radius: 12px;
+            border: 1px solid #e6ece9;
+            border-radius: 18px;
+            padding: 35px;
             text-align: center;
+            box-shadow: 0 8px 30px rgba(15, 76, 69, 0.08);
+        }
 
-            box-shadow:
-                0 4px 15px rgba(0,0,0,0.08);
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 18px;
+            border-radius: 15px;
+            background: #dcefe9;
+            color: #0f4c45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
         }
 
         h1 {
-            color: #1769aa;
+            font-size: 25px;
+            margin-bottom: 10px;
+            color: #20312e;
+        }
+
+        .subtitle {
+            color: #71807c;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .order-box {
+            background: #f7faf8;
+            border: 1px solid #e6ece9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .order-label {
+            color: #71807c;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .order-id {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        .amount-label {
+            color: #71807c;
+            font-size: 13px;
+            margin-bottom: 5px;
         }
 
         .amount {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 25px 0;
+            color: #0f4c45;
+            font-size: 32px;
+            font-weight: 700;
         }
 
-        #payment-button {
-            padding: 14px 30px;
+        .pay-button {
+            width: 100%;
             border: none;
-            border-radius: 7px;
-
-            background: #198754;
+            border-radius: 10px;
+            background: #0f4c45;
             color: white;
-
-            font-size: 17px;
+            padding: 15px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
-        #payment-button:hover {
-            background: #157347;
+        .pay-button:hover:not(:disabled) {
+            background: #0b3e38;
         }
 
+        .pay-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .status {
+            min-height: 24px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #667570;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 18px;
+            color: #0f4c45;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .secure-note {
+            margin-top: 25px;
+            padding: 12px;
+            background: #f0f8f5;
+            border-radius: 9px;
+            color: #47716a;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 500px) {
+            .payment-card {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+        }
     </style>
-
 </head>
-
 
 <body>
 
+    <main class="payment-card">
 
-<div class="container">
+        <!-- Clinic Logo -->
+        <div class="logo">+</div>
 
-    <div class="card">
+        <h1>Complete Your Payment</h1>
 
-        <h1>
-            Complete Payment
-        </h1>
-
-        <p>
-            Pharmacy Order #{{ order.order_id }}
+        <p class="subtitle">
+            Your pharmacy order is ready.
+            Complete your payment securely using Cashfree.
         </p>
 
-        <div class="amount">
+        <!-- Order Details -->
+        <div class="order-box">
 
-            ₹{{ "%.2f"|format(order.total_amount) }}
+            <div class="order-label">Order ID</div>
+
+            <div class="order-id">
+                #{{ order["order_id"] }}
+            </div>
+
+            <div class="amount-label">Total Amount</div>
+
+            <div class="amount">
+                ₹{{ "%.2f"|format(order["total_amount"]|float) }}
+            </div>
 
         </div>
 
-        <p>
-            You will be redirected to
-            Cashfree secure payment.
-        </p>
-
+        <!-- Payment Button -->
         <button
-            id="payment-button"
+            id="payButton"
+            class="pay-button"
+            type="button"
         >
-            Pay Now
+            Pay Securely with Cashfree
         </button>
 
-    </div>
+        <!-- Payment Status -->
+        <p
+            id="status"
+            class="status"
+            role="status"
+            aria-live="polite"
+        ></p>
 
-</div>
+        <!-- Order Link -->
+        <a
+            class="back-link"
+            href="/pharmacy/order/{{ order['order_id'] }}"
+        >
+            View Order Details
+        </a>
 
+        <!-- Security Information -->
+        <div class="secure-note">
+            🔒 Your payment is processed securely through Cashfree.
+            Do not refresh the page while checkout is opening.
+        </div>
 
-<script>
+    </main>
 
-    const cashfree = Cashfree({
-        mode: "sandbox"
-    });
+    <script>
+        // Values supplied by FastAPI and rendered by Jinja2
+        const sessionId = {{ payment_session_id | tojson }};
+        const mode = {{ cashfree_mode | default("sandbox") | tojson }};
 
+        const button = document.getElementById("payButton");
+        const status = document.getElementById("status");
 
-    document
-        .getElementById("payment-button")
-        .addEventListener(
-            "click",
-            function () {
+        // Initialize Cashfree
+        const cashfree = Cashfree({
+            mode: mode
+        });
 
-                cashfree.checkout({
+        // Open Cashfree checkout when the button is clicked
+        button.addEventListener("click", async function () {
 
-                    paymentSessionId:
-                        "{{ payment_session_id }}",
+            if (!sessionId) {
+                status.textContent =
+                    "Payment session is missing. Please contact support.";
+                return;
+            }
 
+            if (typeof Cashfree === "undefined") {
+                status.textContent =
+                    "Cashfree could not be loaded. Please refresh and try again.";
+                return;
+            }
+
+            button.disabled = true;
+            status.textContent = "Opening secure checkout...";
+
+            try {
+                await cashfree.checkout({
+                    paymentSessionId: sessionId,
                     redirectTarget: "_self"
-
                 });
 
+            } catch (error) {
+                console.error("Cashfree checkout error:", error);
+
+                status.textContent =
+                    "Unable to open payment checkout. Please try again.";
+
+                button.disabled = false;
             }
-        );
-
-</script>
-
+        });
+    </script>
 
 </body>
-
 </html>

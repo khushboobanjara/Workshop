@@ -678,6 +678,8 @@ def update_pharmacy_payment_success(
             raise ValueError(
                 "Pharmacy order not found."
             )
+        if order["payment_method"] != "ONLINE":
+            raise ValueError("This order is not an online payment order.")
 
         # -------------------------------------------------
         # PREVENT DUPLICATE STOCK REDUCTION

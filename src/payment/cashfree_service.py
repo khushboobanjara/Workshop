@@ -31,20 +31,17 @@ CASHFREE_ENVIRONMENT = os.getenv(
 
 # =========================================================
 # VALIDATE CONFIGURATION
+#
+# NOTE: We no longer raise at import time. Cashfree is only
+# needed for ONLINE payments; CASH payments (and the chatbot
+# itself) must keep working even if these keys are missing.
+# The error is raised lazily, only when someone actually
+# tries to create/check an online payment.
 # =========================================================
 
-if not CASHFREE_CLIENT_ID:
-
-    raise RuntimeError(
-        "CASHFREE_CLIENT_ID is not configured in .env"
-    )
-
-
-if not CASHFREE_CLIENT_SECRET:
-
-    raise RuntimeError(
-        "CASHFREE_CLIENT_SECRET is not configured in .env"
-    )
+CASHFREE_CONFIGURED = bool(
+    CASHFREE_CLIENT_ID and CASHFREE_CLIENT_SECRET
+)
 
 
 # =========================================================
@@ -52,6 +49,15 @@ if not CASHFREE_CLIENT_SECRET:
 # =========================================================
 
 def get_cashfree_client():
+
+    if not CASHFREE_CONFIGURED:
+
+        raise RuntimeError(
+            "Online payment is not configured. "
+            "Set CASHFREE_CLIENT_ID and CASHFREE_CLIENT_SECRET "
+            "in .env to enable online payments, or use CASH "
+            "payment instead."
+        )
 
     if CASHFREE_ENVIRONMENT == "PRODUCTION":
 

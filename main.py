@@ -1,8 +1,7 @@
 import os
+import json
 import sys
 import uvicorn
-
-from uuid import uuid4
 
 from datetime import date, time
 
@@ -11,7 +10,10 @@ from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     Form,
-    Request
+    Request,
+    UploadFile,
+    File,
+    HTTPException
 )
 
 from fastapi.responses import (
@@ -20,7 +22,6 @@ from fastapi.responses import (
 )
 
 from fastapi.staticfiles import StaticFiles
-
 from fastapi.templating import Jinja2Templates
 
 from starlette.middleware.sessions import SessionMiddleware
@@ -69,8 +70,6 @@ from auth.auth_service import (
 # =========================================================
 # DATABASE IMPORTS
 # =========================================================
-
-from src.database.database import get_db_connection
 
 from src.database.doctor_repository import (
     find_doctors_by_specialization,
@@ -214,7 +213,10 @@ def require_login(request: Request):
 # HOME
 # =========================================================
 
-@app.get("/", response_class=HTMLResponse)
+@app.get(
+    "/",
+    response_class=HTMLResponse
+)
 async def home(request: Request):
 
     user = require_login(request)
@@ -222,48 +224,13 @@ async def home(request: Request):
     if isinstance(user, RedirectResponse):
         return user
 
-    try:
-
-        appointments = get_user_appointments(
-            user["user_id"]
-        )
-
-        # Only show active/upcoming appointments
-        upcoming_appointments = [
-            appointment
-            for appointment in appointments
-            if appointment["status"] in (
-                "BOOKED",
-                "CONFIRMED"
-            )
-        ]
-
-        # Sort by date and time
-        upcoming_appointments.sort(
-            key=lambda appointment: (
-                appointment["appointment_date"],
-                appointment["appointment_time"]
-            )
-        )
-
-        # Show only first 3
-        upcoming_appointments = upcoming_appointments[:3]
-
-    except Exception as e:
-
-        logger.exception(
-            "Failed to load dashboard appointments: %s",
-            e
-        )
-
-        upcoming_appointments = []
+    logger.info("Home page accessed...")
 
     return templates.TemplateResponse(
         request,
         "index.html",
         {
-            "user": user,
-            "upcoming_appointments": upcoming_appointments
+            "user": user
         }
     )
 
@@ -657,12 +624,10 @@ async def pretrained_nlp_form(
 # CHATBOT
 # =========================================================
 
-# =========================================================
-# CHATBOT
-# =========================================================
-
 @app.post("/chat")
-async def chat(request: Request):
+async def chat(
+    request: Request
+):
 
     user = require_login(request)
 
@@ -673,58 +638,67 @@ async def chat(request: Request):
 
         data = await request.json()
 
-        if not isinstance(data, dict):
-
-            return {
-                "success": False,
-                "response": "Invalid chatbot request."
-            }
-
-        message = str(
-            data.get("message", "") or ""
+        message = data.get(
+            "message",
+            ""
         ).strip()
 
         if not message:
 
             return {
-                "success": False,
-                "response": "Please enter a message."
+                "response": (
+                    "Please enter a message."
+                )
             }
 
-        # Pass the authenticated user into the chatbot.
-        # The chatbot can then keep booking state tied to the
-        # correct logged-in patient.
         response = await process_message(
-            message,
-            conversation_history=[],
-            user=user
+            message
         )
 
-        # service.py can return structured data such as:
-        # response + type + options. Return it unchanged so the
-        # frontend can render doctor/date/time/medicine options.
-        if isinstance(response, dict):
-
-            return response
-
         return {
-            "success": True,
-            "response": str(response)
+            "response": response
         }
 
     except Exception as e:
 
-        logger.exception(
+        logger.error(
             f"Chatbot error: {str(e)}"
         )
 
         return {
-            "success": False,
             "response": (
                 "Sorry, I am unable to process "
                 "your request right now."
             )
         }
+
+
+# =========================================================
+# INJURY / INFECTION / ALLERGY IMAGE ANALYSIS
+# ===============================================def _medical_image_system_prompt() -> str:
+    return (
+        "You are a cautious healthcare information assistant for a clinic website. Review only visible "
+        "injuries, wounds, burns, bruises, rashes, and possible skin concerns. If unrelated or unclear, say "
+        "this feature supports only those concerns and do not guess.\n\n"
+        "Return ONLY valid JSON with this schema: "
+        "{\"headings\":{\"1. Visible observations\":\"...\","
+        "\"2. Possible explanations\":\"...\",\"3. General care\":\"...\","
+        "\"4. When to seek care\":\"...\"},"
+        "\"follow_up_question\":null or one question,\"options\":[...]} .\n"
+        "For an initial review, include all four headings. Decide whether one medically useful follow-up is needed. "
+        "If yes, ask exactly one question and provide 2-5 short answer options (include Not sure where useful). "
+        "If no, set follow_up_question to null and options to []. For follow-up turns, use the image and conversation "
+        "history, do not repeat answered questions, and either ask one useful next question or finish with guidance. "
+        "When finishing, set follow_up_question to null and options to [].\n\n"
+        "Describe only visible features such as color, shape, location, and whether the skin appears broken. Do not "
+        "infer timing, cause, depth, healing, infection, or absence of infection from a photo. Possibilities are not "
+        "a diagnosis. Do not prescribe medicines or dosages. Give conservative, relevant first-aid advice and explain "
+        "warning signs. Recommend urgent care for trouble breathing, facial/throat swelling, uncontrolled bleeding, "
+        "deep/gaping wounds, severe burns, rapidly spreading redness, fever with worsening skin symptoms, or severe pain. "
+        "For emergencies, advise local emergency services. Never infer or suggest self-harm, intent, mental state, or "
+        "the cause of an injury from an image. Be calm and clear that this is not a diagnosis and cannot replace a clinician."
+    )
+
 
 # =========================================================
 # DOCTORS
@@ -1107,13 +1081,12 @@ async def book_appointment(
         )
 
         # -------------------------------------------------
-        # CashFree Return URL
+        # Return URL
         # -------------------------------------------------
 
         return_url = (
-        "http://127.0.0.1:8000"
-        "/payments/cashfree/return"
-        f"?order_id={cashfree_order_id}"
+            "http://localhost:8000/"
+            "payments/cashfree/return"
         )
 
         # -------------------------------------------------
@@ -1208,18 +1181,19 @@ async def book_appointment(
 
     except Exception as e:
 
-        logger.exception(
-        "Cashfree appointment payment initialization failed"
+        logger.error(
+            f"Cashfree order creation failed: "
+            f"{str(e)}"
         )
 
         return HTMLResponse(
             content=(
-                "Appointment was created, but online payment "
-                "could not be initialized. Check the terminal "
-                "for the exact Cashfree error."
+                "Appointment was created, but "
+                "online payment could not be "
+                "initialized. Please try again."
             ),
             status_code=500
-    )
+        )
 
 
 # =========================================================
@@ -1444,39 +1418,6 @@ async def cashfree_return(
 
 
 # =========================================================
-# PROFILE - PHARMACY ORDERS HELPER
-# =========================================================
-
-def get_user_pharmacy_orders(user_id):
-
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-
-    try:
-        cursor.execute("""
-            SELECT
-                order_id,
-                total_amount,
-                delivery_method,
-                address,
-                phone,
-                payment_method,
-                payment_status,
-                order_status,
-                created_at
-            FROM pharmacy_orders
-            WHERE user_id = %s
-            ORDER BY created_at DESC
-        """, (user_id,))
-
-        return cursor.fetchall()
-
-    finally:
-        cursor.close()
-        connection.close()
-
-
-# =========================================================
 # PROFILE
 # =========================================================
 
@@ -1497,17 +1438,12 @@ async def profile_page(
         user["user_id"]
     )
 
-    pharmacy_orders = get_user_pharmacy_orders(
-        user["user_id"]
-    )
-
     return templates.TemplateResponse(
         request,
         "profile.html",
         {
             "user": user,
-            "appointments": appointments,
-            "pharmacy_orders": pharmacy_orders
+            "appointments": appointments
         }
     )
 
@@ -1767,6 +1703,7 @@ async def reschedule_user_appointment(
 # =========================================================
 # PHARMACY
 # =========================================================
+
 @app.get(
     "/pharmacy",
     response_class=HTMLResponse
@@ -1780,14 +1717,12 @@ async def pharmacy_page(
     if isinstance(user, RedirectResponse):
         return user
 
-    medicines = get_all_medicines()
-
     return templates.TemplateResponse(
         request,
         "pharmacy.html",
         {
             "user": user,
-            "medicines": medicines,
+            "medicines": [],
             "search_term": ""
         }
     )
@@ -2131,7 +2066,7 @@ async def pharmacy_place_order(
     patient_name = (form.get("patient_name") or "").strip()
     phone = (form.get("phone") or "").strip()
     delivery_method = (form.get("delivery_method") or "").strip().upper()
-    address = (form.get("delivery_address") or form.get("address") or "").strip()
+    address = (form.get("address") or "").strip()
     payment_method = (form.get("payment_method") or "").strip().upper()
 
     if not patient_name:
@@ -2186,15 +2121,10 @@ async def pharmacy_place_order(
     # -----------------------------------------------------
     if payment_method == "ONLINE":
 
-        # Cashfree order IDs must be unique for every payment attempt.
-        # This also prevents a previous failed/retried attempt from
-        # reusing an already-created Cashfree order.
-        cashfree_order_id = (
-            f"pharmacy_{order_id}_{uuid4().hex[:10]}"
-        )
+        cashfree_order_id = f"pharmacy_{order_id}"
 
         return_url = (
-            "http://127.0.0.1:8000"
+            "http://localhost:8000"
             "/pharmacy/payment/return"
             f"?order_id={order_id}"
         )
@@ -2210,27 +2140,6 @@ async def pharmacy_place_order(
                 return_url=return_url
             )
 
-            logger.info(
-                "Pharmacy Cashfree order created: %s",
-                cashfree_order["order_id"]
-            )
-
-        except Exception as e:
-            logger.exception(
-                "Cashfree pharmacy order creation failed: %s",
-                e
-            )
-            return HTMLResponse(
-                content=(
-                    "Unable to create Cashfree payment order. "
-                    "Check the server terminal for the exact error."
-                ),
-                status_code=500
-            )
-
-        # Save the Cashfree identifiers separately so a database
-        # error is not confused with a Cashfree API error.
-        try:
             save_pharmacy_cashfree_order(
                 order_id=order_id,
                 cashfree_order_id=cashfree_order["order_id"],
@@ -2239,15 +2148,10 @@ async def pharmacy_place_order(
 
         except Exception as e:
             logger.exception(
-                "Cashfree order was created but could not be saved "
-                "to pharmacy_orders: %s",
-                e
+                f"Cashfree pharmacy order error: {e}"
             )
             return HTMLResponse(
-                content=(
-                    "Cashfree order was created, but the payment "
-                    "information could not be saved. Check the server terminal."
-                ),
+                "Unable to start online payment.",
                 status_code=500
             )
 
@@ -2395,12 +2299,6 @@ async def pharmacy_cashfree_return(
                     final_status = "FAILED"
                     break
 
-    logger.info(
-        "Pharmacy Cashfree order %s payment status: %s",
-        cashfree_order_id,
-        final_status
-    )
-
     if final_status == "PAID":
         update_pharmacy_payment_success(
             order_id=order_id,
@@ -2446,4 +2344,3 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
-

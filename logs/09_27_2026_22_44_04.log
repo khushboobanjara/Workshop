@@ -1,0 +1,8 @@
+[2026-09-27 22:44:34,141] 496 main -INFO -Screening request received from user 1
+[2026-09-27 22:44:34,148] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-09-27 22:44:34,455] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:44:34,455] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:44:50,853] 496 main -INFO -Screening request received from user 1
+[2026-09-27 22:44:50,856] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-09-27 22:44:50,877] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:44:50,877] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]

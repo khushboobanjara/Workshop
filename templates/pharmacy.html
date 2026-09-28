@@ -681,6 +681,31 @@
 
         }
 
+
+        /* Nearby pharmacy fallback */
+        .nearby-pharmacy-box {
+            margin-top: 22px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: #f7fbfa;
+            text-align: left;
+        }
+        .nearby-pharmacy-box h4 { margin: 0 0 8px; color: var(--text); font-size: 15px; }
+        .nearby-pharmacy-box p { margin: 0 0 12px; color: var(--text-light); font-size: 12px; line-height: 1.5; }
+        .nearby-search-btn, .nearby-card-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 0; border-radius: 9px; padding: 10px 14px;
+            background: var(--primary); color: #fff; font: inherit;
+            font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer;
+        }
+        .nearby-search-btn:disabled { opacity: .65; cursor: wait; }
+        .nearby-results { display: grid; gap: 10px; margin-top: 14px; }
+        .nearby-result-card { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
+        .nearby-result-card strong { display: block; margin-bottom: 5px; font-size: 13px; }
+        .nearby-result-card p { margin-bottom: 9px; }
+        .nearby-error { color: #a83232 !important; margin-top: 10px !important; }
+
     </style>
 
 </head>
@@ -1115,6 +1140,9 @@
 
                             <div class="medicine-buttons">
 
+                                {% if medicine["stock_quantity"] <= 0 %}
+                                    <button type="button" class="nearby-search-btn" data-medicine="{{ medicine['medicine_name'] | e }}" onclick="findNearbyPharmacies(this)">Find Nearby</button>
+                                {% endif %}
 
                                 <a
                                     href="/pharmacy/medicine/{{ medicine['medicine_id'] }}"
@@ -1193,6 +1221,13 @@
                         generic name or category.
                     </p>
 
+                    <div class="nearby-pharmacy-box">
+                        <h4>Medicine not available?</h4>
+                        <p>Find nearby pharmacies and contact them to confirm whether they have this medicine.</p>
+                        <button type="button" class="nearby-search-btn" data-medicine="{{ search_term | e }}" onclick="findNearbyPharmacies(this)">Find Nearby Pharmacies</button>
+                        <div class="nearby-results" aria-live="polite"></div>
+                    </div>
+
                 {% else %}
 
                     <h3>
@@ -1254,6 +1289,92 @@
 </button>
 
 
+
+<script>
+async function findNearbyPharmacies(button) {
+    const results = button.parentElement.querySelector(".nearby-results") ||
+        button.closest(".empty-pharmacy")?.querySelector(".nearby-results") ||
+        button.closest(".medicine-card")?.querySelector(".nearby-results");
+    let target = results || button.closest(".empty-pharmacy")?.querySelector(".nearby-results") ||
+        button.closest(".medicine-card")?.querySelector(".nearby-results");
+    if (!target) {
+        target = document.createElement("div");
+        target.className = "nearby-results";
+        button.insertAdjacentElement("afterend", target);
+    }
+    const medicineName = button.dataset.medicine || "medicine";
+    button.disabled = true;
+    button.textContent = "Finding nearby pharmacies...";
+    if (target) target.innerHTML = '<p>Requesting your location...</p>';
+
+    if (!navigator.geolocation) {
+        if (target) target.innerHTML = '<p class="nearby-error">Your browser does not support location access.</p>';
+        button.disabled = false;
+        button.textContent = "Find Nearby Pharmacies";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+            const response = await fetch("/pharmacy/nearby", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    medicine_name: medicineName
+                })
+            });
+            const data = await response.json();
+            if (!target) return;
+            if (!data.success) {
+                target.innerHTML = `<p class="nearby-error">${escapeNearbyText(data.response || "Unable to find pharmacies.")}</p>`;
+                return;
+            }
+            let html = `<p>${escapeNearbyText(data.response || "Nearby pharmacies:")}</p>`;
+            if (data.pharmacies && data.pharmacies.length) {
+                html += data.pharmacies.map((p, i) => `
+                    <div class="nearby-result-card">
+                        <strong>${i + 1}. ${escapeNearbyText(p.name || "Pharmacy")}</strong>
+                        <p>${escapeNearbyText(p.address || "Address unavailable")}</p>
+                        <a class="nearby-card-link" href="${safeMapsUrl(p.google_maps_url)}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                    </div>`).join("");
+            } else if (data.fallback_url) {
+                html += `<a class="nearby-card-link" href="${safeMapsUrl(data.fallback_url)}" target="_blank" rel="noopener noreferrer">Search pharmacies on Google Maps</a>`;
+            }
+            target.innerHTML = html;
+        } catch (error) {
+            console.error("Nearby pharmacy error:", error);
+            if (target) target.innerHTML = '<p class="nearby-error">Could not load nearby pharmacies. Please try again.</p>';
+        } finally {
+            button.disabled = false;
+            button.textContent = "Find Nearby Pharmacies";
+        }
+    }, (error) => {
+        let message = "Location access was denied. Allow location permission in your browser and try again.";
+        if (error.code === error.POSITION_UNAVAILABLE) message = "Your current location is unavailable. Try again or enable device location.";
+        if (error.code === error.TIMEOUT) message = "Location request timed out. Please try again.";
+        if (target) target.innerHTML = `<p class="nearby-error">${escapeNearbyText(message)}</p>`;
+        button.disabled = false;
+        button.textContent = "Find Nearby Pharmacies";
+    }, {enableHighAccuracy: true, timeout: 12000, maximumAge: 60000});
+}
+
+function escapeNearbyText(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[char]));
+}
+
+function safeMapsUrl(value) {
+    try {
+        const url = new URL(value, window.location.origin);
+        return ["https:", "http:"].includes(url.protocol) ? url.href : "#";
+    } catch (_) {
+        return "#";
+    }
+}
+</script>
 
 <script>
 

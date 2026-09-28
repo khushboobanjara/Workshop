@@ -1,0 +1,13 @@
+[2026-09-27 22:34:49,232] 496 main -INFO -Screening request received from user 1
+[2026-09-27 22:34:49,241] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-09-27 22:34:49,585] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Severe'] in column 0 during transform]
+[2026-09-27 22:34:49,585] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Severe'] in column 0 during transform]
+[2026-09-27 22:35:06,686] 450 main -INFO -Predict form page accessed.....
+[2026-09-27 22:35:20,724] 496 main -INFO -Screening request received from user 1
+[2026-09-27 22:35:20,730] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-09-27 22:35:20,754] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:35:20,754] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:35:30,971] 496 main -INFO -Screening request received from user 1
+[2026-09-27 22:35:30,976] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-09-27 22:35:31,000] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
+[2026-09-27 22:35:31,000] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]

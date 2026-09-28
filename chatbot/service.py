@@ -1,6 +1,8 @@
 # chatbot/service.py
-
+import os
+import requests
 import inspect
+import logging
 import re
 from datetime import datetime, date, time
 from difflib import SequenceMatcher
@@ -11,7 +13,8 @@ from difflib import SequenceMatcher
 # ============================================================
 
 from chatbot.llm import generate_response
-from chatbot.router import detect_intent
+from chatbot.router import detect_intent, is_greeting
+from chatbot.prompts import SYSTEM_PROMPT
 
 
 # ============================================================
@@ -27,12 +30,21 @@ from src.database.doctor_repository import (
 from src.database.appointment_repository import (
     create_appointment,
     is_slot_booked,
-    get_user_appointments
+    get_user_appointments,
+    cancel_appointment,
+    reschedule_appointment,
+    save_cashfree_order
+)
+
+from src.payment.cashfree_service import (
+    create_cashfree_order,
+    CASHFREE_CONFIGURED
 )
 
 from src.database.pharmacy_repository import (
     get_all_medicines,
-    search_medicines
+    search_medicines,
+    add_to_cart
 )
 
 
@@ -73,6 +85,48 @@ booking_state = {
     "available_dates": [],
     "available_slots": []
 }
+
+
+# ============================================================
+# PENDING ACTION STATES
+# (cancel / reschedule / pharmacy-selection follow-ups)
+# ============================================================
+
+pending_states = {}
+
+
+def _empty_pending_state():
+
+    return {
+        "action": None,
+        "step": None,
+        "appointments": [],
+        "appointment_id": None,
+        "doctor_id": None,
+        "doctor_name": None,
+        "available_dates": [],
+        "available_slots": [],
+        "appointment_date": None,
+        "appointment_time": None,
+        "medicines": []
+    }
+
+
+def _get_pending_state(user=None):
+
+    key = _get_user_key(user)
+
+    if key not in pending_states:
+        pending_states[key] = _empty_pending_state()
+
+    return pending_states[key]
+
+
+def _reset_pending_state(user=None):
+
+    key = _get_user_key(user)
+
+    pending_states[key] = _empty_pending_state()
 
 
 # ============================================================
@@ -327,18 +381,32 @@ async def _generate_llm_response(
 ):
 
     """
-    Calls generate_response correctly.
+    Calls generate_response with the REAL medical-assistant
+    system prompt (chatbot/prompts.SYSTEM_PROMPT), and passes
+    the user's message as a proper "user" role turn appended
+    to any prior conversation history.
 
-    Important:
-    generate_response is async in the current project,
-    so it must be awaited.
+    Previously this passed the raw user message as the system
+    prompt and never included SYSTEM_PROMPT at all, which is
+    why general/symptom questions got generic or off-target
+    answers - the model had no medical-safety instructions and
+    often no actual user turn to respond to.
     """
 
     try:
 
-        result = generate_response(
-            message,
+        messages = list(
             conversation_history or []
+        )
+
+        messages.append({
+            "role": "user",
+            "content": message
+        })
+
+        result = generate_response(
+            SYSTEM_PROMPT,
+            messages
         )
 
         result = await _resolve_result(
@@ -346,26 +414,6 @@ async def _generate_llm_response(
         )
 
         return result
-
-    except TypeError:
-
-        try:
-
-            result = generate_response(
-                message
-            )
-
-            result = await _resolve_result(
-                result
-            )
-
-            return result
-
-        except Exception:
-
-            return (
-                "Hello! How can I help you today?"
-            )
 
     except Exception:
 
@@ -937,6 +985,49 @@ def _build_doctor_options(doctors):
 # DATE OPTIONS
 # ============================================================
 
+def _filter_booked_slots(
+    doctor_id,
+    rows
+):
+
+    """
+    Removes availability rows whose exact (date, start_time)
+    is already booked, so a taken slot is never shown to the
+    user as "Available" in the first place - instead of only
+    being caught after they've re-entered their name, phone,
+    and payment method.
+    """
+
+    available = []
+
+    for row in rows:
+
+        row_date = _get_date_from_availability(
+            row
+        )
+
+        row_time = _get_start_time(
+            row
+        )
+
+        if row_date is None or row_time is None:
+            continue
+
+        try:
+            taken = is_slot_booked(
+                doctor_id,
+                row_date,
+                row_time
+            )
+        except Exception:
+            taken = False
+
+        if not taken:
+            available.append(row)
+
+    return available
+
+
 def _build_date_options(
     available_dates
 ):
@@ -1490,6 +1581,12 @@ async def _handle_doctor_selection(
         doctor_id
     )
 
+    # Never show a date/time that's already booked.
+    availability = _filter_booked_slots(
+        doctor_id,
+        availability
+    )
+
     if not availability:
 
         state["step"] = "doctor"
@@ -1614,6 +1711,12 @@ async def _handle_date_selection(
                 row
             )
 
+    # Never show a time that's already booked.
+    matching_slots = _filter_booked_slots(
+        doctor_id,
+        matching_slots
+    )
+
     if not matching_slots:
 
         state["step"] = "date"
@@ -1673,6 +1776,57 @@ async def _handle_time_selection(
         return chatbot_response(
             "Please choose a valid appointment "
             "time from the available options."
+        )
+
+    doctor_id = state.get("doctor_id")
+    appointment_date = state.get("appointment_date")
+
+    # Defensive re-check: the slot was free when listed,
+    # but may have just been taken by someone else in the
+    # meantime. Catch that HERE, before collecting name,
+    # phone, and payment method all over again.
+    try:
+        already_booked = is_slot_booked(
+            doctor_id,
+            appointment_date,
+            selected_time
+        )
+    except Exception:
+        already_booked = False
+
+    if already_booked:
+
+        remaining_slots = _filter_booked_slots(
+            doctor_id,
+            state.get("available_slots", [])
+        )
+
+        state["available_slots"] = remaining_slots
+
+        booking_state.clear()
+        booking_state.update(state)
+
+        if not remaining_slots:
+
+            state["step"] = "date"
+
+            return chatbot_response(
+                "Sorry, that was the last "
+                "available time for this date "
+                "and it was just booked. Please "
+                "choose another date.",
+                "date_selection",
+                _build_date_options(
+                    state.get("available_dates", [])
+                )
+            )
+
+        return chatbot_response(
+            "Sorry, that time was just booked "
+            "by someone else. Please choose "
+            "another available time.",
+            "time_selection",
+            _build_time_options(remaining_slots)
         )
 
     state["appointment_time"] = (
@@ -2096,26 +2250,127 @@ async def _finalize_booking(user):
         )
 
     # --------------------------------------------------------
-    # Online
+    # Online (Cashfree)
     #
-    # Existing normal appointment page already handles
-    # Cashfree. We don't create a second payment flow here.
+    # Mirrors the same create_cashfree_order() +
+    # save_cashfree_order() calls the existing web booking
+    # page (main.py) already uses successfully, so the
+    # appointment ends up with a real cashfree_order_id and
+    # payment_session_id either way - not just when booked
+    # from the web form.
     # --------------------------------------------------------
 
-    return chatbot_response(
-        (
-            "Appointment created successfully.\n\n"
-            f"Appointment ID: {appointment_id}\n"
-            f"Doctor: {doctor_name}\n"
-            f"Date: {formatted_date}\n"
-            f"Time: {formatted_time}\n"
-            f"Amount: {fee}\n\n"
-            "Online payment has been selected. "
-            "Please complete the payment from "
-            "your appointment payment page."
-        ),
-        "booking_success"
-    )
+    if not CASHFREE_CONFIGURED:
+
+        return chatbot_response(
+            (
+                "Appointment created successfully.\n\n"
+                f"Appointment ID: {appointment_id}\n"
+                f"Doctor: {doctor_name}\n"
+                f"Date: {formatted_date}\n"
+                f"Time: {formatted_time}\n"
+                f"Amount: {fee}\n\n"
+                "Online payment isn't configured on this "
+                "clinic yet. Please pay cash at the clinic, "
+                "or ask the clinic to enable online payment."
+            ),
+            "booking_success"
+        )
+
+    try:
+
+        cashfree_order_id = (
+            f"appointment_{appointment_id}"
+        )
+
+        return_url = (
+            "http://127.0.0.1:8000"
+            "/payments/cashfree/return"
+            f"?order_id={cashfree_order_id}"
+        )
+
+        cashfree_order = create_cashfree_order(
+            order_id=cashfree_order_id,
+            amount=float(
+                doctor.get(
+                    "consultation_fee",
+                    0
+                )
+            ),
+            customer_id=str(
+                user["user_id"]
+            ),
+            customer_name=patient_name,
+            customer_email=user.get(
+                "email",
+                ""
+            ),
+            customer_phone=phone,
+            return_url=return_url
+        )
+
+        save_cashfree_order(
+            appointment_id=appointment_id,
+            user_id=user["user_id"],
+            cashfree_order_id=cashfree_order["order_id"],
+            payment_session_id=(
+                cashfree_order["payment_session_id"]
+            )
+        )
+
+        pay_link = (
+            f"/appointments/{appointment_id}/pay"
+        )
+
+        return chatbot_response(
+            (
+                "Appointment created successfully.\n\n"
+                f"Appointment ID: {appointment_id}\n"
+                f"Doctor: {doctor_name}\n"
+                f"Date: {formatted_date}\n"
+                f"Time: {formatted_time}\n"
+                f"Amount: {fee}\n\n"
+                "Tap below to complete your payment."
+            ),
+            "booking_success",
+            [
+                {
+                    "value": pay_link,
+                    "title": "💳 Pay Now",
+                    "subtitle": fee,
+                    "url": pay_link
+                }
+            ]
+        )
+
+    except Exception as e:
+
+        import logging
+        import traceback
+
+        logging.getLogger(__name__).error(
+            "Chat-initiated Cashfree order failed "
+            "for appointment_id=%s: %s",
+            appointment_id,
+            repr(e)
+        )
+
+        traceback.print_exc()
+
+        return chatbot_response(
+            (
+                "Appointment created successfully.\n\n"
+                f"Appointment ID: {appointment_id}\n"
+                f"Doctor: {doctor_name}\n"
+                f"Date: {formatted_date}\n"
+                f"Time: {formatted_time}\n"
+                f"Amount: {fee}\n\n"
+                "I couldn't start online payment right now. "
+                "Please try again from your appointment "
+                "page, or pay cash at the clinic."
+            ),
+            "booking_success"
+        )
 
 
 # ============================================================
@@ -2331,7 +2586,8 @@ async def handle_booking_message(
 
 async def handle_doctor_search(
     message,
-    intent_data
+    intent_data,
+    user=None
 ):
 
     specialty = None
@@ -2347,9 +2603,7 @@ async def handle_doctor_search(
 
     if not specialty:
 
-        specialty = normalize_specialty(
-            message
-        )
+        specialty = normalize_specialty(message)
 
     doctors = find_doctors_by_specialization(
         specialty
@@ -2362,47 +2616,51 @@ async def handle_doctor_search(
             f"{specialty or 'doctors'}."
         )
 
-    options = []
+    # ========================================================
+    # IMPORTANT:
+    #
+    # Use the SAME option-building helper as the normal
+    # booking flow (_build_doctor_options), which uses an
+    # ordinal position ("1", "2", ...) as each option's
+    # "value". _find_selected_doctor() - used by the booking
+    # flow's doctor-selection step - expects that same ordinal
+    # convention. The previous version of this function built
+    # its own options using the real doctor_id as "value",
+    # which would silently break or select the wrong doctor
+    # once the state machine below is entered.
+    # ========================================================
 
-    for doctor in doctors:
+    options = _build_doctor_options(
+        doctors
+    )
 
-        doctor_name = _clean_doctor_name(
-            doctor.get(
-                "doctor_name"
-            )
-        )
+    # ========================================================
+    # IMPORTANT:
+    #
+    # Enter the same booking state machine that
+    # _start_appointment_booking() uses, so that when the
+    # user replies with a doctor name/number next (e.g.
+    # "Dr. Neha Singh"), process_message() sees
+    # state["active"] == True and routes it through
+    # handle_booking_message -> _handle_doctor_selection,
+    # continuing straight into date/time/booking - instead
+    # of falling through to a generic LLM reply.
+    # ========================================================
 
-        options.append(
-            {
-                "value":
-                    str(
-                        doctor.get(
-                            "doctor_id"
-                        )
-                    ),
+    state = get_booking_state(user)
 
-                "title":
-                    doctor_name,
+    state["active"] = True
+    state["specialty"] = specialty
+    state["doctors"] = doctors
+    state["step"] = "doctor"
 
-                "subtitle":
-                    (
-                        f"{doctor.get('experience', 0)} "
-                        f"years experience"
-                    ),
-
-                "price":
-                    _format_money(
-                        doctor.get(
-                            "consultation_fee",
-                            0
-                        )
-                    )
-            }
-        )
+    booking_state.clear()
+    booking_state.update(state)
 
     return chatbot_response(
         f"Here are the available "
-        f"{specialty}s.",
+        f"{specialty}s. Please choose a doctor "
+        f"if you'd like to book an appointment.",
         "doctor_search",
         options
     )
@@ -2484,6 +2742,265 @@ async def handle_patient_history(
 # PHARMACY
 # ============================================================
 
+# ============================================================
+# GOOGLE MAPS - NEARBY PHARMACY SEARCH
+# ============================================================
+
+GOOGLE_MAPS_API_KEY = os.getenv(
+    "GOOGLE_MAPS_API_KEY"
+)
+
+
+def find_nearby_pharmacies(
+    latitude,
+    longitude,
+    radius=5000,
+    max_results=5
+):
+    """
+    Find nearby pharmacies using Google Places API (New).
+
+    Parameters:
+        latitude    : User latitude.
+        longitude   : User longitude.
+        radius      : Search radius in meters.
+        max_results : Maximum number of pharmacies to return.
+
+    Returns:
+        A list of dictionaries containing pharmacy name,
+        address, phone, coordinates and Google Maps URL.
+    """
+
+    if not GOOGLE_MAPS_API_KEY:
+
+        raise RuntimeError(
+            "GOOGLE_MAPS_API_KEY is not configured. "
+            "Add it to your .env file."
+        )
+
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+        radius = float(radius)
+        max_results = int(max_results)
+    except (TypeError, ValueError):
+
+        raise ValueError(
+            "Latitude, longitude, radius and max_results "
+            "must contain valid numeric values."
+        )
+
+    if not -90 <= latitude <= 90:
+
+        raise ValueError(
+            "Latitude must be between -90 and 90."
+        )
+
+    if not -180 <= longitude <= 180:
+
+        raise ValueError(
+            "Longitude must be between -180 and 180."
+        )
+
+    radius = max(1.0, min(radius, 50000.0))
+    max_results = max(1, min(max_results, 20))
+
+    url = (
+        "https://places.googleapis.com/v1/"
+        "places:searchNearby"
+    )
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+        "X-Goog-FieldMask": (
+            "places.displayName,"
+            "places.formattedAddress,"
+            "places.location,"
+            "places.googleMapsUri,"
+            "places.nationalPhoneNumber"
+        )
+    }
+
+    payload = {
+        "includedTypes": [
+            "pharmacy"
+        ],
+        "maxResultCount": max_results,
+        "rankPreference": "DISTANCE",
+        "locationRestriction": {
+            "circle": {
+                "center": {
+                    "latitude": latitude,
+                    "longitude": longitude
+                },
+                "radius": radius
+            }
+        },
+        "regionCode": "IN",
+        "languageCode": "en"
+    }
+
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=10
+        )
+    except requests.RequestException as e:
+
+        raise RuntimeError(
+            f"Unable to connect to Google Places API: {e}"
+        ) from e
+
+    if not response.ok:
+
+        try:
+            error_details = response.json()
+        except ValueError:
+            error_details = response.text
+
+        raise RuntimeError(
+            "Google Places API request failed "
+            f"({response.status_code}): {error_details}"
+        )
+
+    data = response.json()
+    pharmacies = []
+
+    for place in data.get("places", []):
+
+        display_name = place.get(
+            "displayName",
+            {}
+        )
+
+        location = place.get(
+            "location",
+            {}
+        )
+
+        pharmacies.append(
+            {
+                "name": display_name.get(
+                    "text",
+                    "Pharmacy"
+                ),
+                "address": place.get(
+                    "formattedAddress",
+                    "Address unavailable"
+                ),
+                "latitude": location.get(
+                    "latitude"
+                ),
+                "longitude": location.get(
+                    "longitude"
+                ),
+                "phone": place.get(
+                    "nationalPhoneNumber"
+                ),
+                "google_maps_url": place.get(
+                    "googleMapsUri"
+                )
+            }
+        )
+
+    return pharmacies
+
+
+# ============================================================
+# SPECIAL CHAT COMMAND - NEARBY PHARMACY
+# ============================================================
+
+def _handle_nearby_pharmacy_command(message):
+    """
+    Handle a frontend-generated command carrying the user's
+    browser latitude/longitude.
+
+    Format:
+        __NEARBY_PHARMACY__|latitude|longitude
+    """
+
+    prefix = "__NEARBY_PHARMACY__|"
+
+    if not message.startswith(prefix):
+        return None
+
+    payload = message[len(prefix):].split("|", 1)
+
+    if len(payload) != 2:
+        return chatbot_response(
+            "I could not read your location. Please try again."
+        )
+
+    latitude, longitude = payload
+
+    try:
+        pharmacies = find_nearby_pharmacies(
+            latitude=latitude,
+            longitude=longitude,
+            radius=5000,
+            max_results=5
+        )
+    except Exception as e:
+        logging.getLogger(__name__).exception(
+            "Nearby pharmacy Google Places search failed: %s",
+            e
+        )
+
+        return chatbot_response(
+            "I could not find nearby pharmacies right now. Please try again."
+        )
+
+    if not pharmacies:
+        return chatbot_response(
+            "I could not find any nearby pharmacies within 5 km."
+        )
+
+    options = []
+
+    for pharmacy in pharmacies:
+
+        name = pharmacy.get(
+            "name",
+            "Pharmacy"
+        )
+
+        address = pharmacy.get(
+            "address",
+            "Address unavailable"
+        )
+
+        phone = pharmacy.get("phone")
+
+        subtitle = address
+
+        if phone:
+            subtitle = f"{address} • {phone}"
+
+        option = {
+            "value": name,
+            "title": f"📍 {name}",
+            "subtitle": subtitle
+        }
+
+        maps_url = pharmacy.get(
+            "google_maps_url"
+        )
+
+        if maps_url:
+            option["url"] = maps_url
+
+        options.append(option)
+
+    return chatbot_response(
+        "Here are nearby pharmacies. Select one to open its location in Google Maps.",
+        "nearby_pharmacy",
+        options
+    )
+
+
 def _clean_medicine_query(
     message,
     intent_data=None
@@ -2520,7 +3037,7 @@ def _clean_medicine_query(
     )
 
     medicine = re.sub(
-        r"\b(some|any|a|an)\b",
+        r"\b(some|any|a|an|to|for|me|please|the|of)\b",
         "",
         medicine,
         flags=re.IGNORECASE
@@ -2659,7 +3176,8 @@ def _looks_like_pharmacy_request(
 
 async def handle_pharmacy(
     message,
-    intent_data
+    intent_data,
+    user=None
 ):
 
     medicine = _clean_medicine_query(
@@ -2695,12 +3213,32 @@ async def handle_pharmacy(
                 fuzzy_medicine
             ]
 
-    if not medicines:
+    # A medicine is considered available only when at least one
+    # matching item has positive stock.
+    available_medicines = [
+        item
+        for item in (medicines or [])
+        if float(item.get("stock_quantity", 0) or 0) > 0
+    ]
+
+    if not available_medicines:
 
         return chatbot_response(
-            f"I couldn't find '{medicine}' in the pharmacy. "
-            "Please check the medicine name and try again."
+            (
+                f"'{medicine}' is not available at Sanjeevani Clinic.\n\n"
+                "You can find nearby pharmacies using your current location."
+            ),
+            "pharmacy_unavailable",
+            [
+                {
+                    "value": "NEARBY_PHARMACY",
+                    "title": "📍 Find Nearby Pharmacy",
+                    "subtitle": "Use my current location"
+                }
+            ]
         )
+
+    medicines = available_medicines
 
     options = []
 
@@ -2746,18 +3284,57 @@ async def handle_pharmacy(
     if len(medicines) == 1:
         response_text = (
             f"I found {display_name}. "
-            "Please select it to continue."
+            "Please select it to add it to your cart."
         )
     else:
         response_text = (
             f"Here are the medicines matching "
-            f"'{medicine}'."
+            f"'{medicine}'. Select one to add it "
+            f"to your cart."
         )
+
+    # ========================================================
+    # Remember these results so that the user's NEXT message
+    # (clicking an option, or typing the medicine name/number)
+    # can be resolved as an add-to-cart action instead of
+    # falling through to a generic LLM reply.
+    # ========================================================
+
+    pending = _get_pending_state(user)
+    pending["action"] = "PHARMACY_SELECT"
+    pending["medicines"] = medicines[:10]
 
     return chatbot_response(
         response_text,
         "medicine_selection",
         options
+    )
+
+
+# ============================================================
+# APPOINTMENT FORMATTING HELPER
+# ============================================================
+
+def _describe_appointment(appointment):
+
+    doctor_name = _clean_doctor_name(
+        appointment.get(
+            "doctor_name",
+            "Doctor"
+        )
+    )
+
+    appointment_date = appointment.get(
+        "appointment_date"
+    )
+
+    appointment_time = appointment.get(
+        "appointment_time"
+    )
+
+    return (
+        f"{doctor_name} on {appointment_date} "
+        f"at {_format_time(appointment_time)}"
     )
 
 
@@ -2770,21 +3347,67 @@ async def handle_cancel_appointment(
     user
 ):
 
-    appointments = get_user_appointments(
-        user["user_id"]
-    )
+    try:
+        appointments = get_user_appointments(
+            user["user_id"]
+        )
+    except Exception:
+        return chatbot_response(
+            "I could not retrieve your appointments "
+            "right now. Please try again."
+        )
 
-    if not appointments:
+    active_appointments = [
+        a for a in (appointments or [])
+        if str(a.get("status", "")).upper()
+        in ("BOOKED", "CONFIRMED")
+    ]
+
+    if not active_appointments:
 
         return chatbot_response(
-            "You don't have any appointments "
-            "to cancel."
+            "You don't have any active "
+            "appointments to cancel."
+        )
+
+    if len(active_appointments) == 1:
+
+        appt = active_appointments[0]
+
+        pending = _get_pending_state(user)
+        pending["action"] = "CANCEL_CONFIRM"
+        pending["appointment_id"] = appt.get(
+            "appointment_id"
+        )
+        pending["appointments"] = [appt]
+
+        return chatbot_response(
+            f"Cancel your appointment with "
+            f"{_describe_appointment(appt)}? "
+            f"Reply 'yes' to confirm or 'no' "
+            f"to keep it."
+        )
+
+    pending = _get_pending_state(user)
+    pending["action"] = "CANCEL_SELECT"
+    pending["appointments"] = active_appointments
+
+    lines = [
+        "Which appointment would you like to "
+        "cancel? Reply with the number:"
+    ]
+
+    for index, appt in enumerate(
+        active_appointments,
+        start=1
+    ):
+        lines.append(
+            f"{index}. {_describe_appointment(appt)} "
+            f"({appt.get('status')})"
         )
 
     return chatbot_response(
-        "Please cancel or manage your "
-        "appointment from My Profile → "
-        "Appointments."
+        "\n".join(lines)
     )
 
 
@@ -2797,21 +3420,529 @@ async def handle_reschedule_appointment(
     user
 ):
 
-    appointments = get_user_appointments(
-        user["user_id"]
-    )
+    try:
+        appointments = get_user_appointments(
+            user["user_id"]
+        )
+    except Exception:
+        return chatbot_response(
+            "I could not retrieve your appointments "
+            "right now. Please try again."
+        )
 
-    if not appointments:
+    active_appointments = [
+        a for a in (appointments or [])
+        if str(a.get("status", "")).upper()
+        in ("BOOKED", "CONFIRMED")
+    ]
+
+    if not active_appointments:
 
         return chatbot_response(
-            "You don't have any appointments "
-            "to reschedule."
+            "You don't have any active "
+            "appointments to reschedule."
+        )
+
+    if len(active_appointments) == 1:
+
+        return _begin_reschedule_date_step(
+            active_appointments[0],
+            user
+        )
+
+    pending = _get_pending_state(user)
+    pending["action"] = "RESCHEDULE_SELECT"
+    pending["appointments"] = active_appointments
+
+    lines = [
+        "Which appointment would you like to "
+        "reschedule? Reply with the number:"
+    ]
+
+    for index, appt in enumerate(
+        active_appointments,
+        start=1
+    ):
+        lines.append(
+            f"{index}. {_describe_appointment(appt)} "
+            f"({appt.get('status')})"
         )
 
     return chatbot_response(
-        "Please reschedule your appointment "
-        "from My Profile → Appointments."
+        "\n".join(lines)
     )
+
+
+def _begin_reschedule_date_step(
+    appointment,
+    user
+):
+
+    doctor_id = appointment.get("doctor_id")
+
+    try:
+        availability = get_doctor_availability(
+            doctor_id
+        )
+    except Exception:
+        availability = []
+
+    # Never show a date/time that's already booked.
+    availability = _filter_booked_slots(
+        doctor_id,
+        availability
+    )
+
+    if not availability:
+
+        _reset_pending_state(user)
+
+        return chatbot_response(
+            "This doctor currently has no "
+            "available slots to reschedule into. "
+            "Please try again later."
+        )
+
+    available_dates = []
+
+    for row in availability:
+
+        available_date = _get_date_from_availability(
+            row
+        )
+
+        if available_date and (
+            available_date not in available_dates
+        ):
+            available_dates.append(available_date)
+
+    available_dates.sort()
+
+    if not available_dates:
+
+        _reset_pending_state(user)
+
+        return chatbot_response(
+            "I couldn't find available dates "
+            "for this doctor right now."
+        )
+
+    pending = _get_pending_state(user)
+    pending["action"] = "RESCHEDULE_DATE"
+    pending["appointment_id"] = appointment.get(
+        "appointment_id"
+    )
+    pending["doctor_id"] = doctor_id
+    pending["doctor_name"] = appointment.get(
+        "doctor_name"
+    )
+    pending["available_dates"] = available_dates
+    pending["available_slots"] = availability
+
+    options = _build_date_options(
+        available_dates
+    )
+
+    doctor_name = _clean_doctor_name(
+        appointment.get(
+            "doctor_name",
+            "the doctor"
+        )
+    )
+
+    return chatbot_response(
+        f"Rescheduling your appointment with "
+        f"{doctor_name}. Please choose a new date.",
+        "date_selection",
+        options
+    )
+
+
+# ============================================================
+# PENDING ACTION MESSAGE HANDLER
+# (cancel / reschedule / pharmacy-selection follow-ups)
+# ============================================================
+
+def _find_pending_medicine(
+    medicines,
+    value
+):
+
+    if not medicines:
+        return None
+
+    text = _normalize(value)
+
+    if not text:
+        return None
+
+    # Direct medicine_id match (e.g. option button click).
+
+    if text.isdigit():
+
+        target_id = int(text)
+
+        for item in medicines:
+
+            if item.get("medicine_id") == target_id:
+                return item
+
+    # Exact or partial name match.
+
+    for item in medicines:
+
+        name = _normalize(
+            item.get("medicine_name", "")
+        )
+
+        if not name:
+            continue
+
+        if text == name or text in name:
+            return item
+
+    # Fuzzy fallback.
+
+    best_item = None
+    best_score = 0.0
+
+    for item in medicines:
+
+        name = _normalize(
+            item.get("medicine_name", "")
+        )
+
+        if not name:
+            continue
+
+        score = SequenceMatcher(
+            None,
+            text,
+            name
+        ).ratio()
+
+        if score > best_score:
+            best_score = score
+            best_item = item
+
+    if best_item and best_score >= 0.6:
+        return best_item
+
+    return None
+
+
+async def _handle_pending_action_message(
+    message,
+    user
+):
+
+    """
+    Handles a follow-up reply while a cancel, reschedule, or
+    pharmacy-selection flow is in progress for this user.
+
+    Returns a chatbot_response dict if the message was
+    consumed by the pending flow, or None if the pending
+    state should be abandoned and the message should be
+    processed normally instead (e.g. the user typed something
+    unrelated, or explicitly asked to stop).
+    """
+
+    pending = _get_pending_state(user)
+    action = pending.get("action")
+
+    if not action:
+        return None
+
+    text = _normalize(message)
+
+    if text in (
+        "stop",
+        "cancel this",
+        "never mind",
+        "nevermind",
+        "menu"
+    ):
+        _reset_pending_state(user)
+
+        return chatbot_response(
+            "No problem, let me know if you "
+            "need anything else."
+        )
+
+    # --------------------------------------------------------
+    # PHARMACY SELECTION
+    # --------------------------------------------------------
+
+    if action == "PHARMACY_SELECT":
+
+        medicine = _find_pending_medicine(
+            pending.get("medicines", []),
+            message
+        )
+
+        if not medicine:
+            _reset_pending_state(user)
+            return None
+
+        try:
+            add_to_cart(
+                user["user_id"],
+                medicine.get("medicine_id"),
+                1
+            )
+        except Exception:
+            _reset_pending_state(user)
+            return chatbot_response(
+                "I couldn't add that to your "
+                "cart right now. Please try "
+                "again from the Pharmacy page."
+            )
+
+        _reset_pending_state(user)
+
+        return chatbot_response(
+            f"Added {medicine.get('medicine_name')} "
+            f"({_format_money(medicine.get('price', 0))}) "
+            f"to your cart. Go to Pharmacy → Cart "
+            f"to check out, or tell me another "
+            f"medicine to add."
+        )
+
+    # --------------------------------------------------------
+    # CANCEL: choose which appointment
+    # --------------------------------------------------------
+
+    if action == "CANCEL_SELECT":
+
+        appointments = pending.get("appointments", [])
+
+        choice = parse_number_choice(
+            message,
+            maximum=len(appointments)
+        )
+
+        if not choice:
+
+            return chatbot_response(
+                "Please reply with the number of "
+                "the appointment you'd like to "
+                "cancel."
+            )
+
+        appt = appointments[choice - 1]
+
+        pending["action"] = "CANCEL_CONFIRM"
+        pending["appointment_id"] = appt.get(
+            "appointment_id"
+        )
+
+        return chatbot_response(
+            f"Cancel your appointment with "
+            f"{_describe_appointment(appt)}? "
+            f"Reply 'yes' to confirm or 'no' "
+            f"to keep it."
+        )
+
+    # --------------------------------------------------------
+    # CANCEL: confirm
+    # --------------------------------------------------------
+
+    if action == "CANCEL_CONFIRM":
+
+        if text in ("yes", "y", "confirm", "confirmed"):
+
+            appointment_id = pending.get(
+                "appointment_id"
+            )
+
+            try:
+                success = cancel_appointment(
+                    appointment_id,
+                    user["user_id"]
+                )
+            except Exception:
+                success = False
+
+            _reset_pending_state(user)
+
+            if success:
+                return chatbot_response(
+                    "Your appointment has been "
+                    "cancelled."
+                )
+
+            return chatbot_response(
+                "I couldn't cancel that "
+                "appointment. It may have "
+                "already been cancelled or "
+                "completed."
+            )
+
+        if text in ("no", "n", "keep it"):
+
+            _reset_pending_state(user)
+
+            return chatbot_response(
+                "No changes made. Your "
+                "appointment is still booked."
+            )
+
+        return chatbot_response(
+            "Please reply 'yes' to cancel or "
+            "'no' to keep your appointment."
+        )
+
+    # --------------------------------------------------------
+    # RESCHEDULE: choose which appointment
+    # --------------------------------------------------------
+
+    if action == "RESCHEDULE_SELECT":
+
+        appointments = pending.get("appointments", [])
+
+        choice = parse_number_choice(
+            message,
+            maximum=len(appointments)
+        )
+
+        if not choice:
+
+            return chatbot_response(
+                "Please reply with the number of "
+                "the appointment you'd like to "
+                "reschedule."
+            )
+
+        appt = appointments[choice - 1]
+
+        return _begin_reschedule_date_step(
+            appt,
+            user
+        )
+
+    # --------------------------------------------------------
+    # RESCHEDULE: choose new date
+    # --------------------------------------------------------
+
+    if action == "RESCHEDULE_DATE":
+
+        selected_date = _find_selected_date(
+            pending,
+            message
+        )
+
+        if not selected_date:
+
+            return chatbot_response(
+                "Please choose one of the "
+                "available dates."
+            )
+
+        matching_slots = [
+            slot for slot in pending.get(
+                "available_slots", []
+            )
+            if _get_date_from_availability(slot)
+            == selected_date
+        ]
+
+        if not matching_slots:
+
+            return chatbot_response(
+                "No time slots found for that "
+                "date. Please choose another date."
+            )
+
+        pending["appointment_date"] = selected_date
+        pending["available_slots"] = matching_slots
+        pending["action"] = "RESCHEDULE_TIME"
+
+        options = _build_time_options(
+            matching_slots
+        )
+
+        return chatbot_response(
+            f"Please choose a new time for "
+            f"{selected_date.strftime('%a, %d %b %Y')}.",
+            "time_selection",
+            options
+        )
+
+    # --------------------------------------------------------
+    # RESCHEDULE: choose new time + execute
+    # --------------------------------------------------------
+
+    if action == "RESCHEDULE_TIME":
+
+        selected_time = _find_selected_time(
+            pending,
+            message
+        )
+
+        if not selected_time:
+
+            return chatbot_response(
+                "Please choose one of the "
+                "available times."
+            )
+
+        doctor_id = pending.get("doctor_id")
+        appointment_date = pending.get(
+            "appointment_date"
+        )
+        appointment_id = pending.get(
+            "appointment_id"
+        )
+
+        try:
+            already_booked = is_slot_booked(
+                doctor_id,
+                appointment_date,
+                selected_time
+            )
+        except Exception:
+            already_booked = False
+
+        if already_booked:
+
+            return chatbot_response(
+                "That slot has just been booked "
+                "by someone else. Please choose "
+                "another time."
+            )
+
+        try:
+            success = reschedule_appointment(
+                appointment_id,
+                user["user_id"],
+                appointment_date,
+                selected_time
+            )
+        except Exception:
+            success = False
+
+        _reset_pending_state(user)
+
+        if success:
+
+            return chatbot_response(
+                f"Your appointment has been "
+                f"rescheduled to "
+                f"{appointment_date.strftime('%a, %d %b %Y')} "
+                f"at {_format_time(selected_time)}."
+            )
+
+        return chatbot_response(
+            "I couldn't reschedule that "
+            "appointment. It may have already "
+            "been cancelled or completed."
+        )
+
+    # Unknown pending action - clear it defensively.
+
+    _reset_pending_state(user)
+
+    return None
 
 
 # ============================================================
@@ -2880,9 +4011,49 @@ async def process_message(
             "phone": ""
         }
 
+    # Frontend-generated nearby pharmacy command. This must run
+    # before pending/booking handling because it is an explicit
+    # user action coming from the location button.
+    nearby_result = _handle_nearby_pharmacy_command(message)
+
+    if nearby_result is not None:
+        return nearby_result
+
     state = get_booking_state(
         user
     )
+
+    # ========================================================
+    # GREETING ALWAYS BREAKS OUT OF A STUCK FLOW
+    #
+    # If the user is mid-way through booking/cancelling/
+    # rescheduling/pharmacy-selection (state left over from
+    # an earlier session, a restart, or just changing their
+    # mind), a plain "hi"/"hello" should always reset that
+    # and greet normally - not be swallowed as an invalid
+    # answer to whatever step they were stuck on.
+    # ========================================================
+
+    if is_greeting(message):
+
+        reset_booking(user)
+        _reset_pending_state(user)
+
+        name = (
+            user.get("full_name")
+            if isinstance(user, dict)
+            else None
+        )
+
+        greeting = (
+            f"Hello {name}. How can I help you today?"
+            if name
+            else "Hello! How can I help you today?"
+        )
+
+        return chatbot_response(
+            greeting
+        )
 
     # ========================================================
     # ACTIVE BOOKING
@@ -2899,6 +4070,30 @@ async def process_message(
         )
 
     # ========================================================
+    # PENDING ACTION FOLLOW-UP
+    #
+    # If a cancel / reschedule / pharmacy-selection flow is
+    # in progress for this user, let it consume this message
+    # first. If it returns None, the flow decided this
+    # message doesn't belong to it (e.g. an unrelated new
+    # question) and processing falls through to normal intent
+    # handling below.
+    # ========================================================
+
+    pending = _get_pending_state(user)
+
+    if pending.get("action"):
+
+        pending_result = await _handle_pending_action_message(
+            message,
+            user
+        )
+
+        if pending_result is not None:
+
+            return pending_result
+
+    # ========================================================
     # DIRECT PHARMACY ROUTING
     #
     # Pharmacy requests are deterministic because a misspelled
@@ -2909,7 +4104,8 @@ async def process_message(
 
         return await handle_pharmacy(
             message,
-            {"medicine": None}
+            {"medicine": None},
+            user
         )
 
     # ========================================================
@@ -2971,7 +4167,8 @@ async def process_message(
 
         return await handle_doctor_search(
             message,
-            intent_data
+            intent_data,
+            user
         )
 
     # ========================================================
@@ -3014,7 +4211,8 @@ async def process_message(
 
         return await handle_pharmacy(
             message,
-            intent_data
+            intent_data,
+            user
         )
 
     # ========================================================

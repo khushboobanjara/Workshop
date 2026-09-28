@@ -1,0 +1,74 @@
+[2026-09-28 11:37:55,584] 1338 main -ERROR -Failed to initialize Cashfree appointment payment
+Traceback (most recent call last):
+  File "C:\Users\khush\OneDrive\Desktop\workshop\main.py", line 1314, in appointment_pay
+    cashfree_order = create_cashfree_order(
+                     ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\src\payment\cashfree_service.py", line 259, in create_cashfree_order
+    api_response = cashfree.PGCreateOrder(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\pydantic\deprecated\decorator.py", line 56, in wrapper_function
+    return vd.call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\pydantic\deprecated\decorator.py", line 151, in call
+    return self.execute(m)
+           ^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\pydantic\deprecated\decorator.py", line 227, in execute
+    return self.raw_function(**d, **var_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\api_client.py", line 4930, in PGCreateOrder
+    return api_client.call_api(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\api_client.py", line 14858, in call_api
+    return self.__call_api(resource_path, method,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\api_client.py", line 14673, in __call_api
+    raise e
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\api_client.py", line 14663, in __call_api
+    response_data = self.request(
+                    ^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\api_client.py", line 14902, in request
+    return self.rest_client.post_request(url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\rest.py", line 274, in post_request
+    return self.request("POST", url,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\venvs\sanjeevani\Lib\site-packages\cashfree_pg\rest.py", line 231, in request
+    raise ServiceException(http_resp=r)
+cashfree_pg.exceptions.ServiceException: (504)
+Reason: Gateway Time-out
+HTTP response headers: HTTPHeaderDict({'Content-Type': 'text/html; charset=utf-8', 'Content-Length': '239', 'Connection': 'keep-alive', 'Date': 'Mon, 28 Sep 2026 06:07:54 GMT', 'X-Ratelimit-Remaining': '7999', 'X-APISIX-Upstream-Status': '504', 'X-Upstream-Status': '504', 'X-Gateway-Route': 'pg_create-order', 'X-Request-Id': '83a267c2-93ff-4464-9468-364b223d7ada', 'X-Ratelimit-Type': 'app_id', 'X-Ratelimit-Retry': '0', 'X-Ratelimit-Limit': '8000', 'X-Cache': 'Error from cloudfront', 'Via': '1.1 22247a54b03365c80f18c180aa006718.cloudfront.net (CloudFront)', 'X-Amz-Cf-Pop': 'DEL51-P7', 'X-Amz-Cf-Id': '3CpuKVKHf0TELaNFOzt5Pw4cOvF_LF_RFHsBvECSP9deXQIxU70RAA=='})
+HTTP response body: <html>
+<head><title>504 Gateway Time-out</title></head>
+<body>
+<center><h1>504 Gateway Time-out</h1></center>
+<hr><center>openresty</center>
+<p><em>Powered by <a href="https://apisix.apache.org/">APISIX</a>.</em></p></body>
+</html>
+
+
+[2026-09-28 12:02:55,972] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:02:56,018] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:02:56,388] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: []
+[2026-09-28 12:06:15,090] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:06:15,131] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:06:15,246] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: []
+[2026-09-28 12:34:22,895] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:34:23,013] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:34:23,469] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: []
+[2026-09-28 12:34:29,508] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:34:29,551] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:34:29,725] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: []
+[2026-09-28 12:34:47,496] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:34:47,538] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:34:47,604] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: []
+[2026-09-28 12:36:39,573] 1397 main -INFO -Cashfree returned order: appointment_3_b34bfc73
+[2026-09-28 12:36:39,605] 1427 main -INFO -Appointment found: 3
+[2026-09-28 12:36:39,791] 1462 main -INFO -Cashfree payments received for order appointment_3_b34bfc73: [PaymentEntity(cf_payment_id='1457993584980089856', order_id='appointment_3_b34bfc73', entity='payment', error_details=None, is_captured=True, order_amount=700.0, payment_group='upi', payment_currency='INR', payment_amount=700.0, payment_time='2026-09-28T12:35:59+05:30', payment_completion_time='2026-09-28T12:36:29+05:30', payment_status='SUCCESS', payment_message='Simulated response message', bank_reference='1234567890', auth_id=None, order_currency='INR', authorization=None, payment_method=PaymentEntityPaymentMethod(oneof_schema_1_validator=None, oneof_schema_2_validator=None, oneof_schema_3_validator=None, oneof_schema_4_validator=None, oneof_schema_5_validator=None, oneof_schema_6_validator=None, oneof_schema_7_validator=None, oneof_schema_8_validator=None, one_of_schemas=typing.Literal[['PaymentMethodAppInPaymentsEntity', 'PaymentMethodBankTransferInPaymentsEntity', 'PaymentMethodCardEMIInPaymentsEntity', 'PaymentMethodCardInPaymentsEntity', 'PaymentMethodCardlessEMIInPaymentsEntity', 'PaymentMethodNetBankingInPaymentsEntity', 'PaymentMethodPaylaterInPaymentsEntity', 'PaymentMethodUPIInPaymentsEntity']], actual_instance=PaymentMethodUPIInPaymentsEntity(upi=PaymentMethodUPIInPaymentsEntityUpi(channel='qrcode', upi_id='', upi_payer_ifsc='', upi_payer_account_number=''))), international_payment=InternationalPaymentEntity(international=False), payment_gateway_details=PaymentGatewayDetails(gateway_name='CASHFREE', gateway_order_id=None, gateway_payment_id=None, gateway_order_reference_id=None, gateway_status_code=None, gateway_settlement='cashfree', gateway_reference_name=None), payment_surcharge=PaymentEntityPaymentSurcharge(payment_surcharge_service_charge=0, payment_surcharge_service_tax=0))]
+[2026-09-28 12:36:39,793] 1501 main -INFO -Cashfree payment status: SUCCESS
+[2026-09-28 14:12:17,783] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 14:13:02,788] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 14:13:04,305] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 14:15:00,694] 1397 main -INFO -Cashfree returned order: appointment_5
+[2026-09-28 14:15:00,719] 1427 main -INFO -Appointment found: 5
+[2026-09-28 14:15:00,798] 1462 main -INFO -Cashfree payments received for order appointment_5: [PaymentEntity(cf_payment_id='1458018346892440576', order_id='appointment_5', entity='payment', error_details=None, is_captured=True, order_amount=1000.0, payment_group='upi', payment_currency='INR', payment_amount=1000.0, payment_time='2026-09-28T14:14:23+05:30', payment_completion_time='2026-09-28T14:14:48+05:30', payment_status='SUCCESS', payment_message='Simulated response message', bank_reference='1234567890', auth_id=None, order_currency='INR', authorization=None, payment_method=PaymentEntityPaymentMethod(oneof_schema_1_validator=None, oneof_schema_2_validator=None, oneof_schema_3_validator=None, oneof_schema_4_validator=None, oneof_schema_5_validator=None, oneof_schema_6_validator=None, oneof_schema_7_validator=None, oneof_schema_8_validator=None, one_of_schemas=typing.Literal[['PaymentMethodAppInPaymentsEntity', 'PaymentMethodBankTransferInPaymentsEntity', 'PaymentMethodCardEMIInPaymentsEntity', 'PaymentMethodCardInPaymentsEntity', 'PaymentMethodCardlessEMIInPaymentsEntity', 'PaymentMethodNetBankingInPaymentsEntity', 'PaymentMethodPaylaterInPaymentsEntity', 'PaymentMethodUPIInPaymentsEntity']], actual_instance=PaymentMethodUPIInPaymentsEntity(upi=PaymentMethodUPIInPaymentsEntityUpi(channel='qrcode', upi_id='', upi_payer_ifsc='', upi_payer_account_number=''))), international_payment=InternationalPaymentEntity(international=False), payment_gateway_details=PaymentGatewayDetails(gateway_name='CASHFREE', gateway_order_id=None, gateway_payment_id=None, gateway_order_reference_id=None, gateway_status_code=None, gateway_settlement='cashfree', gateway_reference_name=None), payment_surcharge=PaymentEntityPaymentSurcharge(payment_surcharge_service_charge=0, payment_surcharge_service_tax=0))]
+[2026-09-28 14:15:00,798] 1501 main -INFO -Cashfree payment status: SUCCESS

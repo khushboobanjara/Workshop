@@ -885,27 +885,28 @@ def clean_router_result(result):
 async def _call_llm(message: str):
 
     """
-    Call generate_response safely.
+    Call generate_response with its real signature:
+    generate_response(system_prompt, messages_list).
 
-    The existing llm.py implementation may expose slightly
-    different argument styles, so this function supports the
-    common forms without changing llm.py.
+    Previously this called generate_response(prompt) with a
+    single combined string, which always raised TypeError, and
+    the "fallback" then passed a raw string as the messages
+    argument - which llm.py unpacks with `*messages`, shredding
+    it into individual characters and breaking the API call.
+    Net effect: this always returned None, so the LLM-based
+    intent classification never actually ran.
     """
-
-    prompt = (
-        ROUTER_SYSTEM_PROMPT
-        + "\n\nUSER MESSAGE:\n"
-        + message
-        + "\n\nRETURN JSON ONLY."
-    )
 
     try:
 
-        # Most common implementation:
-        # generate_response(prompt)
-
         result = generate_response(
-            prompt
+            ROUTER_SYSTEM_PROMPT,
+            [
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ]
         )
 
         if inspect.isawaitable(
@@ -915,30 +916,6 @@ async def _call_llm(message: str):
             result = await result
 
         return result
-
-    except TypeError:
-
-        # Compatibility fallback for an implementation
-        # using system_prompt + user_message.
-
-        try:
-
-            result = generate_response(
-                ROUTER_SYSTEM_PROMPT,
-                message
-            )
-
-            if inspect.isawaitable(
-                result
-            ):
-
-                result = await result
-
-            return result
-
-        except Exception:
-
-            return None
 
     except Exception:
 
