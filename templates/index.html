@@ -2708,6 +2708,65 @@ function scrollChat() {
 
 
 /* =====================================================
+   NORMALIZE CHATBOT RESPONSE
+===================================================== */
+
+function getChatMessageText(message) {
+
+    if (typeof message === "string") {
+        return message;
+    }
+
+    if (message === null || message === undefined) {
+        return "";
+    }
+
+    if (typeof message === "number" || typeof message === "boolean") {
+        return String(message);
+    }
+
+    if (Array.isArray(message)) {
+        return message
+            .map(function(item) {
+                return getChatMessageText(item);
+            })
+            .filter(Boolean)
+            .join("\n");
+    }
+
+    if (typeof message === "object") {
+        const fields = [
+            "response",
+            "message",
+            "text",
+            "reply",
+            "content",
+            "answer"
+        ];
+
+        for (const field of fields) {
+            if (message[field] !== undefined && message[field] !== null) {
+                const text = getChatMessageText(message[field]);
+                if (text) {
+                    return text;
+                }
+            }
+        }
+
+        // Avoid displaying the literal [object Object] if the backend
+        // returns an object with an unexpected structure.
+        try {
+            return JSON.stringify(message, null, 2);
+        } catch (error) {
+            return "Sorry, I couldn't read the assistant's response.";
+        }
+    }
+
+    return String(message);
+}
+
+
+/* =====================================================
    ADD MESSAGE
 ===================================================== */
 
@@ -2741,12 +2800,12 @@ function addMessage(
 
 
     /*
-       textContent prevents
-       HTML injection.
+       Convert chatbot response objects into readable text.
+       textContent also prevents HTML injection.
     */
 
     messageDiv.textContent =
-        message || "";
+        getChatMessageText(message);
 
 
     chatMessages.appendChild(

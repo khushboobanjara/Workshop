@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | Sanjeevani Clinic</title>
+    <link rel="stylesheet" href="/static/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Verify Your Email</h1>
+
+            <p>
+                We sent a six-digit OTP to
+                <strong>{{ email }}</strong>.
+            </p>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+
+            <form action="/verify-otp" method="POST">
+                <label for="otp">Enter OTP</label>
+                <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    inputmode="numeric"
+                    required
+                    autocomplete="one-time-code"
+                    placeholder="Enter 6-digit OTP"
+                >
+
+                <button type="submit">Verify Email</button>
+            </form>
+
+            <p>
+                Didn't receive the OTP?
+                <a href="/register">Register again</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

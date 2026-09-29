@@ -1,95 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Login - Sanjeevani Clinic</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/style.css"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Sanjeevani Healthcare</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='auth.css') }}">
 </head>
-
 <body>
-
-<div class="auth-container">
-
-    <div class="auth-card">
-
-        <h1>Sanjeevani Clinic</h1>
-
-        <h2>Login</h2>
-
-        {% if error %}
-
-            <div class="auth-error">
-                {{ error }}
+    <main class="auth-shell">
+        <section class="brand-panel">
+            <div class="brand">
+                <div class="brand-mark">S</div>
+                <div>
+                    <div class="brand-name">Sanjeevani</div>
+                    <div class="brand-subtitle">Healthcare AI</div>
+                </div>
             </div>
-
-        {% endif %}
-
-
-        <form method="POST" action="/login">
-
-            <div class="form-group">
-
-                <label>Email</label>
-
-                <input
-                    type="email"
-                    name="email"
-                    required
-                >
-
+            <div class="brand-message">
+                <span class="eyebrow">YOUR HEALTH, OUR PRIORITY</span>
+                <h1>Care that starts<br>with a conversation.</h1>
+                <p>Access your healthcare dashboard, connect with doctors, and manage your care in one place.</p>
             </div>
+            <div class="brand-footer">A smarter way to manage your healthcare.</div>
+        </section>
 
-
-            <div class="form-group">
-
-                <label>Password</label>
-
-                <input
-                    type="password"
-                    name="password"
-                    required
-                >
-
+        <section class="form-panel">
+            <div class="mobile-brand">
+                <div class="brand-mark">S</div>
+                <div><div class="brand-name">Sanjeevani</div><div class="brand-subtitle">Healthcare AI</div></div>
             </div>
+            <div class="form-wrap">
+                <span class="eyebrow form-eyebrow">WELCOME BACK</span>
+                <h2>Sign in to your account</h2>
+                <p class="form-intro">Enter your details to continue to Sanjeevani.</p>
 
+                {% if error %}
+                <div class="alert" role="alert">{{ error }}</div>
+                {% endif %}
 
-            <button
-                type="submit"
-                class="auth-button"
-            >
-                Login
-            </button>
+                <form method="post" action="/login">
+                    <label for="email">Email address</label>
+                    <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
 
-        </form>
+                    <div class="label-row">
+                        <label for="password">Password</label>
+                    </div>
+                    <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
 
+                    <button class="primary-btn" type="submit">Sign in <span aria-hidden="true">→</span></button>
+                </form>
 
-        <p class="auth-link">
-
-            Don't have an account?
-
-            <a href="/register">
-                Create Account
-            </a>
-
-        </p>
-
-    </div>
-
-</div>
-
+                <p class="switch-text">Don't have an account? <a href="/register">Create account</a></p>
+                <p class="secure-note"><span class="lock-icon">▣</span> Your account is protected by secure sign-in.</p>
+            </div>
+            <footer class="form-footer">© Sanjeevani Healthcare AI</footer>
+        </section>
+    </main>
 </body>
-
 </html>

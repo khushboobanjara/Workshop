@@ -1,0 +1,6 @@
+[2026-09-28 22:27:26,013] 230 main -INFO -Home page accessed...
+[2026-09-28 22:27:26,964] 230 main -INFO -Home page accessed...
+[2026-09-28 22:27:56,177] 829 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:27:56,513] 806 main -ERROR -Image analysis error: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"
+[2026-09-28 22:28:37,427] 829 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:28:37,427] 806 main -ERROR -Image analysis error: "Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"

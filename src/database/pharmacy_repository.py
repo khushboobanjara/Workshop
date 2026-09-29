@@ -759,14 +759,36 @@ def update_pharmacy_payment_success(
                 )
 
         # -------------------------------------------------
-        # CLEAR CART
+        # REMOVE ONLY THE ITEMS INCLUDED IN THIS ORDER
         # -------------------------------------------------
+        # Do not clear the whole cart. The user may have added
+        # new medicines after starting checkout. Subtract the
+        # purchased quantity and preserve any newer quantity.
+        for item in order_items:
+            cursor.execute("""
+                UPDATE pharmacy_cart
+                SET quantity = quantity - %s
+                WHERE user_id = %s
+                  AND medicine_id = %s
+                  AND quantity > %s
+            """, (
+                item["quantity"],
+                user_id,
+                item["medicine_id"],
+                item["quantity"]
+            ))
 
-        cursor.execute("""
-            DELETE FROM pharmacy_cart
-
-            WHERE user_id = %s
-        """, (user_id,))
+            if cursor.rowcount == 0:
+                cursor.execute("""
+                    DELETE FROM pharmacy_cart
+                    WHERE user_id = %s
+                      AND medicine_id = %s
+                      AND quantity <= %s
+                """, (
+                    user_id,
+                    item["medicine_id"],
+                    item["quantity"]
+                ))
 
         # -------------------------------------------------
         # MARK PAYMENT SUCCESS

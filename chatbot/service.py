@@ -239,8 +239,21 @@ def start_booking(user=None):
     state["doctor_name"] = None
     state["appointment_date"] = None
     state["appointment_time"] = None
-    state["patient_name"] = None
-    state["phone"] = None
+    # Reuse the details from the authenticated account instead of
+    # asking the patient to enter them again during every booking.
+    if isinstance(user, dict):
+        state["patient_name"] = (
+            str(user.get("full_name") or user.get("name") or "").strip()
+            or None
+        )
+        state["phone"] = (
+            re.sub(r"\D", "", str(user.get("phone") or ""))
+            or None
+        )
+    else:
+        state["patient_name"] = None
+        state["phone"] = None
+
     state["payment_method"] = None
 
     state["doctors"] = []
@@ -1128,27 +1141,13 @@ def _build_time_options(
 # ============================================================
 
 def _payment_options():
-
+    """Only offer online payment for chatbot appointments."""
     return [
-
-        {
-            "value": "CASH",
-
-            "title": "Cash at Clinic",
-
-            "subtitle":
-                "Pay when you visit"
-        },
-
         {
             "value": "ONLINE",
-
             "title": "Online Payment",
-
-            "subtitle":
-                "UPI, Card or Net Banking"
+            "subtitle": "UPI, Card or Net Banking"
         }
-
     ]
 
 
@@ -1829,17 +1828,35 @@ async def _handle_time_selection(
             _build_time_options(remaining_slots)
         )
 
-    state["appointment_time"] = (
-        selected_time
-    )
+    state["appointment_time"] = selected_time
 
-    state["step"] = "name"
+    # The patient is already authenticated. Use the name and phone
+    # number saved in their account, and proceed directly to payment.
+    if isinstance(user, dict):
+        state["patient_name"] = (
+            str(user.get("full_name") or user.get("name") or "").strip()
+            or state.get("patient_name")
+        )
+        state["phone"] = (
+            re.sub(r"\D", "", str(user.get("phone") or ""))
+            or state.get("phone")
+        )
+
+    if not state.get("patient_name") or not state.get("phone"):
+        return chatbot_response(
+            "Your account is missing your name or phone number. "
+            "Please update your profile before booking."
+        )
+
+    state["step"] = "payment"
 
     booking_state.clear()
     booking_state.update(state)
 
     return chatbot_response(
-        "What is your full name?"
+        "Your appointment is ready. Select Online Payment to continue:",
+        "payment_selection",
+        _payment_options()
     )
 
 
@@ -1907,7 +1924,7 @@ async def _handle_phone(
     booking_state.update(state)
 
     return chatbot_response(
-        "How would you like to pay?",
+        "Your appointment is ready. Select Online Payment to continue:",
         "payment_selection",
         _payment_options()
     )
@@ -1927,15 +1944,6 @@ async def _handle_payment(
     payment_method = None
 
     if text in [
-        "cash",
-        "cash at clinic",
-        "1",
-        "one"
-    ]:
-
-        payment_method = "CASH"
-
-    elif text in [
         "online",
         "online payment",
         "upi",
@@ -1950,25 +1958,22 @@ async def _handle_payment(
 
     else:
 
-        # Fuzzy matching.
-
-        if "cash" in text:
-
-            payment_method = "CASH"
-
-        elif (
+        # Fuzzy matching for supported online methods only.
+        if (
             "online" in text
             or "upi" in text
             or "card" in text
+            or "net banking" in text
+            or "netbanking" in text
         ):
-
             payment_method = "ONLINE"
 
     if not payment_method:
 
         return chatbot_response(
-            "Please choose Cash at Clinic "
-            "or Online Payment."
+            "Please select Online Payment (UPI, Card or Net Banking).",
+            "payment_selection",
+            _payment_options()
         )
 
     state = get_booking_state(user)
@@ -2051,10 +2056,7 @@ async def _finalize_booking(user):
             "Phone number is missing."
         )
 
-    if payment_method not in [
-        "CASH",
-        "ONLINE"
-    ]:
+    if payment_method != "ONLINE":
 
         return chatbot_response(
             "Please select a valid payment method."
@@ -2153,6 +2155,21 @@ async def _finalize_booking(user):
             "another time."
         )
 
+    # Online payment is the only supported chatbot payment method.
+    # Do not create an appointment if the payment gateway is unavailable.
+    if payment_method != "ONLINE":
+        return chatbot_response(
+            "Please select Online Payment (UPI, Card or Net Banking).",
+            "payment_selection",
+            _payment_options()
+        )
+
+    if not CASHFREE_CONFIGURED:
+        return chatbot_response(
+            "Online payment is not configured right now. "
+            "Please contact the clinic or try again later."
+        )
+
     # --------------------------------------------------------
     # Create appointment
     # --------------------------------------------------------
@@ -2231,25 +2248,6 @@ async def _finalize_booking(user):
     reset_booking(user)
 
     # --------------------------------------------------------
-    # Cash
-    # --------------------------------------------------------
-
-    if payment_method == "CASH":
-
-        return chatbot_response(
-            (
-                "Appointment booked successfully.\n\n"
-                f"Appointment ID: {appointment_id}\n"
-                f"Doctor: {doctor_name}\n"
-                f"Date: {formatted_date}\n"
-                f"Time: {formatted_time}\n"
-                f"Amount: {fee}\n"
-                "Payment: Cash at Clinic"
-            ),
-            "booking_success"
-        )
-
-    # --------------------------------------------------------
     # Online (Cashfree)
     #
     # Mirrors the same create_cashfree_order() +
@@ -2261,20 +2259,10 @@ async def _finalize_booking(user):
     # --------------------------------------------------------
 
     if not CASHFREE_CONFIGURED:
-
         return chatbot_response(
-            (
-                "Appointment created successfully.\n\n"
-                f"Appointment ID: {appointment_id}\n"
-                f"Doctor: {doctor_name}\n"
-                f"Date: {formatted_date}\n"
-                f"Time: {formatted_time}\n"
-                f"Amount: {fee}\n\n"
-                "Online payment isn't configured on this "
-                "clinic yet. Please pay cash at the clinic, "
-                "or ask the clinic to enable online payment."
-            ),
-            "booking_success"
+            "Online payment is not configured right now. "
+            "Your appointment has not been completed. "
+            "Please contact the clinic or try again later."
         )
 
     try:

@@ -5,71 +5,95 @@ def create_user(
     full_name: str,
     email: str,
     phone: str,
-    password_hash: str
+    password_hash: str,
+    role: str = "PATIENT"
 ):
+    """
+    Create a new patient or doctor account.
+
+    Patients are registered directly.
+    Doctors require admin approval.
+    """
+
+    role = role.upper().strip()
+
+    if role not in ("PATIENT", "DOCTOR"):
+        raise ValueError("Invalid user role.")
+
+    doctor_status = "PENDING" if role == "DOCTOR" else None
 
     connection = get_db_connection()
-
     cursor = connection.cursor()
 
-    query = """
-        INSERT INTO users
-        (
-            full_name,
-            email,
-            phone,
-            password_hash
+    try:
+        query = """
+            INSERT INTO users
+            (
+                full_name,
+                email,
+                phone,
+                password_hash,
+                role,
+                doctor_status,
+                email_verified
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(
+            query,
+            (
+                full_name,
+                email,
+                phone,
+                password_hash,
+                role,
+                doctor_status,
+                1
+            )
         )
-        VALUES (%s, %s, %s, %s)
-    """
 
-    cursor.execute(
-        query,
-        (
-            full_name,
-            email,
-            phone,
-            password_hash
-        )
-    )
+        connection.commit()
 
-    connection.commit()
+        return cursor.lastrowid
 
-    user_id = cursor.lastrowid
+    except Exception:
+        connection.rollback()
+        raise
 
-    cursor.close()
-    connection.close()
+    finally:
+        cursor.close()
+        connection.close()
 
-    return user_id
 
 def get_user_by_email(email: str):
-
-    connection = get_db_connection()
-
-    cursor = connection.cursor(
-        dictionary=True
-    )
-
-    query = """
-        SELECT
-            user_id,
-            full_name,
-            email,
-            phone,
-            password_hash,
-            role
-        FROM users
-        WHERE email = %s
+    """
+    Retrieve a user using their email address.
     """
 
-    cursor.execute(
-        query,
-        (email,)
-    )
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
 
-    user = cursor.fetchone()
+    try:
+        query = """
+            SELECT
+                user_id,
+                full_name,
+                email,
+                phone,
+                password_hash,
+                role,
+                doctor_status,
+                email_verified,
+                created_at
+            FROM users
+            WHERE email = %s
+        """
 
-    cursor.close()
-    connection.close()
+        cursor.execute(query, (email,))
 
-    return user
+        return cursor.fetchone()
+
+    finally:
+        cursor.close()
+        connection.close()

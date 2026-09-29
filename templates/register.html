@@ -1,109 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Sanjeevani Healthcare</title>
 
-    <title>Register - Sanjeevani Clinic</title>
+    <link rel="stylesheet" href="/static/auth.css">
 
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f7f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .logo-icon {
+            width: 55px;
+            height: 55px;
+            background: #0d5149;
+            color: white;
+            border-radius: 14px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .logo h1 {
+            color: #104e47;
+            font-size: 27px;
+        }
+
+        .logo p {
+            color: #718096;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #183b37;
+            font-size: 23px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 17px;
+        }
+
+        label {
+            display: block;
+            color: #334155;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #d5e2df;
+            border-radius: 9px;
+            font-size: 15px;
+            outline: none;
+            background: #fff;
+            color: #263b38;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #0d776a;
+            box-shadow: 0 0 0 3px rgba(13, 119, 106, 0.1);
+        }
+
+        .role-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .role-card {
+            border: 1px solid #d5e2df;
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .role-card input {
+            width: auto;
+            margin-right: 5px;
+            accent-color: #0d776a;
+        }
+
+        .role-card:has(input:checked) {
+            border: 2px solid #0d776a;
+            background: #effaf7;
+        }
+
+        .role-title {
+            font-weight: bold;
+            color: #164e46;
+            font-size: 15px;
+        }
+
+        .role-description {
+            color: #718096;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        .error-message {
+            background: #fff0f0;
+            color: #b42318;
+            border: 1px solid #f5c2c2;
+            padding: 11px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #eaf8ef;
+            color: #176b3a;
+            border: 1px solid #b7e4c7;
+            padding: 11px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 9px;
+            background: #0d5149;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #0a403a;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #0d776a;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .terms {
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 500px) {
+            .register-container {
+                padding: 25px 20px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="auth-container">
+    <div class="register-container">
 
-    <div class="auth-card">
+        <div class="logo">
+            <div class="logo-icon">S</div>
+            <h1>Sanjeevani</h1>
+            <p>Healthcare AI</p>
+        </div>
 
-        <h1>Sanjeevani Clinic</h1>
-
-        <h2>Create Account</h2>
+        <h2>Create Your Account</h2>
+        <p class="subtitle">
+            Join Sanjeevani Healthcare
+        </p>
 
         {% if error %}
-            <div class="auth-error">
-                {{ error }}
-            </div>
+        <div class="error-message">
+            {{ error }}
+        </div>
         {% endif %}
 
-        <form method="POST" action="/register">
+        {% if success %}
+        <div class="success-message">
+            {{ success }}
+        </div>
+        {% endif %}
 
+        <form action="/register" method="POST">
+
+            <!-- Full Name -->
             <div class="form-group">
-
-                <label>Full Name</label>
-
+                <label for="full_name">Full Name</label>
                 <input
                     type="text"
+                    id="full_name"
                     name="full_name"
+                    placeholder="Enter your full name"
+                    value="{{ full_name or '' }}"
                     required
+                    autocomplete="name"
                 >
-
             </div>
 
-
+            <!-- Email -->
             <div class="form-group">
-
-                <label>Email</label>
-
+                <label for="email">Email Address</label>
                 <input
                     type="email"
+                    id="email"
                     name="email"
+                    placeholder="Enter your email address"
+                    value="{{ email or '' }}"
                     required
+                    autocomplete="email"
                 >
-
             </div>
 
-
+            <!-- Phone -->
             <div class="form-group">
-
-                <label>Phone Number</label>
-
+                <label for="phone">Phone Number</label>
                 <input
                     type="tel"
+                    id="phone"
                     name="phone"
+                    placeholder="Enter your phone number"
+                    value="{{ phone or '' }}"
                     required
+                    autocomplete="tel"
                 >
-
             </div>
 
-
+            <!-- Role -->
             <div class="form-group">
+                <label>Select Account Type</label>
 
-                <label>Password</label>
+                <div class="role-options">
 
+                    <label class="role-card">
+                        <input
+                            type="radio"
+                            name="role"
+                            value="PATIENT"
+                            checked
+                        >
+                        <div class="role-title">Patient</div>
+                        <div class="role-description">
+                            Access healthcare services
+                        </div>
+                    </label>
+
+                    <label class="role-card">
+                        <input
+                            type="radio"
+                            name="role"
+                            value="DOCTOR"
+                        >
+                        <div class="role-title">Doctor</div>
+                        <div class="role-description">
+                            Register as a healthcare professional
+                        </div>
+                    </label>
+
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password">Create Password</label>
                 <input
                     type="password"
+                    id="password"
                     name="password"
+                    placeholder="Create your login password"
+                    minlength="8"
                     required
+                    autocomplete="new-password"
                 >
-
+                <p class="password-hint">
+                    Use at least 8 characters.
+                </p>
             </div>
 
-
-            <button
-                type="submit"
-                class="auth-button"
-            >
-                Register
+            <!-- Submit -->
+            <button type="submit" class="submit-btn">
+                Sign Up
             </button>
+
+            <p class="terms">
+                An OTP will be sent to your email address
+                to verify your account.
+            </p>
 
         </form>
 
-
-        <p class="auth-link">
-
+        <div class="login-link">
             Already have an account?
-
-            <a href="/login">
-                Login
-            </a>
-
-        </p>
+            <a href="/login">Login</a>
+        </div>
 
     </div>
 
-</div>
-
 </body>
-
 </html>

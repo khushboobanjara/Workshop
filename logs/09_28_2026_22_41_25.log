@@ -1,0 +1,22 @@
+[2026-09-28 22:41:37,751] 230 main -INFO -Home page accessed...
+[2026-09-28 22:41:37,818] 820 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:41:41,263] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:41:49,790] 230 main -INFO -Home page accessed...
+[2026-09-28 22:41:50,557] 230 main -INFO -Home page accessed...
+[2026-09-28 22:42:04,501] 820 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:42:06,628] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:42:20,660] 874 main -INFO -Image follow-up from user 1
+[2026-09-28 22:42:23,154] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:46:27,327] 230 main -INFO -Home page accessed...
+[2026-09-28 22:46:39,290] 820 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:46:41,908] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:47:07,502] 874 main -INFO -Image follow-up from user 1
+[2026-09-28 22:47:09,567] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:47:09,577] 807 main -ERROR -Groq image analysis error: Expecting ':' delimiter: line 1 column 814 (char 813)
+[2026-09-28 22:47:23,274] 230 main -INFO -Home page accessed...
+[2026-09-28 22:47:40,316] 820 main -INFO -Image analysis requested by user 1
+[2026-09-28 22:47:42,132] 1740 httpx -INFO -HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+[2026-09-28 22:48:56,234] 874 main -INFO -Image follow-up from user 1
+[2026-09-28 22:49:01,263] 1679 groq._base_client -INFO -Retrying request to /openai/v1/chat/completions in 0.403420 seconds
+[2026-09-28 22:49:06,816] 1679 groq._base_client -INFO -Retrying request to /openai/v1/chat/completions in 0.939898 seconds
+[2026-09-28 22:49:12,787] 807 main -ERROR -Groq image analysis error: Request timed out.

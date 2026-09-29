@@ -1,11 +1,16 @@
 import os
 import json
 import sys
+import base64
+import secrets
+from pathlib import Path
 import uvicorn
+from uuid import uuid4
 
 from datetime import date, time
 
 from dotenv import load_dotenv
+import httpx
 
 from fastapi import (
     FastAPI,
@@ -31,7 +36,7 @@ from starlette.middleware.sessions import SessionMiddleware
 # LOAD ENVIRONMENT
 # =========================================================
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 
 # =========================================================
@@ -59,17 +64,21 @@ from nlp_pretrained.sentiment_analyzer import (
     analyze_sentiment
 )
 
-from chatbot.service import process_message
 
 from auth.auth_service import (
-    register_user,
-    login_user
+    login_user,
+    request_registration_otp,
+    complete_registration
 )
+
+from auth.password import hash_password
 
 
 # =========================================================
 # DATABASE IMPORTS
 # =========================================================
+
+from src.database.database import get_db_connection
 
 from src.database.doctor_repository import (
     find_doctors_by_specialization,
@@ -149,10 +158,19 @@ app = FastAPI(
 # SESSION MIDDLEWARE
 # =========================================================
 
+# Keep this value stable across restarts. Set SESSION_SECRET in .env.
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+if not SESSION_SECRET:
+    raise RuntimeError(
+        "SESSION_SECRET is missing. Add a long random value to your .env file."
+    )
+
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET"),
-    max_age=60 * 60 * 24 * 7
+    secret_key=SESSION_SECRET,
+    max_age=60 * 60 * 24 * 7,
+    same_site="lax",
+    https_only=False  # Set to True when deployed behind HTTPS.
 )
 
 
@@ -181,10 +199,25 @@ templates = Jinja2Templates(
 # =========================================================
 
 def get_current_user(request: Request):
+    """Return the identity stored in the authenticated session.
 
-    user_id = request.session.get("user_id")
+    Never accept a user ID from a query parameter, form, or URL for
+    ownership checks. Normalize the session value before passing it to
+    database repository functions.
+    """
+    raw_user_id = request.session.get("user_id")
 
-    if not user_id:
+    if raw_user_id is None:
+        return None
+
+    try:
+        user_id = int(raw_user_id)
+    except (TypeError, ValueError):
+        request.session.clear()
+        return None
+
+    if user_id <= 0:
+        request.session.clear()
         return None
 
     return {
@@ -292,6 +325,8 @@ async def login(
 
     user = result["user"]
 
+    # Prevent stale session fields from a previous account being retained.
+    request.session.clear()
     request.session["user_id"] = user["user_id"]
     request.session["full_name"] = user["full_name"]
     request.session["email"] = user["email"]
@@ -315,7 +350,6 @@ async def login(
 async def register_page(request: Request):
 
     if request.session.get("user_id"):
-
         return RedirectResponse(
             url="/",
             status_code=303
@@ -331,7 +365,7 @@ async def register_page(request: Request):
 
 
 # =========================================================
-# REGISTER
+# REGISTER - SEND EMAIL OTP
 # =========================================================
 
 @app.post(
@@ -343,28 +377,138 @@ async def register(
     full_name: str = Form(...),
     email: str = Form(...),
     phone: str = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    role: str = Form("PATIENT")
 ):
+    if request.session.get("user_id"):
+        return RedirectResponse(url="/", status_code=303)
 
-    result = register_user(
-        full_name=full_name,
-        email=email,
-        phone=phone,
-        password=password
-    )
+    full_name = full_name.strip()
+    email = email.strip().lower()
+    phone = phone.strip()
+    role = role.strip().upper()
 
-    if not result["success"]:
-
+    if role not in ("PATIENT", "DOCTOR"):
         return templates.TemplateResponse(
             request,
             "register.html",
-            {
-                "error": result["message"]
-            }
+            {"error": "Please select a valid account type."},
+            status_code=400
         )
 
+    if not full_name or not email or not phone or not password:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": "All fields are required."},
+            status_code=400
+        )
+
+    success, message = request_registration_otp(
+        full_name=full_name,
+        email=email,
+        phone=phone,
+        password=password,
+        role=role
+    )
+
+    if not success:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": message},
+            status_code=400
+        )
+
+    # Starlette's default session is a signed client-side cookie.
+    # Store only the password hash, never the plain-text password.
+    request.session["pending_registration"] = {
+        "full_name": full_name,
+        "email": email,
+        "phone": phone,
+        "password_hash": hash_password(password),
+        "role": role
+    }
+
     return RedirectResponse(
-        url="/login",
+        url="/verify-otp",
+        status_code=303
+    )
+
+
+# =========================================================
+# VERIFY REGISTRATION OTP
+# =========================================================
+
+@app.get(
+    "/verify-otp",
+    response_class=HTMLResponse
+)
+async def verify_otp_page(request: Request):
+    pending = request.session.get("pending_registration")
+
+    if not pending:
+        return RedirectResponse(url="/register", status_code=303)
+
+    return templates.TemplateResponse(
+        request,
+        "verify_otp.html",
+        {
+            "email": pending["email"],
+            "error": None
+        }
+    )
+
+
+@app.post(
+    "/verify-otp",
+    response_class=HTMLResponse
+)
+async def verify_otp(
+    request: Request,
+    otp: str = Form(...)
+):
+    pending = request.session.get("pending_registration")
+
+    if not pending:
+        return RedirectResponse(url="/register", status_code=303)
+
+    otp = otp.strip()
+    if len(otp) != 6 or not otp.isdigit():
+        return templates.TemplateResponse(
+            request,
+            "verify_otp.html",
+            {
+                "email": pending["email"],
+                "error": "Enter a valid six-digit OTP."
+            },
+            status_code=400
+        )
+
+    success, message = complete_registration(
+        full_name=pending["full_name"],
+        email=pending["email"],
+        phone=pending["phone"],
+        password_hash=pending["password_hash"],
+        otp=otp,
+        role=pending.get("role", "PATIENT")
+    )
+
+    if not success:
+        return templates.TemplateResponse(
+            request,
+            "verify_otp.html",
+            {
+                "email": pending["email"],
+                "error": message
+            },
+            status_code=400
+        )
+
+    request.session.pop("pending_registration", None)
+
+    return RedirectResponse(
+        url="/login?registered=true",
         status_code=303
     )
 
@@ -625,46 +769,43 @@ async def pretrained_nlp_form(
 # =========================================================
 
 @app.post("/chat")
-async def chat(
-    request: Request
-):
-
+async def chat(request: Request):
     user = require_login(request)
 
     if isinstance(user, RedirectResponse):
         return user
 
     try:
-
         data = await request.json()
+        message = data.get("message", "")
 
-        message = data.get(
-            "message",
-            ""
-        ).strip()
+        if not isinstance(message, str):
+            message = ""
+        message = message.strip()
 
         if not message:
+            return {"response": "Please enter a message."}
 
-            return {
-                "response": (
-                    "Please enter a message."
-                )
-            }
+        # Import the chatbot only when a chat request arrives.
+        # IMPORTANT: appointment_repository.py must not import chatbot.service;
+        # chatbot.service may import appointment_repository.py, not vice versa.
+        from chatbot.service import process_message
 
-        response = await process_message(
-            message
+        # process_message returns a structured response dictionary.
+        # Return it directly so the frontend receives response/type/options
+        # at the expected top level instead of a nested object.
+        result = await process_message(
+            message,
+            user=user
         )
 
-        return {
-            "response": response
-        }
+        if isinstance(result, dict):
+            return result
+
+        return {"response": str(result)}
 
     except Exception as e:
-
-        logger.error(
-            f"Chatbot error: {str(e)}"
-        )
-
+        logger.exception(f"Chatbot error: {str(e)}")
         return {
             "response": (
                 "Sorry, I am unable to process "
@@ -674,17 +815,49 @@ async def chat(
 
 
 # =========================================================
-# INJURY / INFECTION / ALLERGY IMAGE ANALYSIS
-# ===============================================def _medical_image_system_prompt() -> str:
+# INJURY / INFECTION / ALLERGY IMAGE ANALYSIS (GROQ)
+# =========================================================
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+MAX_FOLLOWUP_QUESTIONS = 4
+VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
+_vision_client = None
+
+
+def _get_vision_client():
+    """Create the Groq async client lazily, using the existing GROQ_API_KEY."""
+    global _vision_client
+    if _vision_client is None:
+        api_key = os.getenv("GROQ_API_KEY", "").strip()
+        if not api_key:
+            logger.error("GROQ_API_KEY is missing. Add it to the .env file beside main.py.")
+            raise HTTPException(
+                status_code=503,
+                detail="Image analysis is not configured. Add GROQ_API_KEY to the .env file beside main.py, then restart the server."
+            )
+        try:
+            from groq import AsyncGroq
+        except ImportError as exc:
+            logger.error(f"Groq package is not installed: {exc}")
+            raise HTTPException(
+                status_code=503,
+                detail="Groq is not installed. Run: pip install groq"
+            )
+        _vision_client = AsyncGroq(api_key=api_key)
+    return _vision_client
+
+
+def _medical_image_system_prompt() -> str:
     return (
         "You are a cautious healthcare information assistant for a clinic website. Review only visible "
         "injuries, wounds, burns, bruises, rashes, and possible skin concerns. If unrelated or unclear, say "
         "this feature supports only those concerns and do not guess.\n\n"
-        "Return ONLY valid JSON with this schema: "
+        "Return ONLY valid JSON (no markdown fences) with this schema: "
         "{\"headings\":{\"1. Visible observations\":\"...\","
         "\"2. Possible explanations\":\"...\",\"3. General care\":\"...\","
         "\"4. When to seek care\":\"...\"},"
-        "\"follow_up_question\":null or one question,\"options\":[...]} .\n"
+        "\"follow_up_question\":null or one question,\"options\":[...]}\n"
         "For an initial review, include all four headings. Decide whether one medically useful follow-up is needed. "
         "If yes, ask exactly one question and provide 2-5 short answer options (include Not sure where useful). "
         "If no, set follow_up_question to null and options to []. For follow-up turns, use the image and conversation "
@@ -698,6 +871,146 @@ async def chat(
         "For emergencies, advise local emergency services. Never infer or suggest self-harm, intent, mental state, or "
         "the cause of an injury from an image. Be calm and clear that this is not a diagnosis and cannot replace a clinician."
     )
+
+
+def _parse_model_json(text: str) -> dict:
+    """Extract the JSON object from the model reply, including if fences slip in."""
+    text = (text or "").strip()
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end == -1:
+        raise ValueError("No JSON object in model reply")
+    return json.loads(text[start:end + 1])
+
+
+def _format_result(data: dict, force_final: bool) -> dict:
+    """Convert model JSON to the response shape expected by index.html."""
+    headings = data.get("headings")
+    if not isinstance(headings, dict) or not headings:
+        raise ValueError("Model reply has no headings")
+
+    response_text = "\n\n".join(
+        f"{title}\n{str(body).strip()}" for title, body in headings.items()
+    )
+    question = data.get("follow_up_question")
+    options = data.get("options")
+    if not isinstance(question, str) or not question.strip():
+        question = None
+    if not isinstance(options, list):
+        options = []
+    options = [str(option).strip() for option in options if str(option).strip()][:5]
+
+    if force_final or question is None or len(options) < 2:
+        return {"response": response_text, "question": None, "options": [], "is_final": True}
+    return {"response": response_text, "question": question.strip(), "options": options, "is_final": False}
+
+
+async def _read_and_validate_image(image: UploadFile) -> tuple[bytes, str]:
+    if image.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Please upload a JPG, PNG or WEBP image.")
+    data = await image.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="The image file is empty.")
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB.")
+    return data, image.content_type
+
+
+async def _run_image_analysis(
+    image_bytes: bytes,
+    media_type: str,
+    prompt_text: str,
+    force_final: bool
+) -> dict:
+    try:
+        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+        response = await _get_vision_client().chat.completions.create(
+            model=VISION_MODEL,
+            messages=[
+                {"role": "system", "content": _medical_image_system_prompt()},
+                {"role": "user", "content": [
+                    {"type": "text", "text": prompt_text},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:{media_type};base64,{encoded_image}"
+                    }}
+                ]}
+            ],
+            temperature=0.2,
+            max_tokens=1200
+        )
+        reply = response.choices[0].message.content or ""
+        return _format_result(_parse_model_json(reply), force_final)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Groq image analysis error: {exc}")
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to analyze the image right now. Check your Groq vision model configuration and try again."
+        )
+
+
+@app.post("/chat/image-analysis")
+async def chat_image_analysis(request: Request, image: UploadFile = File(...)):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Please log in again.")
+    image_bytes, media_type = await _read_and_validate_image(image)
+    logger.info(f"Image analysis requested by user {user['user_id']}")
+    return await _run_image_analysis(
+        image_bytes, media_type,
+        "Please review this image. This is the initial review.",
+        force_final=False
+    )
+
+
+@app.post("/chat/image-followup")
+async def chat_image_followup(
+    request: Request,
+    image: UploadFile = File(...),
+    answer: str = Form(...),
+    initial_analysis: str = Form(""),
+    history: str = Form("[]")
+):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Please log in again.")
+    answer = answer.strip()
+    if not answer:
+        raise HTTPException(status_code=400, detail="Please select an answer.")
+    image_bytes, media_type = await _read_and_validate_image(image)
+
+    try:
+        turns = json.loads(history)
+        if not isinstance(turns, list):
+            turns = []
+    except (json.JSONDecodeError, TypeError):
+        turns = []
+    clean_turns = [
+        turn for turn in turns
+        if isinstance(turn, dict)
+        and turn.get("role") in ("assistant", "user")
+        and isinstance(turn.get("content"), str)
+    ][-12:]
+    answers_given = sum(1 for turn in clean_turns if turn["role"] == "user") + 1
+    force_final = answers_given >= MAX_FOLLOWUP_QUESTIONS
+
+    conversation = "\n".join(
+        f"{'Assistant' if turn['role'] == 'assistant' else 'Patient'}: {turn['content'][:1500]}"
+        for turn in clean_turns
+    )
+    prompt = (
+        "This is a follow-up turn.\n\n"
+        f"Initial analysis:\n{initial_analysis[:3000]}\n\n"
+        f"Conversation so far:\n{conversation}\n\n"
+        f"Latest patient answer: {answer[:300]}\n\n"
+    )
+    if force_final:
+        prompt += "You have enough information. Do not ask another question: finish with updated guidance using all four headings."
+    else:
+        prompt += "Ask one more useful question only if truly needed; otherwise finish with updated guidance using all four headings."
+
+    logger.info(f"Image follow-up from user {user['user_id']}")
+    return await _run_image_analysis(image_bytes, media_type, prompt, force_final=force_final)
 
 
 # =========================================================
@@ -1076,17 +1389,18 @@ async def book_appointment(
         # Cashfree order ID
         # -------------------------------------------------
 
+        # Use a unique Cashfree order ID for every payment attempt.
+        # This avoids duplicate-order errors when a previous attempt
+        # reached Cashfree but failed before the session was saved.
         cashfree_order_id = (
-            f"appointment_{appointment_id}"
+            f"appointment_{appointment_id}_{uuid4().hex[:8]}"
         )
 
-        # -------------------------------------------------
-        # Return URL
-        # -------------------------------------------------
-
+        # Build the return URL from the current application host and
+        # include the Cashfree order ID expected by cashfree_return().
         return_url = (
-            "http://localhost:8000/"
-            "payments/cashfree/return"
+            f"{request.url_for('cashfree_return')}"
+            f"?order_id={cashfree_order_id}"
         )
 
         # -------------------------------------------------
@@ -1117,21 +1431,18 @@ async def book_appointment(
         # Save Cashfree order information
         # -------------------------------------------------
 
-        save_cashfree_order(
+        saved = save_cashfree_order(
             appointment_id=appointment_id,
-
             user_id=user["user_id"],
-
-            cashfree_order_id=(
-                cashfree_order["order_id"]
-            ),
-
-            payment_session_id=(
-                cashfree_order[
-                    "payment_session_id"
-                ]
-            )
+            cashfree_order_id=cashfree_order["order_id"],
+            payment_session_id=cashfree_order["payment_session_id"]
         )
+
+        if not saved:
+            raise RuntimeError(
+                "Cashfree order was created, but its payment session "
+                "could not be saved for this appointment."
+            )
 
         logger.info(
             f"Cashfree order created: "
@@ -1179,19 +1490,167 @@ async def book_appointment(
             }
         )
 
-    except Exception as e:
-
-        logger.error(
-            f"Cashfree order creation failed: "
-            f"{str(e)}"
+    except Exception:
+        # Keep the appointment so the patient can retry payment later.
+        # Log the full traceback; the previous code hid the actual cause.
+        logger.exception(
+            "Cashfree initialization failed for appointment %s "
+            "(user_id=%s)",
+            appointment_id,
+            user["user_id"]
         )
 
+        retry_url = f"/appointments/{appointment_id}/pay"
         return HTMLResponse(
-            content=(
-                "Appointment was created, but "
-                "online payment could not be "
-                "initialized. Please try again."
-            ),
+            content=f"""
+            <!doctype html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>Payment could not start</title>
+              <style>
+                body {{ font-family: Arial, sans-serif; background: #f4f8f7;
+                       color: #20312f; margin: 0; padding: 32px; }}
+                main {{ max-width: 650px; margin: 8vh auto; background: white;
+                        padding: 32px; border: 1px solid #dce8e5;
+                        border-radius: 16px; }}
+                a {{ display: inline-block; margin-top: 16px; padding: 12px 18px;
+                     background: #0d5148; color: white; border-radius: 8px;
+                     text-decoration: none; }}
+              </style>
+            </head>
+            <body><main>
+              <h1>Appointment created</h1>
+              <p>Your appointment number is <strong>{appointment_id}</strong>.</p>
+              <p>Online payment could not be started. Your appointment is still
+                 saved with payment pending. You can retry payment from here.</p>
+              <a href="{retry_url}">Retry online payment</a>
+              <p><a href="/profile#appointments" style="background:#e7f1ef;color:#0d5148">
+                 View my appointments</a></p>
+            </main></body></html>
+            """,
+            status_code=502
+        )
+
+
+# =========================================================
+# CHATBOT APPOINTMENT PAYMENT PAGE
+# =========================================================
+
+@app.get(
+    "/appointments/{appointment_id}/pay",
+    response_class=HTMLResponse
+)
+async def appointment_pay(
+    request: Request,
+    appointment_id: int
+):
+    user = require_login(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    # Only allow the logged-in user to pay for their own appointment.
+    appointment = get_appointment_for_cashfree_payment(
+        appointment_id=appointment_id,
+        user_id=user["user_id"]
+    )
+
+    if not appointment:
+        return HTMLResponse(
+            content="Appointment not found.",
+            status_code=404
+        )
+
+    appointment_status = str(appointment.get("status", "")).upper()
+    payment_status = str(appointment.get("payment_status", "")).upper()
+
+    if appointment_status == "CANCELLED":
+        return HTMLResponse(
+            content="Payment is not available for cancelled appointments.",
+            status_code=400
+        )
+
+    if payment_status == "PAID":
+        return RedirectResponse(url="/profile#appointments", status_code=303)
+
+    try:
+        amount = float(appointment.get("consultation_fee") or 0)
+        patient_name = appointment.get("patient_name") or user.get("full_name") or "Patient"
+        phone = appointment.get("phone") or user.get("phone")
+
+        if amount <= 0:
+            return HTMLResponse(
+                content="A valid consultation fee was not found for this appointment.",
+                status_code=400
+            )
+
+        payment_session_id = appointment.get("cashfree_payment_session_id")
+        cashfree_order_id = appointment.get("cashfree_order_id")
+
+        # Create a Cashfree order if the chatbot-created appointment
+        # does not already have a payment session.
+        if not payment_session_id:
+            if not phone:
+                return HTMLResponse(
+                    content="A phone number is required to start online payment. Please update your profile.",
+                    status_code=400
+                )
+
+            cashfree_order_id = f"appointment_{appointment_id}_{uuid4().hex[:8]}"
+            return_url = (
+                "http://127.0.0.1:8000/payments/cashfree/return"
+                f"?order_id={cashfree_order_id}"
+            )
+
+            cashfree_order = create_cashfree_order(
+                order_id=cashfree_order_id,
+                amount=amount,
+                customer_id=str(user["user_id"]),
+                customer_name=patient_name,
+                customer_email=user["email"],
+                customer_phone=phone,
+                return_url=return_url
+            )
+
+            cashfree_order_id = cashfree_order["order_id"]
+            payment_session_id = cashfree_order["payment_session_id"]
+
+            save_cashfree_order(
+                appointment_id=appointment_id,
+                user_id=user["user_id"],
+                cashfree_order_id=cashfree_order_id,
+                payment_session_id=payment_session_id
+            )
+
+        doctor = {
+            "doctor_name": appointment.get("doctor_name"),
+            "specialization": appointment.get("specialization"),
+            "consultation_fee": amount
+        }
+
+        return templates.TemplateResponse(
+            request,
+            "cashfree_checkout.html",
+            {
+                "user": user,
+                "doctor": doctor,
+                "appointment_id": appointment_id,
+                "appointment_date": appointment.get("appointment_date"),
+                "appointment_time": appointment.get("appointment_time"),
+                "patient_name": patient_name,
+                "phone": phone,
+                "payment_amount": amount,
+                "payment_session_id": payment_session_id,
+                "cashfree_order_id": cashfree_order_id
+            }
+        )
+
+    except Exception:
+        logger.exception("Failed to initialize chatbot appointment payment")
+        return HTMLResponse(
+            content="Unable to start online payment. Please check the server logs and try again.",
             status_code=500
         )
 
@@ -1434,8 +1893,10 @@ async def profile_page(
     if isinstance(user, RedirectResponse):
         return user
 
+    # The repository receives only the authenticated user's ID from
+    # the session. It applies WHERE appointments.user_id = %s.
     appointments = get_user_appointments(
-        user["user_id"]
+        user_id=int(user["user_id"])
     )
 
     return templates.TemplateResponse(
@@ -2066,7 +2527,11 @@ async def pharmacy_place_order(
     patient_name = (form.get("patient_name") or "").strip()
     phone = (form.get("phone") or "").strip()
     delivery_method = (form.get("delivery_method") or "").strip().upper()
-    address = (form.get("address") or "").strip()
+    address = (
+        form.get("delivery_address")
+        or form.get("address")
+        or ""
+    ).strip()    
     payment_method = (form.get("payment_method") or "").strip().upper()
 
     if not patient_name:
@@ -2220,113 +2685,225 @@ async def pharmacy_order_details(
 )
 async def pharmacy_cashfree_return(
     request: Request,
-    order_id: int
+    order_id: str = "",
+    cf_order_id: str = ""
 ):
+    """Verify Cashfree payment, then show the order only to its owner."""
 
-    user = require_login(request)
+    # Cashfree can return after the browser session has changed or expired.
+    # Verify and update the payment using the database order owner; do not
+    # block payment verification just because the current session differs.
+    user = get_current_user(request)
 
-    if isinstance(user, RedirectResponse):
-        return user
-
-    order = get_pharmacy_order(
-        order_id,
-        user["user_id"]
-    )
-
-    if not order:
+    supplied_order_id = (order_id or cf_order_id or "").strip()
+    if not supplied_order_id:
         return HTMLResponse(
-            "Pharmacy order not found.",
-            status_code=404
-        )
-
-    cashfree_order_id = order.get("cashfree_order_id")
-
-    if not cashfree_order_id:
-        return HTMLResponse(
-            "Cashfree order ID is missing.",
+            "Payment return is missing the order ID. Please open your order from My Profile.",
             status_code=400
         )
 
+    # Resolve the order and its real owner from the database. Do not use
+    # the current session user to locate the order: Cashfree may return to
+    # a browser session that has changed since checkout.
+    connection = None
+    cursor = None
     try:
-        payments = get_cashfree_order_payments(
-            cashfree_order_id
-        )
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        if supplied_order_id.isdigit():
+            cursor.execute(
+                """
+                SELECT order_id, user_id, cashfree_order_id,
+                       payment_method, payment_status, order_status
+                FROM pharmacy_orders
+                WHERE order_id = %s
+                """,
+                (int(supplied_order_id),)
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT order_id, user_id, cashfree_order_id,
+                       payment_method, payment_status, order_status
+                FROM pharmacy_orders
+                WHERE cashfree_order_id = %s
+                """,
+                (supplied_order_id,)
+            )
+        order = cursor.fetchone()
     except Exception:
         logger.exception(
-            "Unable to verify pharmacy Cashfree payment."
+            "Could not load pharmacy order for Cashfree return: %s",
+            supplied_order_id
+        )
+        return HTMLResponse(
+            "Unable to load your order right now. Please try again.",
+            status_code=500
+        )
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
+
+    if not order:
+        logger.warning(
+            "Pharmacy order not found for payment return: %s",
+            supplied_order_id
+        )
+        return HTMLResponse("Pharmacy order not found.", status_code=404)
+
+    if str(order.get("payment_method", "")).upper() != "ONLINE":
+        return HTMLResponse(
+            "This order is not configured for online payment.",
+            status_code=400
         )
 
+    cashfree_order_id = order.get("cashfree_order_id")
+    if not cashfree_order_id:
+        return HTMLResponse(
+            "Cashfree order ID is missing. Please contact support.",
+            status_code=400
+        )
+
+    # The return URL is not proof of payment. Verify with Cashfree.
+    try:
+        payments = get_cashfree_order_payments(cashfree_order_id)
+    except Exception:
+        logger.exception(
+            "Cashfree verification failed for pharmacy order %s",
+            order["order_id"]
+        )
+        if not user or str(user["user_id"]) != str(order["user_id"]):
+            return HTMLResponse(
+                "Payment could not be verified right now. Please sign in with the account used to place the order and check the order status from My Profile.",
+                status_code=503
+            )
+        owned_order = get_pharmacy_order(order["order_id"], user["user_id"])
         return templates.TemplateResponse(
             request,
             "pharmacy_order.html",
             {
                 "user": user,
-                "order": order,
+                "order": owned_order,
                 "payment_message": (
                     "Payment could not be verified right now. "
-                    "Please check your order again shortly."
+                    "Your order has not been marked as paid. Please check again shortly."
                 )
-            }
+            },
+            status_code=503
         )
 
     def extract_payment_status(payment):
         if isinstance(payment, dict):
-            return str(
-                payment.get("payment_status", "")
-            ).upper()
+            value = payment.get("payment_status", "")
+        else:
+            value = getattr(payment, "payment_status", "")
+        return str(value or "").strip().upper()
 
-        return str(
-            getattr(payment, "payment_status", "")
-        ).upper()
-
-    final_status = "PENDING"
-
-    if payments:
-        for payment in payments:
-            status = extract_payment_status(payment)
-            if status == "SUCCESS":
-                final_status = "PAID"
-                break
-
-        if final_status != "PAID":
-            for payment in payments:
-                status = extract_payment_status(payment)
-                if status in (
-                    "FAILED",
-                    "FAILURE",
-                    "USER_DROPPED"
-                ):
-                    final_status = "FAILED"
-                    break
-
-    if final_status == "PAID":
-        update_pharmacy_payment_success(
-            order_id=order_id,
-            user_id=user["user_id"]
-        )
-        message = "Payment successful. Your pharmacy order is confirmed."
-
-    elif final_status == "FAILED":
-        update_pharmacy_payment_failed(
-            order_id=order_id,
-            user_id=user["user_id"]
-        )
-        message = "Payment failed. Please try again or choose another payment method."
-
+    statuses = [extract_payment_status(payment) for payment in (payments or [])]
+    if "SUCCESS" in statuses:
+        final_status = "PAID"
+    elif any(status in ("FAILED", "FAILURE", "USER_DROPPED") for status in statuses):
+        final_status = "FAILED"
     else:
-        message = "Payment is still being processed. Please check your order again shortly."
+        final_status = "PENDING"
 
-    order = get_pharmacy_order(
-        order_id,
-        user["user_id"]
-    )
+    owner_id = order["user_id"]
+    try:
+        if final_status == "PAID":
+            update_pharmacy_payment_success(
+                order_id=order["order_id"],
+                user_id=owner_id
+            )
+
+            # update_pharmacy_payment_success() atomically confirms the order,
+            # reduces stock once, and removes only the purchased quantities
+            # from the owning user's cart. Do not clear the entire cart here:
+            # the user may have added new items after checkout.
+            message = "Payment successful. Your pharmacy order is confirmed."
+        elif final_status == "FAILED":
+            update_pharmacy_payment_failed(
+                order_id=order["order_id"],
+                user_id=owner_id
+            )
+            message = "Payment failed. You can retry payment from your order page."
+        else:
+            message = (
+                "Payment is still being processed. Your order has not been "
+                "marked as paid. Please check again shortly."
+            )
+    except Exception:
+        logger.exception(
+            "Failed to update payment for pharmacy order %s",
+            order["order_id"]
+        )
+        return HTMLResponse(
+            "Payment was checked, but the order could not be updated. Please contact support.",
+            status_code=500
+        )
+
+    # Never display another account's order. Payment verification and order
+    # updates are complete even if this browser is logged into a different
+    # account; provide a safe message instead of returning a misleading 403.
+    if not user or str(user["user_id"]) != str(owner_id):
+        logger.warning(
+            "Payment return session mismatch: order=%s owner=%s session_user=%s",
+            order["order_id"], owner_id, user["user_id"] if user else None
+        )
+        # Do not expose order details to a different signed-in account.
+        # Give the user a direct way to end the current session and sign in
+        # with the account that owns the order. The order is still verified
+        # and updated above using the database owner, not the session user.
+        return HTMLResponse(
+            """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment verified | Sanjeevani</title>
+    <style>
+        body { margin: 0; padding: 24px; font-family: Arial, sans-serif;
+               background: #f4f8f7; color: #183b36; }
+        .card { max-width: 620px; margin: 8vh auto; padding: 32px;
+                background: #fff; border: 1px solid #dce9e5;
+                border-radius: 16px; box-shadow: 0 8px 28px #12352b12; }
+        h1 { margin-top: 0; font-size: 26px; }
+        p { line-height: 1.6; color: #526a65; }
+        a { display: inline-block; margin-top: 12px; padding: 12px 20px;
+            border-radius: 9px; background: #0d5148; color: white;
+            text-decoration: none; }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>Payment verification complete</h1>
+        <p>Your payment has been checked and the order has been updated.</p>
+        <p>This order belongs to a different account. For your privacy, its
+           details are not shown in this session.</p>
+        <p>Sign out, then sign in with the account used to place the order
+           to view it in My Profile.</p>
+        <a href="/logout">Sign out and continue</a>
+    </main>
+</body>
+</html>""",
+            status_code=200
+        )
+
+    owned_order = get_pharmacy_order(order["order_id"], user["user_id"])
+    if not owned_order:
+        return HTMLResponse(
+            "Payment was checked, but the order could not be loaded. Please open My Profile.",
+            status_code=500
+        )
 
     return templates.TemplateResponse(
         request,
         "pharmacy_order.html",
         {
             "user": user,
-            "order": order,
+            "order": owned_order,
             "payment_message": message
         }
     )
