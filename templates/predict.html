@@ -1,168 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Health Screening | Sanjeevani Clinic</title>
-    <style>
-        :root {
-            --green: #0f766e;
-            --green-dark: #0f4c45;
-            --green-soft: #e7f4f0;
-            --ink: #20312e;
-            --muted: #71817d;
-            --line: #dce8e4;
-            --surface: #ffffff;
-            --page: #f3f8f6;
-            --danger: #b42318;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, "Segoe UI", Arial, sans-serif;
-            color: var(--ink);
-            background: var(--page);
-        }
-        a { color: inherit; text-decoration: none; }
-        .app { min-height: 100vh; }
-        .topbar {
-            height: 76px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 0 clamp(18px, 5vw, 64px);
-            background: var(--surface);
-            border-bottom: 1px solid #e5eeea;
-        }
-        .brand { display: flex; align-items: center; gap: 11px; }
-        .brand-mark {
-            width: 42px; height: 42px; display: grid; place-items: center;
-            border-radius: 13px; background: var(--green-soft);
-            color: var(--green-dark); font-size: 22px; font-weight: 800;
-        }
-        .brand-name { font-size: 17px; font-weight: 750; letter-spacing: -.3px; }
-        .brand-sub { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
-        .home-link {
-            padding: 10px 16px; border: 1px solid var(--line); border-radius: 10px;
-            color: var(--green-dark); font-size: 13px; font-weight: 650;
-            transition: .2s ease;
-        }
-        .home-link:hover { background: var(--green-soft); border-color: #b9d9d0; }
-        main { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 42px 0 34px; }
-        .intro { margin-bottom: 25px; }
-        .eyebrow {
-            display: inline-flex; align-items: center; gap: 8px;
-            color: var(--green); font-size: 11px; font-weight: 800;
-            letter-spacing: 1.5px; text-transform: uppercase;
-        }
-        .eyebrow::before { content: ""; width: 20px; height: 2px; background: var(--green); }
-        h1 { margin: 12px 0 8px; font-size: clamp(28px, 4vw, 38px); line-height: 1.15; letter-spacing: -1.1px; }
-        .intro p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
-        .layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, .75fr); gap: 22px; align-items: start; }
-        .card {
-            background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
-            box-shadow: 0 8px 26px rgba(22, 65, 56, .055);
-        }
-        .form-card { padding: clamp(22px, 3.5vw, 34px); }
-        .card-heading { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 25px; }
-        .heading-icon {
-            width: 45px; height: 45px; flex: 0 0 45px; display: grid; place-items: center;
-            border-radius: 14px; background: var(--green-soft); color: var(--green);
-            font-size: 21px; font-weight: 800;
-        }
-        h2 { margin: 1px 0 5px; font-size: 19px; letter-spacing: -.3px; }
-        .card-heading p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 19px 16px; }
-        .field { min-width: 0; }
-        .field.full { grid-column: 1 / -1; }
-        label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; }
-        .control {
-            width: 100%; height: 47px; padding: 0 13px; border: 1px solid #d5e2dd;
-            border-radius: 10px; background: #fbfdfc; color: var(--ink);
-            font: inherit; font-size: 14px; outline: none; transition: .2s ease;
-        }
-        .control:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(15,118,110,.10); background: #fff; }
-        .hint { margin: 7px 0 0; color: #8a9995; font-size: 11px; }
-        .submit-row { display: flex; align-items: center; gap: 14px; margin-top: 25px; }
-        .submit-btn {
-            min-height: 48px; padding: 0 22px; border: 0; border-radius: 11px;
-            background: var(--green); color: #fff; font: inherit; font-size: 14px;
-            font-weight: 750; cursor: pointer; box-shadow: 0 5px 12px rgba(15,118,110,.18);
-            transition: .2s ease;
-        }
-        .submit-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
-        .submit-note { color: var(--muted); font-size: 11px; line-height: 1.5; }
-        .error {
-            margin-bottom: 18px; padding: 12px 14px; border: 1px solid #f2c5c1;
-            border-radius: 10px; background: #fff5f4; color: var(--danger); font-size: 13px;
-        }
-        .side-card { padding: 25px; }
-        .side-icon {
-            width: 46px; height: 46px; display: grid; place-items: center;
-            border-radius: 14px; background: #e7f4f0; color: var(--green);
-            font-size: 21px; margin-bottom: 16px;
-        }
-        .side-card h2 { font-size: 17px; margin-bottom: 9px; }
-        .side-card > p { margin: 0 0 18px; color: var(--muted); font-size: 12px; line-height: 1.65; }
-        .steps { display: grid; gap: 16px; }
-        .step { display: flex; align-items: flex-start; gap: 11px; }
-        .step-num {
-            width: 27px; height: 27px; flex: 0 0 27px; display: grid; place-items: center;
-            border-radius: 8px; background: var(--green-soft); color: var(--green-dark);
-            font-size: 10px; font-weight: 800;
-        }
-        .step strong { display: block; margin: 1px 0 3px; font-size: 12px; }
-        .step span { display: block; color: var(--muted); font-size: 11px; line-height: 1.5; }
-        .disclaimer {
-            display: flex; gap: 10px; align-items: flex-start; margin-top: 22px;
-            padding: 14px 16px; border: 1px solid #f0dfc8; border-radius: 12px;
-            background: #fffaf3; color: #80613a; font-size: 11px; line-height: 1.6;
-        }
-        .disclaimer strong { display: block; color: #654b2d; margin-bottom: 2px; font-size: 12px; }
-        footer {
-            display: flex; justify-content: space-between; gap: 15px;
-            padding: 19px clamp(18px, 5vw, 64px); border-top: 1px solid #e3ece8;
-            color: #879792; background: #fff; font-size: 11px;
-        }
-        @media (max-width: 760px) {
-            main { padding-top: 30px; }
-            .layout { grid-template-columns: 1fr; }
-            .side-card { order: 2; }
-        }
-        @media (max-width: 520px) {
-            .topbar { height: 66px; }
-            main { width: min(100% - 26px, 1080px); padding-top: 25px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .field.full { grid-column: auto; }
-            .submit-row { align-items: stretch; flex-direction: column; }
-            .submit-btn { width: 100%; }
-            footer { flex-direction: column; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Screening | Sanjeevani</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+/* =====================================================
+   SANJEEVANI "APOTHECARY" THEME (same tokens as index.html)
+===================================================== */
+* { box-sizing: border-box; }
+
+:root {
+    --forest: #1E3A2B;
+    --forest-dark: #142A1E;
+    --sage: #3E6B49;
+    --sage-light: #E7F0E6;
+    --gold: #B8823D;
+    --gold-light: #F5E9D6;
+    --ivory: #FAF8F2;
+    --ink: #24291F;
+    --muted: #6C7362;
+    --line: #E4E1D2;
+    --danger: #B2493F;
+}
+
+html, body { margin: 0; padding: 0; font-family: "Inter", Arial, sans-serif; background: var(--ivory); color: var(--ink); }
+body { min-height: 100vh; }
+h1, h2, h3, h4 { font-family: "Fraunces", Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+a { text-decoration: none; color: inherit; }
+button, input, select { font-family: inherit; }
+button { border: none; }
+svg { display: block; }
+
+/* ---------- SIDEBAR ---------- */
+.sidebar { width: 250px; min-height: 100vh; background: var(--forest); color: #fff; display: flex; flex-direction: column; padding: 24px 16px; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px 28px; }
+.brand-logo { width: 42px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.14); color: #fff; display: flex; align-items: center; justify-content: center; font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 700; }
+.brand-text h2 { margin: 0; font-size: 18px; font-weight: 600; color: #fff; }
+.brand-text span { display: block; margin-top: 3px; font-size: 11px; color: rgba(255,255,255,0.58); }
+.sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
+.nav-item { width: 100%; min-height: 46px; padding: 0 13px; border-radius: 12px; display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500; transition: 0.2s ease; }
+.nav-item:hover { background: rgba(255,255,255,0.09); color: #fff; }
+.nav-item.active { background: #fff; color: var(--forest); font-weight: 700; }
+.nav-button { background: transparent; cursor: pointer; text-align: left; }
+.nav-icon { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-icon svg { width: 17px; height: 17px; }
+.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.12); }
+.logout-link { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.72); font-size: 13px; padding: 10px; }
+.logout-link:hover { color: #fff; }
+
+/* ---------- MAIN / TOPBAR ---------- */
+.main-content { width: calc(100% - 250px); margin-left: 250px; min-height: 100vh; }
+.topbar { height: 78px; background: #fff; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 34px; position: sticky; top: 0; z-index: 50; }
+.mobile-brand { display: none; }
+.search-box { width: 390px; height: 43px; background: #F5F2E9; border: 1px solid var(--line); border-radius: 12px; display: flex; align-items: center; padding: 0 14px; gap: 9px; }
+.search-box svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+.search-box input { width: 100%; border: none; outline: none; background: transparent; font-size: 12px; color: var(--ink); }
+.search-box input::placeholder { color: #9AA091; }
+.topbar-right { display: flex; align-items: center; gap: 18px; }
+.notification-btn { width: 38px; height: 38px; border-radius: 11px; background: #F5F2E9; color: var(--sage); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.notification-btn svg { width: 17px; height: 17px; }
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 39px; height: 39px; border-radius: 50%; background: var(--sage-light); color: var(--forest); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.user-details { display: flex; flex-direction: column; gap: 3px; }
+.user-details strong { font-size: 12px; color: var(--ink); }
+.user-details span { font-size: 10px; color: var(--muted); }
+
+.dashboard-container { padding: 32px 34px 50px; max-width: 1500px; margin: 0 auto; }
+.section-label { display: inline-block; color: var(--sage); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+
+.dashboard-footer { padding: 18px 34px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; }
+
+/* ---------- FLOATING CHAT BUTTON ---------- */
+.chatbot-floating-btn { position: fixed; right: 28px; bottom: 24px; height: 54px; padding: 0 19px; border-radius: 28px; background: var(--sage); color: #fff; display: flex; align-items: center; gap: 9px; cursor: pointer; box-shadow: 0 12px 30px rgba(30,58,43,0.28); z-index: 900; font-weight: 700; }
+.chatbot-floating-btn:hover { background: var(--forest); }
+.chatbot-icon svg { width: 17px; height: 17px; }
+.chatbot-label { font-size: 11px; }
+
+/* =====================================================
+   SCREENING PAGE
+===================================================== */
+.screening-page { max-width: 1180px; }
+
+.screening-heading { margin-bottom: 24px; }
+.screening-heading h1 { margin: 6px 0 8px; font-size: clamp(25px, 3vw, 32px); line-height: 1.2; color: var(--ink); }
+.screening-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+
+.screening-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr); gap: 18px; align-items: start; }
+
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; }
+.form-panel { padding: clamp(22px, 3vw, 30px); }
+
+.panel-heading { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 24px; }
+.panel-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--sage-light); color: var(--forest); }
+.panel-icon svg { width: 20px; height: 20px; }
+.panel-heading h2 { margin: 0 0 5px; font-size: 19px; color: var(--ink); }
+.panel-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+.error { margin-bottom: 18px; padding: 12px 14px; border: 1px solid #EBC9C3; border-radius: 11px; background: #FBEEEC; color: var(--danger); font-size: 13px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 19px 16px; }
+.field { min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+.field label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--ink); }
+.control {
+    width: 100%; height: 46px; padding: 0 13px; border: 1px solid var(--line); border-radius: 11px;
+    background: #FBFAF6; color: var(--ink); font-size: 13px; outline: none; transition: .2s ease;
+}
+select.control { appearance: none; -webkit-appearance: none; padding-right: 38px; cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236C7362' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat; background-position: right 13px center; }
+.control::placeholder { color: #9AA091; }
+.control:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(62,107,73,0.10); background: #fff; }
+.hint { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
+
+.submit-row { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
+.submit-btn { min-height: 46px; padding: 0 22px; border-radius: 11px; background: var(--forest); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s; }
+.submit-btn:hover { background: var(--sage); }
+.submit-note { color: var(--muted); font-size: 10px; line-height: 1.5; }
+
+/* side panel */
+.side-panel { padding: 24px; }
+.side-panel h2 { margin: 14px 0 8px; font-size: 18px; color: var(--ink); }
+.side-panel > p { margin: 0 0 20px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+.steps { display: grid; gap: 16px; }
+.step { display: flex; align-items: flex-start; gap: 12px; }
+.step-num { width: 28px; height: 28px; flex: 0 0 28px; display: flex; align-items: center; justify-content: center; border-radius: 9px; background: var(--sage-light); color: var(--forest); font-size: 11px; font-weight: 800; }
+.step strong { display: block; margin: 1px 0 3px; font-size: 12px; color: var(--ink); }
+.step span { display: block; color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+/* reminder (same as dashboard health note) */
+.health-note { margin-top: 18px; border: 1px solid #EADFC7; background: var(--gold-light); border-radius: 15px; padding: 15px; display: flex; align-items: flex-start; gap: 12px; }
+.health-note-icon { width: 30px; height: 30px; border-radius: 9px; background: #ECD8AE; color: #8A5E22; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.health-note-icon svg { width: 15px; height: 15px; }
+.health-note strong { display: block; font-size: 11px; }
+.health-note p { margin: 4px 0 0; font-size: 10px; color: #8A7E5C; line-height: 1.6; }
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 1100px) {
+    .sidebar { width: 220px; }
+    .main-content { width: calc(100% - 220px); margin-left: 220px; }
+}
+@media (max-width: 900px) {
+    .screening-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 800px) {
+    .sidebar { width: 70px; padding: 18px 10px; }
+    .brand { justify-content: center; padding: 5px 0 25px; }
+    .brand-text, .nav-item span:last-child, .logout-link { display: none; }
+    .nav-item { justify-content: center; padding: 0; }
+    .main-content { width: calc(100% - 70px); margin-left: 70px; }
+    .topbar { padding: 0 18px; }
+    .search-box { width: 260px; }
+    .user-details { display: none; }
+    .dashboard-container { padding: 22px 18px 40px; }
+}
+@media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main-content { width: 100%; margin-left: 0; }
+    .topbar { height: 66px; padding: 0 14px; }
+    .mobile-brand { display: flex; align-items: center; gap: 10px; }
+    .mobile-brand .brand-logo { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; }
+    .mobile-brand strong { font-size: 14px; margin-left: 7px; }
+    .search-box { display: none; }
+    .topbar-right { margin-left: auto; }
+    .dashboard-container { padding: 15px 13px 30px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .field.full { grid-column: auto; }
+    .submit-row { align-items: stretch; flex-direction: column; }
+    .submit-btn { width: 100%; }
+    .dashboard-footer { padding: 15px; flex-direction: column; gap: 5px; }
+    .chatbot-floating-btn { right: 14px; bottom: 14px; }
+}
+</style>
 </head>
+
 <body>
-<div class="app">
-    <header class="topbar">
-        <a class="brand" href="/" aria-label="Sanjeevani Clinic dashboard">
-            <span class="brand-mark">S</span>
-            <span><span class="brand-name">Sanjeevani Clinic</span><span class="brand-sub">Healthcare AI</span></span>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-logo">S</div>
+        <div class="brand-text"><h2>Sanjeevani</h2><span>Healthcare AI</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+            <span>Dashboard</span>
         </a>
-        <a class="home-link" href="/">← Home</a>
+
+        <button type="button" class="nav-item nav-button" onclick="openChatbot()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.4-4 8-9 8-1.1 0-2.2-.18-3.2-.5L3 21l1.6-4.3C3.6 15.4 3 13.8 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg></span>
+            <span>AI Health Chat</span>
+        </button>
+
+        <a href="/doctors" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 8v6a5 5 0 0 0 10 0V8"/><circle cx="12" cy="20" r="1.6"/></svg></span>
+            <span>Find Doctor</span>
+        </a>
+
+        <a href="/profile#appointments" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span>Appointments</span>
+        </a>
+
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-4 4.2-6 7-6s5.7 2 7 6"/></svg></span>
+            <span>My Profile</span>
+        </a>
+
+        <a href="/pharmacy" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg></span>
+            <span>Pharmacy</span>
+        </a>
+
+        <a href="/predict" class="nav-item active">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg></span>
+            <span>Health Screening</span>
+        </a>
+
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.8.9c0 1.6-2.3 2-2.3 3.4"/><path d="M12 17h.01"/></svg></span>
+            <span>Help &amp; Support</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="/logout" class="logout-link">
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+            Logout
+        </a>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <header class="topbar">
+        <div class="mobile-brand">
+            <div class="brand-logo">S</div>
+            <strong>Sanjeevani</strong>
+        </div>
+
+        <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search doctors, medicines, services..." aria-label="Search doctors, medicines, services">
+        </div>
+
+        <div class="topbar-right">
+            <button type="button" class="notification-btn" aria-label="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+            </button>
+            {% if user %}
+            <a href="/profile" class="user-chip">
+                <div class="user-avatar">{{ user.full_name[0] | upper }}</div>
+                <div class="user-details"><strong>{{ user.full_name }}</strong><span>Patient</span></div>
+            </a>
+            {% else %}
+            <a href="/profile" class="user-chip">
+                <div class="user-avatar">P</div>
+                <div class="user-details"><strong>My Profile</strong><span>Patient</span></div>
+            </a>
+            {% endif %}
+        </div>
     </header>
 
-    <main>
-        <section class="intro">
-            <span class="eyebrow">Sanjeevani Care · Health Screening</span>
+    <section class="dashboard-container screening-page">
+
+        <div class="screening-heading">
+            <span class="section-label">Health screening</span>
             <h1>Health screening desk</h1>
             <p>Enter the patient's details below to receive a screening result.</p>
-        </section>
+        </div>
 
-        <div class="layout">
-            <section class="card form-card">
-                <div class="card-heading">
-                    <div class="heading-icon">＋</div>
+        <div class="screening-layout">
+
+            <section class="panel form-panel">
+                <div class="panel-heading">
+                    <div class="panel-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+                    </div>
                     <div>
                         <h2>Patient details</h2>
                         <p>Complete each field to continue with the screening.</p>
@@ -175,6 +302,7 @@
 
                 <form action="/predict" method="POST">
                     <div class="form-grid">
+
                         <div class="field">
                             <label for="age">Age (years)</label>
                             <input class="control" type="number" id="age" name="age" min="1" max="120" placeholder="e.g. 34" required>
@@ -218,46 +346,72 @@
                                 <option value="Pune">Pune</option>
                             </select>
                         </div>
+
                     </div>
 
                     <div class="submit-row">
-                        <button class="submit-btn" type="submit">Check my result <span aria-hidden="true">→</span></button>
+                        <button class="submit-btn" type="submit">Check my result →</button>
                         <span class="submit-note">Your details are used to generate the screening result.</span>
                     </div>
                 </form>
             </section>
 
-            <aside class="card side-card">
-                <div class="side-icon">✚</div>
+            <aside class="panel side-panel">
+                <div class="panel-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                </div>
                 <h2>How screening works</h2>
                 <p>Follow these steps to complete your health screening.</p>
+
                 <div class="steps">
                     <div class="step">
-                        <span class="step-num">01</span>
+                        <span class="step-num">1</span>
                         <div><strong>Enter patient details</strong><span>Provide age, gender, body temperature, cough, and city.</span></div>
                     </div>
                     <div class="step">
-                        <span class="step-num">02</span>
+                        <span class="step-num">2</span>
                         <div><strong>Submit for screening</strong><span>Check that the information is accurate before submitting.</span></div>
                     </div>
                     <div class="step">
-                        <span class="step-num">03</span>
+                        <span class="step-num">3</span>
                         <div><strong>Review the result</strong><span>Use the result as screening support and follow any next-step guidance.</span></div>
                     </div>
                 </div>
             </aside>
+
         </div>
 
-        <div class="disclaimer">
-            <span aria-hidden="true">ⓘ</span>
-            <div><strong>Important health reminder</strong>This screening tool supports triage and does not replace a medical diagnosis. For emergencies or severe symptoms, seek immediate medical care.</div>
+        <div class="health-note">
+            <div class="health-note-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3L12 3Z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+                <strong>Important health reminder</strong>
+                <p>This screening tool supports triage and does not replace a medical diagnosis. For emergencies or severe symptoms, seek immediate medical care.</p>
+            </div>
         </div>
-    </main>
 
-    <footer>
-        <span>© 2026 Sanjeevani Clinic</span>
-        <span>Digital Healthcare Assistance Platform</span>
+    </section>
+
+    <footer class="dashboard-footer">
+        <div>© 2026 Sanjeevani Clinic</div>
+        <div>Digital Healthcare Assistance Platform</div>
     </footer>
-</div>
+</main>
+
+<!-- FLOATING AI BUTTON -->
+<button type="button" class="chatbot-floating-btn" onclick="openChatbot()" aria-label="Open AI Health Assistant">
+    <span class="chatbot-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.4-4 8-9 8-1.1 0-2.2-.18-3.2-.5L3 21l1.6-4.3C3.6 15.4 3 13.8 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/></svg>
+    </span>
+    <span class="chatbot-label">AI Health</span>
+</button>
+
+<script>
+function openChatbot() {
+    /* Change this only if your existing chatbot uses a different route. */
+    window.location.href = "/chat";
+}
+</script>
 </body>
 </html>

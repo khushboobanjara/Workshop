@@ -122,7 +122,8 @@ from src.database.pharmacy_repository import (
     save_pharmacy_cashfree_order,
     get_pharmacy_order_by_cashfree_order_id,
     update_pharmacy_payment_success,
-    update_pharmacy_payment_failed
+    update_pharmacy_payment_failed,
+    get_nearby_pharmacies
 )
 
 
@@ -172,6 +173,10 @@ app.add_middleware(
     same_site="lax",
     https_only=False  # Set to True when deployed behind HTTPS.
 )
+
+# Doctor dashboard routes (/doctor/...)
+from doctor_dashboard import router as doctor_dashboard_router
+app.include_router(doctor_dashboard_router)
 
 
 # =========================================================
@@ -257,6 +262,12 @@ async def home(request: Request):
     if isinstance(user, RedirectResponse):
         return user
 
+    if (user.get("role") or "").upper() == "DOCTOR":
+        return RedirectResponse(
+            url="/doctor/dashboard",
+            status_code=303
+        )
+
     logger.info("Home page accessed...")
 
     return templates.TemplateResponse(
@@ -332,6 +343,12 @@ async def login(
     request.session["email"] = user["email"]
     request.session["phone"] = user["phone"]
     request.session["role"] = user["role"]
+
+    if (user["role"] or "").upper() == "DOCTOR":
+        return RedirectResponse(
+            url="/doctor/dashboard",
+            status_code=303
+        )
 
     return RedirectResponse(
         url="/",
@@ -1054,6 +1071,43 @@ async def doctors_page(
 # DOCTOR DETAILS
 # =========================================================
 
+def prepare_slots_for_display(slots):
+    """
+    Turn raw availability rows into display-ready rows:
+    readable date/time labels, and drop slots that already ended today.
+    (MySQL TIME columns arrive as timedelta objects.)
+    """
+    from datetime import datetime as _datetime
+    from datetime import time as _time
+    from datetime import timedelta as _timedelta
+
+    def to_clock(value):
+        if isinstance(value, _timedelta):
+            total = int(value.total_seconds())
+            return _time((total // 3600) % 24, (total % 3600) // 60)
+        if isinstance(value, _datetime):
+            return value.time()
+        return value
+
+    now = _datetime.now()
+    prepared = []
+
+    for slot in slots:
+        start = to_clock(slot["start_time"])
+        end = to_clock(slot["end_time"])
+
+        if slot["available_date"] == now.date() and end <= now.time():
+            continue
+
+        item = dict(slot)
+        item["date_label"] = slot["available_date"].strftime("%a, %d %b %Y")
+        item["start_label"] = start.strftime("%I:%M %p").lstrip("0")
+        item["end_label"] = end.strftime("%I:%M %p").lstrip("0")
+        prepared.append(item)
+
+    return prepared
+
+
 @app.get(
     "/doctors/{doctor_id}",
     response_class=HTMLResponse
@@ -1079,8 +1133,10 @@ async def doctor_details(
             status_code=404
         )
 
-    availability = get_doctor_availability(
-        doctor_id
+    availability = prepare_slots_for_display(
+        get_doctor_availability(
+            doctor_id
+        )
     )
 
     return templates.TemplateResponse(
@@ -2222,6 +2278,95 @@ async def pharmacy_search(
             "search_term": q
         }
     )
+
+
+# =========================================================
+# PHARMACY - FIND NEARBY PHARMACIES
+# =========================================================
+
+@app.post("/pharmacy/nearby")
+async def find_nearby_pharmacies(request: Request):
+    """Find pharmacies near the patient's current location.
+
+    Accepts JSON, form data, or query parameters. Expected location fields
+    are latitude/longitude (also accepts lat/lng); radius_km is optional.
+    """
+
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Please log in to find nearby pharmacies."
+        )
+
+    try:
+        content_type = request.headers.get("content-type", "").lower()
+
+        if "application/json" in content_type:
+            payload = await request.json()
+        elif (
+            "application/x-www-form-urlencoded" in content_type
+            or "multipart/form-data" in content_type
+        ):
+            form = await request.form()
+            payload = dict(form)
+        else:
+            payload = dict(request.query_params)
+
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid location data."
+            )
+
+        latitude = payload.get("latitude", payload.get("lat"))
+        longitude = payload.get("longitude", payload.get("lng"))
+        radius_km = payload.get("radius_km", 10)
+
+        if latitude in (None, "") or longitude in (None, ""):
+            raise HTTPException(
+                status_code=400,
+                detail="Your latitude and longitude are required. Please allow location access."
+            )
+
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+            radius_km = float(radius_km)
+        except (TypeError, ValueError):
+            raise HTTPException(
+                status_code=400,
+                detail="Latitude, longitude, and radius must be numbers."
+            )
+
+        pharmacies = get_nearby_pharmacies(
+            user_lat=latitude,
+            user_lng=longitude,
+            radius_km=radius_km
+        )
+
+        return {
+            "success": True,
+            "pharmacies": pharmacies,
+            "count": len(pharmacies)
+        }
+
+    except HTTPException:
+        raise
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception:
+        logger.exception(
+            "Nearby pharmacy search failed for user %s",
+            user["user_id"]
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Unable to find nearby pharmacies right now. "
+                "Please check the pharmacy location data and Google Maps API configuration."
+            )
+        )
 
 
 @app.get(

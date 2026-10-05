@@ -1,3 +1,5 @@
+import math
+
 from src.database.database import get_db_connection
 
 
@@ -99,6 +101,152 @@ def get_medicine_by_id(medicine_id):
 
 
 # =========================================================
+# FIND NEARBY PHARMACIES
+# =========================================================
+
+def get_nearby_pharmacies(user_lat, user_lng, radius_km=10.0):
+    """Find real pharmacies near the user's current coordinates via Places API (New).
+
+    Distances are straight-line distances calculated from the returned place
+    coordinates. Google Maps links open the selected pharmacy in Maps.
+    """
+    import os
+    import httpx
+    from urllib.parse import quote
+
+    try:
+        user_lat = float(user_lat)
+        user_lng = float(user_lng)
+        radius_km = float(radius_km)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Latitude, longitude, and radius must be numbers.") from exc
+
+    if not math.isfinite(user_lat) or not -90 <= user_lat <= 90:
+        raise ValueError("Latitude must be between -90 and 90.")
+    if not math.isfinite(user_lng) or not -180 <= user_lng <= 180:
+        raise ValueError("Longitude must be between -180 and 180.")
+    if not math.isfinite(radius_km) or not 0 < radius_km <= 50:
+        raise ValueError("Radius must be greater than 0 and no more than 50 km.")
+
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError(
+            "GOOGLE_MAPS_API_KEY is missing from the environment. "
+            "Add a Google Maps Platform API key to your .env file."
+        )
+
+    endpoint = "https://places.googleapis.com/v1/places:searchNearby"
+    payload = {
+        "includedTypes": ["pharmacy"],
+        "maxResultCount": 20,
+        "rankPreference": "DISTANCE",
+        "languageCode": "en",
+        "regionCode": "IN",
+        "locationRestriction": {
+            "circle": {
+                "center": {
+                    "latitude": user_lat,
+                    "longitude": user_lng,
+                },
+                "radius": radius_km * 1000,
+            }
+        },
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": api_key,
+        "X-Goog-FieldMask": (
+            "places.id,places.displayName,places.formattedAddress,"
+            "places.location,places.googleMapsUri,places.nationalPhoneNumber"
+        ),
+    }
+
+    try:
+        response = httpx.post(
+            endpoint,
+            json=payload,
+            headers=headers,
+            timeout=20.0,
+        )
+    except httpx.TimeoutException as exc:
+        raise RuntimeError("Google Places API request timed out. Please try again.") from exc
+    except httpx.RequestError as exc:
+        raise RuntimeError(f"Could not connect to Google Places API: {exc}") from exc
+
+    if response.status_code != 200:
+        try:
+            error_data = response.json().get("error", {})
+            message = error_data.get("message", response.text[:500])
+            status = error_data.get("status", response.status_code)
+        except (ValueError, AttributeError):
+            message = response.text[:500]
+            status = response.status_code
+        raise RuntimeError(f"Google Places API error: {status} - {message}")
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise RuntimeError("Google Places API returned invalid JSON.") from exc
+
+    earth_radius_km = 6371.0088
+    user_lat_rad = math.radians(user_lat)
+    user_lng_rad = math.radians(user_lng)
+    nearby = []
+
+    for place in data.get("places", []):
+        location = place.get("location") or {}
+        try:
+            lat = float(location["latitude"])
+            lng = float(location["longitude"])
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            continue
+
+        lat_rad = math.radians(lat)
+        lng_rad = math.radians(lng)
+        delta_lat = lat_rad - user_lat_rad
+        delta_lng = lng_rad - user_lng_rad
+        a = (
+            math.sin(delta_lat / 2) ** 2
+            + math.cos(user_lat_rad)
+            * math.cos(lat_rad)
+            * math.sin(delta_lng / 2) ** 2
+        )
+        distance_km = 2 * earth_radius_km * math.asin(
+            min(1.0, math.sqrt(a))
+        )
+
+        display_name = place.get("displayName") or {}
+        name = display_name.get("text") or "Pharmacy"
+        maps_url = place.get("googleMapsUri")
+        if not maps_url:
+            place_id = place.get("id")
+            maps_url = (
+                f"https://www.google.com/maps/search/?api=1&query_place_id={place_id}"
+                if place_id else
+                "https://www.google.com/maps/search/?api=1&query="
+                + quote(name)
+            )
+
+        nearby.append({
+            "place_id": place.get("id"),
+            "name": name,
+            "address": place.get("formattedAddress") or "Address unavailable",
+            "phone": place.get("nationalPhoneNumber"),
+            "latitude": lat,
+            "longitude": lng,
+            "distance_km": round(distance_km, 2),
+            "distance_text": f"{distance_km:.2f} km (straight-line)",
+            "google_maps_url": maps_url,
+        })
+
+    nearby.sort(key=lambda item: item["distance_km"])
+    return nearby
+
+
+# =========================================================
 # CART
 # =========================================================
 
@@ -107,28 +255,63 @@ def add_to_cart(
     medicine_id,
     quantity=1
 ):
+    """Add a medicine to the user's cart after validating availability and stock."""
+    if (
+        not isinstance(quantity, int)
+        or isinstance(quantity, bool)
+        or quantity <= 0
+    ):
+        raise ValueError("Quantity must be a positive whole number.")
+
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     try:
+        # Lock the medicine row so concurrent cart updates cannot exceed stock.
         cursor.execute("""
-            INSERT INTO pharmacy_cart
-            (
-                user_id,
-                medicine_id,
-                quantity
-            )
-            VALUES (%s, %s, %s)
+            SELECT medicine_id, medicine_name, stock_quantity, is_available
+            FROM medicines
+            WHERE medicine_id = %s
+            FOR UPDATE
+        """, (medicine_id,))
+        medicine = cursor.fetchone()
 
-            ON DUPLICATE KEY UPDATE
-                quantity = quantity + VALUES(quantity)
-        """, (
-            user_id,
-            medicine_id,
-            quantity
-        ))
+        if not medicine or not medicine["is_available"]:
+            raise ValueError("Medicine is not available.")
+
+        cursor.execute("""
+            SELECT cart_id, quantity
+            FROM pharmacy_cart
+            WHERE user_id = %s AND medicine_id = %s
+            FOR UPDATE
+        """, (user_id, medicine_id))
+        cart_item = cursor.fetchone()
+        current_quantity = cart_item["quantity"] if cart_item else 0
+        requested_quantity = current_quantity + quantity
+
+        if requested_quantity > medicine["stock_quantity"]:
+            raise ValueError(
+                f"Only {medicine['stock_quantity']} units of "
+                f"{medicine['medicine_name']} are available."
+            )
+
+        if cart_item:
+            cursor.execute("""
+                UPDATE pharmacy_cart
+                SET quantity = %s
+                WHERE cart_id = %s
+            """, (requested_quantity, cart_item["cart_id"]))
+        else:
+            cursor.execute("""
+                INSERT INTO pharmacy_cart (user_id, medicine_id, quantity)
+                VALUES (%s, %s, %s)
+            """, (user_id, medicine_id, quantity))
 
         conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
 
     finally:
         cursor.close()
@@ -829,24 +1012,29 @@ def update_pharmacy_payment_failed(
     order_id,
     user_id
 ):
+    """Mark an online order failed without overwriting a paid order."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
         cursor.execute("""
             UPDATE pharmacy_orders
-
-            SET
-                payment_status = 'FAILED'
-
+            SET payment_status = 'FAILED'
             WHERE order_id = %s
               AND user_id = %s
+              AND payment_method = 'ONLINE'
+              AND payment_status <> 'PAID'
         """, (
             order_id,
             user_id
         ))
 
         conn.commit()
+        return cursor.rowcount == 1
+
+    except Exception:
+        conn.rollback()
+        raise
 
     finally:
         cursor.close()

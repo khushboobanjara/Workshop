@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doctor Dashboard · Sanjeevani Clinic</title>
+    <style>
+        :root {
+            --teal: #0d5148;
+            --teal-dark: #12352b;
+            --teal-soft: #e8f3f0;
+            --border: #dce9e5;
+            --muted: #526a65;
+            --bg: #f4f8f7;
+            --card: #ffffff;
+            --ok: #1f7a4d;
+            --warn: #a86400;
+            --bad: #b3261e;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; background: var(--bg); color: var(--teal-dark);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+        }
+        a { color: var(--teal); }
+
+        /* ---------- top bar ---------- */
+        .topbar {
+            background: var(--teal); color: #fff;
+            padding: 14px 24px; display: flex; flex-wrap: wrap;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .topbar h1 { margin: 0; font-size: 18px; font-weight: 650; }
+        .topbar small { display: block; opacity: .8; font-weight: 400; }
+        .topbar .right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .topbar a { color: #fff; text-decoration: none; opacity: .9; }
+        .topbar a:hover { opacity: 1; text-decoration: underline; }
+
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; }
+
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: 0 6px 22px #12352b0d;
+        }
+        .card h2 { margin: 0; font-size: 16px; }
+        .card-head {
+            padding: 16px 18px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; flex-wrap: wrap;
+        }
+        .card-body { padding: 16px 18px; }
+
+        /* ---------- flash ---------- */
+        .flash {
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+            border: 1px solid; font-size: 14px;
+        }
+        .flash.ok  { background: #e8f6ee; border-color: #b8dfc9; color: var(--ok); }
+        .flash.err { background: #fdecea; border-color: #f3c1bc; color: var(--bad); }
+
+        /* ---------- stats ---------- */
+        .stats {
+            display: grid; gap: 14px; margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        }
+        .stat { padding: 16px 18px; }
+        .stat .label { color: var(--muted); font-size: 13px; }
+        .stat .value { font-size: 30px; font-weight: 700; margin: 2px 0; }
+        .stat .sub { color: var(--muted); font-size: 12.5px; }
+
+        /* ---------- layout ---------- */
+        .grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+        @media (min-width: 1000px) { .grid { grid-template-columns: 1.9fr 1fr; } }
+
+        /* ---------- tabs / filters ---------- */
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tab {
+            padding: 6px 14px; border-radius: 999px; font-size: 13.5px;
+            text-decoration: none; color: var(--muted);
+            border: 1px solid var(--border); background: #fff;
+        }
+        .tab.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+        .filters {
+            display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 18px;
+            border-bottom: 1px solid var(--border); background: #fbfdfc;
+        }
+        input, select {
+            font: inherit; font-size: 14px; padding: 8px 10px;
+            border: 1px solid #c9dcd7; border-radius: 8px; background: #fff;
+            color: var(--teal-dark);
+        }
+        input:focus, select:focus { outline: 2px solid #0d514840; border-color: var(--teal); }
+        .filters input[type=search] { flex: 1; min-width: 160px; }
+
+        button, .btn {
+            font: inherit; font-size: 13px; cursor: pointer;
+            padding: 6px 12px; border-radius: 8px; border: 1px solid var(--teal);
+            background: var(--teal); color: #fff; text-decoration: none;
+        }
+        button:hover { filter: brightness(1.1); }
+        button.ghost { background: #fff; color: var(--teal); }
+        button.danger { background: #fff; color: var(--bad); border-color: #e3b1ad; }
+        button.big { padding: 9px 16px; font-size: 14px; }
+
+        /* ---------- table ---------- */
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th {
+            text-align: left; font-size: 12px; text-transform: uppercase;
+            letter-spacing: .04em; color: var(--muted);
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        td { padding: 12px 14px; border-bottom: 1px solid #edf3f1; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        .time { font-weight: 650; white-space: nowrap; }
+        .dim { color: var(--muted); font-size: 12.5px; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .actions form { margin: 0; }
+
+        .badge {
+            display: inline-block; padding: 2px 10px; border-radius: 999px;
+            font-size: 12px; font-weight: 600; white-space: nowrap;
+        }
+        .b-booked    { background: #fff4e0; color: var(--warn); }
+        .b-confirmed { background: #e3f0fb; color: #1b5e94; }
+        .b-completed { background: #e8f6ee; color: var(--ok); }
+        .b-cancelled { background: #f1f1f1; color: #6b6b6b; }
+        .b-paid      { background: #e8f6ee; color: var(--ok); }
+        .b-pending   { background: #fff4e0; color: var(--warn); }
+        .b-failed    { background: #fdecea; color: var(--bad); }
+
+        .empty { padding: 36px 18px; text-align: center; color: var(--muted); }
+
+        /* ---------- availability ---------- */
+        .slot-form { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+        .slot-form .full { grid-column: 1 / -1; }
+        .slot-form label { font-size: 12.5px; color: var(--muted); display: block; }
+        .slot-form input { width: 100%; }
+        .slot-list { list-style: none; margin: 0; padding: 0; }
+        .slot-list li {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; padding: 10px 0; border-bottom: 1px solid #edf3f1;
+        }
+        .slot-list li:last-child { border-bottom: none; }
+        .slot-list form { margin: 0; }
+
+        .toggle-row { display: flex; align-items: center; gap: 10px; }
+        .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+        .dot.on { background: #4ade80; } .dot.off { background: #f87171; }
+
+        /* ---------- notice states ---------- */
+        .notice { max-width: 560px; margin: 60px auto; padding: 30px; text-align: center; }
+        .notice p { color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <h1>
+        Sanjeevani Clinic · Doctor Dashboard
+        {% if state == "ok" %}
+        <small>{{ today_label }}</small>
+        {% endif %}
+    </h1>
+    <div class="right">
+        {% if state == "ok" %}
+        <form method="post" action="/doctor/accepting" class="toggle-row" style="margin:0">
+            <input type="hidden" name="next" value="{{ current_url }}">
+            <span class="dot {{ 'on' if doctor.available else 'off' }}"></span>
+            <span>{{ 'Accepting patients' if doctor.available else 'Hidden from search' }}</span>
+            <input type="hidden" name="accepting" value="{{ 0 if doctor.available else 1 }}">
+            <button class="ghost" type="submit">{{ 'Pause' if doctor.available else 'Resume' }}</button>
+        </form>
+        {% endif %}
+        <span>{{ user.full_name or user.email }}</span>
+        <a href="/logout">Log out</a>
+    </div>
+</header>
+
+{% if state == "pending" %}
+<main class="card notice">
+    <h2>Your doctor account isn't active yet</h2>
+    <p>Your account status is <strong>{{ doctor_status|title }}</strong>. You'll get access to the dashboard once the clinic approves your profile.</p>
+    <a href="/logout">Log out</a>
+</main>
+
+{% elif state == "unlinked" %}
+<main class="card notice">
+    <h2>Your doctor profile isn't linked yet</h2>
+    <p>We couldn't find a doctor profile with the email <strong>{{ user.email }}</strong>. Ask the clinic admin to add you to the doctors list using this same email address, then reload this page.</p>
+    <a href="/logout">Log out</a>
+</main>
+
+{% else %}
+<div class="wrap">
+
+    {% if flash %}
+    <div class="flash {{ 'ok' if flash.ok else 'err' }}">{{ flash.text }}</div>
+    {% endif %}
+
+    <p style="margin:0 0 16px;color:var(--muted)">
+        Welcome, <strong style="color:var(--teal-dark)">Dr. {{ doctor.doctor_name }}</strong>
+        · {{ doctor.specialization }}
+    </p>
+
+    <!-- ================= STATS ================= -->
+    <section class="stats">
+        <div class="card stat">
+            <div class="label">Today's appointments</div>
+            <div class="value">{{ stats.today_total }}</div>
+            <div class="sub">{{ stats.today_remaining }} still to see</div>
+        </div>
+        <div class="card stat">
+            <div class="label">Upcoming</div>
+            <div class="value">{{ stats.upcoming }}</div>
+            <div class="sub">after today, active bookings</div>
+        </div>
+        <div class="card stat">
+            <div class="label">Completed this month</div>
+            <div class="value">{{ stats.completed_month }}</div>
+            <div class="sub">consultations finished</div>
+        </div>
+        <div class="card stat">
+            <div class="label">Collected this month</div>
+            <div class="value">₹{{ "{:,.0f}".format(stats.earned_month) }}</div>
+            <div class="sub">₹{{ "{:,.0f}".format(stats.outstanding) }} unpaid on completed visits</div>
+        </div>
+    </section>
+
+    <div class="grid">
+
+        <!-- ================= APPOINTMENTS ================= -->
+        <section class="card">
+            <div class="card-head">
+                <h2>Appointments</h2>
+                <nav class="tabs">
+                    {% for key, label in [("today","Today"),("upcoming","Upcoming"),("past","Past"),("all","All")] %}
+                    <a class="tab {{ 'active' if view == key }}"
+                       href="/doctor/dashboard?view={{ key }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ label }}</a>
+                    {% endfor %}
+                </nav>
+            </div>
+
+            <form class="filters" method="get" action="/doctor/dashboard">
+                <input type="hidden" name="view" value="{{ view }}">
+                <input type="search" name="q" value="{{ q }}" placeholder="Search patient name or phone">
+                <select name="status">
+                    <option value="">All statuses</option>
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {{ 'selected' if s == status_filter }}>{{ s|title }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="big">Filter</button>
+            </form>
+
+            {% if appointments %}
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Patient</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for a in appointments %}
+                        <tr>
+                            <td>
+                                <div class="time">{{ a.time_label }}</div>
+                                <div class="dim">{{ a.date_label }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ a.patient_name }}</strong>
+                                <div class="dim"><a href="tel:{{ a.phone }}">{{ a.phone }}</a></div>
+                            </td>
+                            <td><span class="badge b-{{ a.status|lower }}">{{ a.status|title }}</span></td>
+                            <td>
+                                <span class="badge b-{{ a.payment_status|lower }}">{{ a.payment_status|title }}</span>
+                                <div class="dim">{{ a.payment_method|title }} · ₹{{ "{:,.0f}".format(a.fee) }}</div>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    {% if a.can_confirm %}
+                                    <form method="post" action="/doctor/appointments/{{ a.appointment_id }}/confirm">
+                                        <input type="hidden" name="next" value="{{ current_url }}">
+                                        <button type="submit">Confirm</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if a.can_complete %}
+                                    <form method="post" action="/doctor/appointments/{{ a.appointment_id }}/complete">
+                                        <input type="hidden" name="next" value="{{ current_url }}">
+                                        <button type="submit">Complete</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if a.can_mark_paid %}
+                                    <form method="post" action="/doctor/appointments/{{ a.appointment_id }}/mark-paid"
+                                          data-confirm="Record that ₹{{ '{:,.0f}'.format(a.fee) }} cash was received from {{ a.patient_name }}?"
+                                          onsubmit="return !this.dataset.confirm || confirm(this.dataset.confirm)">
+                                        <input type="hidden" name="next" value="{{ current_url }}">
+                                        <button type="submit" class="ghost">Cash received</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if a.can_cancel %}
+                                    <form method="post" action="/doctor/appointments/{{ a.appointment_id }}/cancel"
+                                          data-confirm="Cancel {{ a.patient_name }}'s appointment on {{ a.date_label }} at {{ a.time_label }}?{% if a.payment_status == 'PAID' %} They have already paid online — any refund must be issued separately.{% endif %}"
+                                          onsubmit="return !this.dataset.confirm || confirm(this.dataset.confirm)">
+                                        <input type="hidden" name="next" value="{{ current_url }}">
+                                        <button type="submit" class="danger">Cancel</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if a.awaiting_payment %}
+                                    <span class="dim">Awaiting online payment</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                No appointments found{% if view == "today" %} for today{% endif %}.
+                {% if q or status_filter %}Try clearing the filters.{% endif %}
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- ================= AVAILABILITY ================= -->
+        <aside style="display:grid;gap:20px;align-content:start">
+
+            <section class="card">
+                <div class="card-head"><h2>Add availability</h2></div>
+                <div class="card-body">
+                    <form method="post" action="/doctor/availability/add" class="slot-form">
+                        <input type="hidden" name="next" value="{{ current_url }}">
+                        <div class="full">
+                            <label for="slot_date">Date</label>
+                            <input id="slot_date" type="date" name="slot_date" min="{{ today.isoformat() }}" required>
+                        </div>
+                        <div>
+                            <label for="start_time">From</label>
+                            <input id="start_time" type="time" name="start_time" required>
+                        </div>
+                        <div>
+                            <label for="end_time">To</label>
+                            <input id="end_time" type="time" name="end_time" required>
+                        </div>
+                        <div class="full"><button type="submit" class="big">Add slot</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-head"><h2>Your upcoming slots</h2></div>
+                <div class="card-body">
+                    {% if slots %}
+                    <ul class="slot-list">
+                        {% for s in slots %}
+                        <li>
+                            <div>
+                                <strong>{{ s.date_label }}</strong>
+                                <div class="dim">
+                                    {{ s.start_label }} – {{ s.end_label }}
+                                    · {{ s.booked_count }} booked
+                                </div>
+                            </div>
+                            <form method="post" action="/doctor/availability/{{ s.availability_id }}/remove"
+                                  data-confirm="Remove this availability slot?"
+                                  onsubmit="return !this.dataset.confirm || confirm(this.dataset.confirm)">
+                                <input type="hidden" name="next" value="{{ current_url }}">
+                                <button type="submit" class="danger">Remove</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="dim" style="margin:0">
+                        No upcoming slots. Patients can't book you until you add some.
+                    </p>
+                    {% endif %}
+                </div>
+            </section>
+
+        </aside>
+    </div>
+</div>
+{% endif %}
+
+</body>
+</html>

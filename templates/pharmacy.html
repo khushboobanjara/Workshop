@@ -1,1316 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Pharmacy | Sanjeevani</title>
-
-    <link
-        rel="stylesheet"
-        href="/static/style.css"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-        crossorigin
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
-
-
-    <style>
-
-        .pharmacy-page {
-            max-width: 1200px;
-        }
-
-
-        /* =====================================================
-           HEADER
-        ===================================================== */
-
-        .pharmacy-heading {
-            margin-bottom: 24px;
-        }
-
-        .pharmacy-heading h1 {
-            font-size: 30px;
-            font-weight: 800;
-            margin: 6px 0 8px;
-        }
-
-        .pharmacy-heading p {
-            color: var(--text-light);
-            font-size: 13px;
-        }
-
-
-        /* =====================================================
-           PHARMACY HERO
-        ===================================================== */
-
-        .pharmacy-hero {
-            background:
-                linear-gradient(
-                    135deg,
-                    #0f8f83,
-                    #08766d
-                );
-
-            border-radius: 22px;
-
-            padding: 30px;
-
-            color: white;
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            gap: 25px;
-
-            margin-bottom: 25px;
-
-            overflow: hidden;
-
-            position: relative;
-        }
-
-
-        .pharmacy-hero::after {
-            content: "";
-
-            position: absolute;
-
-            width: 250px;
-            height: 250px;
-
-            border: 1px solid rgba(255,255,255,0.15);
-
-            border-radius: 50%;
-
-            right: -70px;
-
-            top: -120px;
-        }
-
-
-        .pharmacy-hero-content {
-            position: relative;
-            z-index: 2;
-        }
-
-
-        .pharmacy-hero-label {
-            font-size: 9px;
-
-            font-weight: 800;
-
-            letter-spacing: 1.4px;
-
-            opacity: 0.85;
-        }
-
-
-        .pharmacy-hero h2 {
-            font-size: 25px;
-
-            margin: 8px 0;
-
-            font-weight: 800;
-        }
-
-
-        .pharmacy-hero p {
-            font-size: 12px;
-
-            opacity: 0.88;
-
-            max-width: 550px;
-
-            line-height: 1.6;
-        }
-
-
-        .pharmacy-hero-icon {
-            width: 100px;
-            height: 100px;
-
-            border-radius: 28px;
-
-            background: rgba(255,255,255,0.12);
-
-            border: 1px solid rgba(255,255,255,0.18);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 38px;
-
-            font-weight: 800;
-
-            position: relative;
-
-            z-index: 2;
-        }
-
-
-        /* =====================================================
-           SEARCH
-        ===================================================== */
-
-        .pharmacy-search {
-            background: white;
-
-            border: 1px solid var(--border);
-
-            border-radius: 17px;
-
-            padding: 8px;
-
-            display: flex;
-
-            align-items: center;
-
-            gap: 8px;
-
-            box-shadow: var(--shadow);
-
-            margin-bottom: 25px;
-        }
-
-
-        .pharmacy-search-icon {
-            width: 40px;
-            height: 40px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            color: var(--primary);
-
-            font-size: 17px;
-        }
-
-
-        .pharmacy-search input {
-            flex: 1;
-
-            border: none;
-
-            outline: none;
-
-            font-family: inherit;
-
-            font-size: 12px;
-
-            color: var(--text);
-
-            background: transparent;
-        }
-
-
-        .pharmacy-search input::placeholder {
-            color: #9aa9a5;
-        }
-
-
-        .pharmacy-search button {
-            border: none;
-
-            background: var(--primary);
-
-            color: white;
-
-            padding: 12px 20px;
-
-            border-radius: 10px;
-
-            font-family: inherit;
-
-            font-size: 10px;
-
-            font-weight: 800;
-
-            cursor: pointer;
-        }
-
-
-        .pharmacy-search button:hover {
-            background: var(--primary-dark);
-        }
-
-
-        /* =====================================================
-           TOP ACTIONS
-        ===================================================== */
-
-        .pharmacy-actions {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            margin-bottom: 18px;
-        }
-
-
-        .pharmacy-actions h2 {
-            font-size: 19px;
-
-            font-weight: 800;
-        }
-
-
-        .cart-button {
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 7px;
-
-            background: white;
-
-            border: 1px solid var(--border);
-
-            border-radius: 10px;
-
-            padding: 10px 14px;
-
-            text-decoration: none;
-
-            color: var(--primary);
-
-            font-size: 10px;
-
-            font-weight: 800;
-        }
-
-
-        .cart-button:hover {
-            background: #eef8f5;
-        }
-
-
-        /* =====================================================
-           SEARCH RESULT
-        ===================================================== */
-
-        .search-result {
-            color: var(--text-light);
-
-            font-size: 10px;
-
-            margin-bottom: 15px;
-        }
-
-
-        /* =====================================================
-           MEDICINE GRID
-        ===================================================== */
-
-        .medicine-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(3, 1fr);
-
-            gap: 17px;
-        }
-
-
-        .medicine-card {
-            background: white;
-
-            border: 1px solid var(--border);
-
-            border-radius: 17px;
-
-            padding: 20px;
-
-            box-shadow: var(--shadow);
-
-            transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
-        }
-
-
-        .medicine-card:hover {
-            transform: translateY(-3px);
-
-            box-shadow:
-                0 14px 30px rgba(20,60,50,0.08);
-        }
-
-
-        .medicine-top {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: flex-start;
-
-            gap: 10px;
-
-            margin-bottom: 17px;
-        }
-
-
-        .medicine-icon {
-            width: 48px;
-            height: 48px;
-
-            border-radius: 14px;
-
-            background: #e7f5f1;
-
-            color: var(--primary);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 18px;
-
-            font-weight: 800;
-        }
-
-
-        .stock-badge {
-            padding: 5px 8px;
-
-            border-radius: 20px;
-
-            background: #e6f6ee;
-
-            color: #16815f;
-
-            font-size: 8px;
-
-            font-weight: 800;
-        }
-
-
-        .stock-badge.out {
-            background: #fff0ed;
-
-            color: #b34f40;
-        }
-
-
-        .medicine-card h3 {
-            font-size: 14px;
-
-            font-weight: 800;
-
-            margin-bottom: 5px;
-        }
-
-
-        .medicine-generic {
-            color: var(--primary);
-
-            font-size: 9px;
-
-            font-weight: 700;
-
-            margin-bottom: 10px;
-        }
-
-
-        .medicine-description {
-            color: var(--text-light);
-
-            font-size: 10px;
-
-            line-height: 1.6;
-
-            min-height: 32px;
-
-            margin-bottom: 15px;
-        }
-
-
-        .medicine-category {
-            display: inline-block;
-
-            padding: 5px 8px;
-
-            border-radius: 6px;
-
-            background: #f1f5f3;
-
-            color: #687873;
-
-            font-size: 8px;
-
-            font-weight: 700;
-
-            margin-bottom: 15px;
-        }
-
-
-        .medicine-bottom {
-            display: flex;
-
-            align-items: center;
-
-            justify-content: space-between;
-
-            gap: 10px;
-
-            padding-top: 14px;
-
-            border-top: 1px solid var(--border);
-        }
-
-
-        .medicine-price {
-            font-size: 16px;
-
-            font-weight: 800;
-
-            color: var(--text);
-        }
-
-
-        .medicine-price small {
-            display: block;
-
-            color: var(--text-light);
-
-            font-size: 8px;
-
-            font-weight: 500;
-
-            margin-top: 2px;
-        }
-
-
-        .medicine-buttons {
-            display: flex;
-
-            gap: 6px;
-        }
-
-
-        .medicine-details-btn {
-            border: 1px solid var(--border);
-
-            background: white;
-
-            color: var(--primary);
-
-            padding: 8px 9px;
-
-            border-radius: 8px;
-
-            font-family: inherit;
-
-            font-size: 8px;
-
-            font-weight: 700;
-
-            text-decoration: none;
-        }
-
-
-        .medicine-details-btn:hover {
-            background: #eef8f5;
-        }
-
-
-        .add-cart-btn {
-            border: none;
-
-            background: var(--primary);
-
-            color: white;
-
-            padding: 8px 10px;
-
-            border-radius: 8px;
-
-            font-family: inherit;
-
-            font-size: 8px;
-
-            font-weight: 800;
-
-            cursor: pointer;
-        }
-
-
-        .add-cart-btn:hover {
-            background: var(--primary-dark);
-        }
-
-
-        .add-cart-btn:disabled {
-            background: #c4cfcc;
-
-            cursor: not-allowed;
-        }
-
-
-        /* =====================================================
-           EMPTY STATE
-        ===================================================== */
-
-        .empty-pharmacy {
-            background: white;
-
-            border: 1px solid var(--border);
-
-            border-radius: 18px;
-
-            padding: 60px 20px;
-
-            text-align: center;
-        }
-
-
-        .empty-pharmacy-icon {
-            width: 65px;
-            height: 65px;
-
-            margin: 0 auto 15px;
-
-            border-radius: 18px;
-
-            background: #edf7f5;
-
-            color: var(--primary);
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-size: 25px;
-        }
-
-
-        .empty-pharmacy h3 {
-            font-size: 16px;
-
-            margin-bottom: 7px;
-        }
-
-
-        .empty-pharmacy p {
-            color: var(--text-light);
-
-            font-size: 10px;
-        }
-
-
-        /* =====================================================
-           RESPONSIVE
-        ===================================================== */
-
-        @media (max-width: 1050px) {
-
-            .medicine-grid {
-                grid-template-columns:
-                    repeat(2, 1fr);
-            }
-
-        }
-
-
-        @media (max-width: 700px) {
-
-            .pharmacy-hero {
-                padding: 23px;
-            }
-
-
-            .pharmacy-hero-icon {
-                display: none;
-            }
-
-
-            .medicine-grid {
-                grid-template-columns: 1fr;
-            }
-
-
-            .pharmacy-search {
-                flex-wrap: wrap;
-            }
-
-
-            .pharmacy-search input {
-                min-width: 180px;
-            }
-
-
-            .pharmacy-search button {
-                width: 100%;
-            }
-
-        }
-
-
-        /* Nearby pharmacy fallback */
-        .nearby-pharmacy-box {
-            margin-top: 22px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: #f7fbfa;
-            text-align: left;
-        }
-        .nearby-pharmacy-box h4 { margin: 0 0 8px; color: var(--text); font-size: 15px; }
-        .nearby-pharmacy-box p { margin: 0 0 12px; color: var(--text-light); font-size: 12px; line-height: 1.5; }
-        .nearby-search-btn, .nearby-card-link {
-            display: inline-flex; align-items: center; justify-content: center;
-            border: 0; border-radius: 9px; padding: 10px 14px;
-            background: var(--primary); color: #fff; font: inherit;
-            font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer;
-        }
-        .nearby-search-btn:disabled { opacity: .65; cursor: wait; }
-        .nearby-results { display: grid; gap: 10px; margin-top: 14px; }
-        .nearby-result-card { padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; }
-        .nearby-result-card strong { display: block; margin-bottom: 5px; font-size: 13px; }
-        .nearby-result-card p { margin-bottom: 9px; }
-        .nearby-error { color: #a83232 !important; margin-top: 10px !important; }
-
-    </style>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacy | Sanjeevani</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+/* =====================================================
+   SANJEEVANI "APOTHECARY" THEME
+   Same tokens and shell as index.html (dashboard)
+===================================================== */
+* { box-sizing: border-box; }
+
+:root {
+    --forest: #1E3A2B;
+    --forest-dark: #142A1E;
+    --sage: #3E6B49;
+    --sage-light: #E7F0E6;
+    --gold: #B8823D;
+    --gold-light: #F5E9D6;
+    --ivory: #FAF8F2;
+    --paper: #ffffff;
+    --ink: #24291F;
+    --muted: #6C7362;
+    --line: #E4E1D2;
+    --danger: #B2493F;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", Arial, sans-serif;
+    background: var(--ivory);
+    color: var(--ink);
+}
+body { min-height: 100vh; }
+h1, h2, h3, h4 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+a { text-decoration: none; color: inherit; }
+button, input { font-family: inherit; }
+button { border: none; }
+svg { display: block; }
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+    width: 250px; min-height: 100vh;
+    background: var(--forest); color: #fff;
+    display: flex; flex-direction: column;
+    padding: 24px 16px;
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+}
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px 28px; }
+.brand-logo {
+    width: 42px; height: 42px; border-radius: 13px;
+    background: rgba(255,255,255,0.14); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 700;
+}
+.brand-text h2 { margin: 0; font-size: 18px; font-weight: 600; color: #fff; }
+.brand-text span { display: block; margin-top: 3px; font-size: 11px; color: rgba(255,255,255,0.58); }
+.sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
+.nav-item {
+    width: 100%; min-height: 46px; padding: 0 13px; border-radius: 12px;
+    display: flex; align-items: center; gap: 12px;
+    color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500;
+    transition: 0.2s ease;
+}
+.nav-item:hover { background: rgba(255,255,255,0.09); color: #fff; }
+.nav-item.active { background: #fff; color: var(--forest); font-weight: 700; }
+.nav-button { background: transparent; cursor: pointer; text-align: left; }
+.nav-icon { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-icon svg { width: 17px; height: 17px; }
+.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.12); }
+.logout-link { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.72); font-size: 13px; padding: 10px; }
+.logout-link:hover { color: #fff; }
+
+/* ---------- MAIN / TOPBAR ---------- */
+.main-content { width: calc(100% - 250px); margin-left: 250px; min-height: 100vh; }
+.topbar {
+    height: 78px; background: #fff; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 34px; position: sticky; top: 0; z-index: 50;
+}
+.mobile-brand { display: none; }
+.search-box {
+    width: 390px; height: 43px; background: #F5F2E9;
+    border: 1px solid var(--line); border-radius: 12px;
+    display: flex; align-items: center; padding: 0 14px; gap: 9px;
+}
+.search-box svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+.search-box input { width: 100%; border: none; outline: none; background: transparent; font-size: 12px; color: var(--ink); }
+.search-box input::placeholder { color: #9AA091; }
+.topbar-right { display: flex; align-items: center; gap: 18px; }
+.notification-btn {
+    width: 38px; height: 38px; border-radius: 11px; background: #F5F2E9; color: var(--sage);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.notification-btn svg { width: 17px; height: 17px; }
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+    width: 39px; height: 39px; border-radius: 50%;
+    background: var(--sage-light); color: var(--forest);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+}
+.user-details { display: flex; flex-direction: column; gap: 3px; }
+.user-details strong { font-size: 12px; color: var(--ink); }
+.user-details span { font-size: 10px; color: var(--muted); }
+
+.dashboard-container { padding: 32px 34px 50px; max-width: 1500px; margin: 0 auto; }
+.section-label { display: inline-block; color: var(--sage); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+
+/* ---------- FOOTER ---------- */
+.dashboard-footer {
+    padding: 18px 34px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; color: var(--muted); font-size: 9px;
+}
+
+/* ---------- FLOATING CHAT BUTTON ---------- */
+.chatbot-floating-btn {
+    position: fixed; right: 28px; bottom: 24px; height: 54px; padding: 0 19px;
+    border-radius: 28px; background: var(--sage); color: #fff;
+    display: flex; align-items: center; gap: 9px; cursor: pointer;
+    box-shadow: 0 12px 30px rgba(30,58,43,0.28); z-index: 900; font-weight: 700;
+}
+.chatbot-floating-btn:hover { background: var(--forest); }
+.chatbot-icon svg { width: 17px; height: 17px; }
+.chatbot-label { font-size: 11px; }
+
+/* =====================================================
+   PHARMACY PAGE
+===================================================== */
+.pharmacy-page { max-width: 1280px; }
+
+.pharmacy-heading { margin-bottom: 24px; }
+.pharmacy-heading h1 { margin: 6px 0 8px; color: var(--ink); font-size: clamp(25px, 3vw, 32px); line-height: 1.2; }
+.pharmacy-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* hero: same treatment as dashboard welcome banner */
+.pharmacy-hero {
+    position: relative; display: flex; align-items: center; justify-content: space-between;
+    gap: 25px; overflow: hidden; margin-bottom: 25px; padding: 36px 40px;
+    border-radius: 24px; color: #fff;
+    background: linear-gradient(135deg, var(--forest) 0%, var(--sage) 100%);
+}
+.pharmacy-hero-content { position: relative; z-index: 1; max-width: 620px; }
+.pharmacy-hero-label { color: rgba(255,255,255,0.65); font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+.pharmacy-hero h2 { margin: 11px 0 10px; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2; color: #fff; }
+.pharmacy-hero p { margin: 0; color: rgba(255,255,255,0.80); font-size: 14px; line-height: 1.7; }
+.pharmacy-hero-icon {
+    position: relative; z-index: 1; flex: 0 0 120px; width: 120px; height: 120px;
+    display: flex; align-items: center; justify-content: center;
+}
+.pharmacy-hero-icon svg { width: 100%; height: 100%; }
+
+/* search */
+.pharmacy-search {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 28px; padding: 8px;
+    border: 1px solid var(--line); border-radius: 16px; background: #fff;
+}
+.pharmacy-search:focus-within { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(62,107,73,0.10); }
+.pharmacy-search-icon { display: flex; flex: 0 0 40px; align-items: center; justify-content: center; height: 40px; color: var(--sage); }
+.pharmacy-search-icon svg { width: 18px; height: 18px; }
+.pharmacy-search input {
+    flex: 1; min-width: 0; height: 42px; margin: 0; padding: 0 10px;
+    border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 13px; box-shadow: none;
+}
+.pharmacy-search input::placeholder { color: #9AA091; }
+.pharmacy-search button {
+    min-height: 42px; padding: 0 20px; border-radius: 11px;
+    background: var(--forest); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s;
+}
+.pharmacy-search button:hover { background: var(--sage); }
+
+/* section heading row */
+.pharmacy-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.pharmacy-actions h2 { margin: 0; color: var(--ink); font-size: 21px; }
+.search-result { margin-top: 5px; color: var(--muted); font-size: 11px; }
+.cart-button {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px;
+    border: 1px solid var(--line); border-radius: 11px; background: #fff;
+    color: var(--forest); font-size: 11px; font-weight: 700; transition: background .15s, border-color .15s;
+}
+.cart-button svg { width: 15px; height: 15px; }
+.cart-button:hover { background: var(--sage-light); border-color: #BFD6C4; }
+
+/* grid + cards */
+.medicine-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.medicine-card {
+    min-width: 0; padding: 21px; border: 1px solid var(--line); border-radius: 17px; background: #fff;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.medicine-card:hover { transform: translateY(-3px); border-color: #BFD6C4; box-shadow: 0 12px 28px rgba(30,58,43,0.08); }
+.medicine-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 17px; }
+.medicine-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 12px; background: var(--sage-light); color: var(--forest);
+}
+.medicine-icon svg { width: 20px; height: 20px; }
+.stock-badge { padding: 5px 9px; border-radius: 20px; background: var(--sage-light); color: #276441; font-size: 9px; font-weight: 700; }
+.stock-badge.out { background: #F8E5E1; color: var(--danger); }
+.medicine-card h3 { margin: 0 0 5px; color: var(--ink); font-size: 16px; }
+.medicine-generic { margin-bottom: 10px; color: var(--sage); font-size: 11px; font-weight: 600; }
+.medicine-description { min-height: 34px; margin: 0 0 15px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.medicine-category {
+    display: inline-block; margin-bottom: 15px; padding: 5px 9px; border-radius: 7px;
+    background: var(--gold-light); color: #8A5E22; font-size: 9px; font-weight: 700;
+}
+.medicine-bottom {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-top: 14px; border-top: 1px solid var(--line);
+}
+.medicine-price { color: var(--ink); font-family: "Fraunces", Georgia, serif; font-size: 18px; font-weight: 600; white-space: nowrap; }
+.medicine-price small { display: block; margin-top: 2px; color: var(--muted); font: 500 9px "Inter", sans-serif; }
+.medicine-buttons { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.medicine-buttons form { margin: 0; }
+.medicine-details-btn {
+    display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 9px; background: #fff;
+    color: var(--forest); font-size: 10px; font-weight: 700;
+}
+.medicine-details-btn:hover { background: var(--sage-light); border-color: #BFD6C4; }
+.add-cart-btn, .nearby-search-btn, .nearby-card-link {
+    display: inline-flex; align-items: center; justify-content: center; padding: 9px 11px;
+    border: 0; border-radius: 9px; background: var(--forest); color: #fff;
+    font-size: 10px; font-weight: 700; cursor: pointer; transition: background .15s;
+}
+.add-cart-btn:hover, .nearby-search-btn:hover, .nearby-card-link:hover { background: var(--sage); }
+.add-cart-btn:disabled, .nearby-search-btn:disabled { background: #C9CDBF; cursor: not-allowed; }
+
+/* empty state */
+.empty-pharmacy { padding: 56px 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; text-align: center; }
+.empty-pharmacy-icon {
+    display: flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; margin: 0 auto 15px; border-radius: 16px; background: var(--sage-light); color: var(--sage);
+}
+.empty-pharmacy-icon svg { width: 26px; height: 26px; }
+.empty-pharmacy h3 { margin: 0 0 7px; color: var(--ink); font-size: 18px; }
+.empty-pharmacy > p { margin: 0; color: var(--muted); font-size: 12px; }
+
+/* nearby pharmacies */
+.nearby-pharmacy-box {
+    max-width: 560px; margin: 24px auto 0; padding: 20px;
+    border: 1px solid #EADFC7; border-radius: 15px; background: var(--gold-light); text-align: left;
+}
+.nearby-pharmacy-box h4 { margin: 0 0 8px; color: var(--ink); font-size: 16px; }
+.nearby-pharmacy-box p { margin: 0 0 12px; color: #7A6D4A; font-size: 12px; line-height: 1.5; }
+.nearby-search-btn { padding: 10px 14px; font-size: 11px; }
+.nearby-results { display: grid; gap: 10px; margin-top: 14px; }
+.nearby-results p { margin: 0; color: var(--muted); font-size: 11px; }
+.nearby-result-card { padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.nearby-result-card strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 13px; }
+.nearby-result-card p { margin-bottom: 9px; }
+.nearby-card-link { padding: 9px 12px; font-size: 10px; }
+.nearby-error { margin-top: 10px !important; color: var(--danger) !important; }
+
+/* =====================================================
+   RESPONSIVE (same breakpoints as dashboard)
+===================================================== */
+@media (max-width: 1100px) {
+    .sidebar { width: 220px; }
+    .main-content { width: calc(100% - 220px); margin-left: 220px; }
+    .medicine-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+    .sidebar { width: 70px; padding: 18px 10px; }
+    .brand { justify-content: center; padding: 5px 0 25px; }
+    .brand-text, .nav-item span:last-child, .logout-link { display: none; }
+    .nav-item { justify-content: center; padding: 0; }
+    .main-content { width: calc(100% - 70px); margin-left: 70px; }
+    .topbar { padding: 0 18px; }
+    .search-box { width: 260px; }
+    .user-details { display: none; }
+    .dashboard-container { padding: 22px 18px 40px; }
+    .pharmacy-hero { padding: 28px; }
+    .pharmacy-hero-icon { display: none; }
+}
+@media (max-width: 700px) {
+    .medicine-grid { grid-template-columns: 1fr; }
+    .pharmacy-search { flex-wrap: wrap; }
+    .pharmacy-search input { min-width: 150px; }
+    .pharmacy-search button { width: 100%; }
+    .medicine-bottom { align-items: flex-start; flex-direction: column; }
+    .medicine-buttons { justify-content: flex-start; }
+}
+@media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main-content { width: 100%; margin-left: 0; }
+    .topbar { height: 66px; padding: 0 14px; }
+    .mobile-brand { display: flex; align-items: center; gap: 10px; }
+    .mobile-brand .brand-logo { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; }
+    .mobile-brand strong { font-size: 14px; margin-left: 7px; }
+    .search-box { display: none; }
+    .topbar-right { margin-left: auto; }
+    .dashboard-container { padding: 15px 13px 30px; }
+    .pharmacy-hero { padding: 24px 20px; border-radius: 18px; }
+    .pharmacy-actions { align-items: flex-start; }
+    .dashboard-footer { padding: 15px; flex-direction: column; gap: 5px; }
+    .chatbot-floating-btn { right: 14px; bottom: 14px; }
+}
+</style>
 </head>
-
 
 <body>
 
-
 <!-- =====================================================
      SIDEBAR
-===================================================== -->
-
+====================================================== -->
 <aside class="sidebar">
-
-
     <div class="brand">
-
-        <div class="brand-logo">
-            S
-        </div>
-
-        <div class="brand-text">
-
-            <h2>
-                Sanjeevani
-            </h2>
-
-            <span>
-                Healthcare AI
-            </span>
-
-        </div>
-
+        <div class="brand-logo">S</div>
+        <div class="brand-text"><h2>Sanjeevani</h2><span>Healthcare AI</span></div>
     </div>
 
-
-
     <nav class="sidebar-nav">
-
-
-        <a
-            href="/"
-            class="nav-item"
-        >
-            <span class="nav-icon">▦</span>
+        <a href="/" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
             <span>Dashboard</span>
         </a>
 
-
-        <button
-            type="button"
-            class="nav-item nav-button"
-            onclick="openChatbot()"
-        >
-            <span class="nav-icon">◉</span>
+        <button type="button" class="nav-item nav-button" onclick="openChatbot()">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.4-4 8-9 8-1.1 0-2.2-.18-3.2-.5L3 21l1.6-4.3C3.6 15.4 3 13.8 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg></span>
             <span>AI Health Chat</span>
         </button>
 
-
-        <a
-            href="/doctors"
-            class="nav-item"
-        >
-            <span class="nav-icon">+</span>
+        <a href="/doctors" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 8v6a5 5 0 0 0 10 0V8"/><circle cx="12" cy="20" r="1.6"/></svg></span>
             <span>Find Doctor</span>
         </a>
 
-
-        <a
-            href="/profile#appointments"
-            class="nav-item"
-        >
-            <span class="nav-icon">▣</span>
+        <a href="/profile#appointments" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
             <span>Appointments</span>
         </a>
 
-
-        <a
-            href="/profile"
-            class="nav-item"
-        >
-            <span class="nav-icon">□</span>
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-4 4.2-6 7-6s5.7 2 7 6"/></svg></span>
             <span>My Profile</span>
         </a>
 
-
-        <a
-            href="/pharmacy"
-            class="nav-item active"
-        >
-            <span class="nav-icon">+</span>
+        <a href="/pharmacy" class="nav-item active">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg></span>
             <span>Pharmacy</span>
         </a>
 
-
-        <a
-            href="/predict"
-            class="nav-item"
-        >
-            <span class="nav-icon">◌</span>
+        <a href="/predict" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg></span>
             <span>Health Screening</span>
         </a>
 
-
-        <a
-            href="/profile"
-            class="nav-item"
-        >
-            <span class="nav-icon">?</span>
-            <span>Help & Support</span>
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.8.9c0 1.6-2.3 2-2.3 3.4"/><path d="M12 17h.01"/></svg></span>
+            <span>Help &amp; Support</span>
         </a>
-
-
     </nav>
 
-
-
     <div class="sidebar-bottom">
-
-        <a
-            href="/logout"
-            class="logout-link"
-        >
-            <span>↪</span>
+        <a href="/logout" class="logout-link">
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
             Logout
         </a>
-
     </div>
-
-
 </aside>
-
-
 
 <!-- =====================================================
      MAIN
-===================================================== -->
-
+====================================================== -->
 <main class="main-content">
 
-
-    <!-- TOPBAR -->
-
     <header class="topbar">
-
+        <div class="mobile-brand">
+            <div class="brand-logo">S</div>
+            <strong>Sanjeevani</strong>
+        </div>
 
         <div class="search-box">
-
-            <span>⌕</span>
-
-            <input
-                type="text"
-                placeholder="Search doctors, medicines, services..."
-            >
-
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search doctors, medicines, services..." aria-label="Search doctors, medicines, services">
         </div>
-
 
         <div class="topbar-right">
-
-            <button
-                type="button"
-                class="notification-btn"
-            >
-                ♢
+            <button type="button" class="notification-btn" aria-label="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
             </button>
-
-
-            <a
-                href="/profile"
-                class="user-chip"
-            >
-
-                <div class="user-avatar">
-                    {{ user.full_name[0] | upper }}
-                </div>
-
-                <div class="user-details">
-
-                    <strong>
-                        {{ user.full_name }}
-                    </strong>
-
-                    <span>
-                        Patient
-                    </span>
-
-                </div>
-
+            <a href="/profile" class="user-chip">
+                <div class="user-avatar">{{ user.full_name[0] | upper }}</div>
+                <div class="user-details"><strong>{{ user.full_name }}</strong><span>Patient</span></div>
             </a>
-
         </div>
-
-
     </header>
-
-
-
-    <!-- =================================================
-         PHARMACY CONTENT
-    ================================================== -->
 
     <section class="dashboard-container pharmacy-page">
 
-
-        <!-- HEADING -->
-
         <div class="pharmacy-heading">
-
-            <span class="section-label">
-                SANJEEVANI PHARMACY
-            </span>
-
-            <h1>
-                Medicines & Pharmacy
-            </h1>
-
-            <p>
-                Search medicines, check availability and
-                add them to your cart.
-            </p>
-
+            <span class="section-label">Sanjeevani pharmacy</span>
+            <h1>Medicines &amp; Pharmacy</h1>
+            <p>Search medicines, check availability and add them to your cart.</p>
         </div>
-
-
-
-        <!-- HERO -->
 
         <div class="pharmacy-hero">
-
-
             <div class="pharmacy-hero-content">
-
-                <span class="pharmacy-hero-label">
-                    DIGITAL PHARMACY
-                </span>
-
-                <h2>
-                    Your medicines, all in one place.
-                </h2>
-
-                <p>
-                    Find available medicines, view their
-                    details and place your pharmacy order
-                    for clinic pickup or home delivery.
-                </p>
-
+                <span class="pharmacy-hero-label">Digital pharmacy</span>
+                <h2>Your medicines, all in one place.</h2>
+                <p>Find available medicines, view their details and place your pharmacy order for clinic pickup or home delivery.</p>
             </div>
-
-
-            <div class="pharmacy-hero-icon">
-                Rx
+            <div class="pharmacy-hero-icon" aria-hidden="true">
+                <svg viewBox="0 0 120 120" fill="none">
+                    <circle cx="60" cy="60" r="52" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+                    <g transform="rotate(-30 60 60)">
+                        <rect x="24" y="42" width="72" height="36" rx="18" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.55)" stroke-width="1.8"/>
+                        <line x1="60" y1="42" x2="60" y2="78" stroke="rgba(255,255,255,0.55)" stroke-width="1.8"/>
+                    </g>
+                </svg>
             </div>
-
-
         </div>
 
-
-
-        <!-- SEARCH -->
-
-        <form
-            action="/pharmacy/search"
-            method="GET"
-            class="pharmacy-search"
-        >
-
-            <div class="pharmacy-search-icon">
-                ⌕
+        <form action="/pharmacy/search" method="GET" class="pharmacy-search">
+            <div class="pharmacy-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </div>
-
-
-            <input
-                type="text"
-                name="q"
-                value="{{ search_term }}"
-                placeholder="Search medicine, generic name or category..."
-                autocomplete="off"
-            >
-
-
-            <button type="submit">
-                Search Medicine
-            </button>
-
+            <input type="text" name="q" value="{{ search_term }}" placeholder="Search medicine, generic name or category..." autocomplete="off" aria-label="Search medicine">
+            <button type="submit">Search Medicine</button>
         </form>
 
-
-
-        <!-- ACTION HEADER -->
-
         <div class="pharmacy-actions">
-
-
             <div>
-
                 {% if search_term %}
-
-                    <h2>
-                        Search Results
-                    </h2>
-
-                    <div class="search-result">
-                        Results for "{{ search_term }}"
-                    </div>
-
+                    <h2>Search Results</h2>
+                    <div class="search-result">Results for "{{ search_term }}"</div>
                 {% else %}
-
-                    <h2>
-                        Available Medicines
-                    </h2>
-
+                    <h2>Available Medicines</h2>
                 {% endif %}
-
             </div>
-
-
-            <a
-                href="/cart"
-                class="cart-button"
-            >
-                🛒
+            <a href="/cart" class="cart-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 11.4a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 7H6"/></svg>
                 View Cart
             </a>
-
-
         </div>
 
-
-
-        <!-- MEDICINES -->
-
         {% if medicines %}
-
-
-            <div class="medicine-grid">
-
-
-                {% for medicine in medicines %}
-
-
-                    <div class="medicine-card">
-
-
-                        <div class="medicine-top">
-
-
-                            <div class="medicine-icon">
-                                Rx
-                            </div>
-
-
-                            {% if medicine["stock_quantity"] > 0 %}
-
-                                <span class="stock-badge">
-                                    In Stock
-                                </span>
-
-                            {% else %}
-
-                                <span class="stock-badge out">
-                                    Out of Stock
-                                </span>
-
-                            {% endif %}
-
-
-                        </div>
-
-
-
-                        <h3>
-                            {{ medicine["medicine_name"] }}
-                        </h3>
-
-
-                        {% if medicine["generic_name"] %}
-
-                            <div class="medicine-generic">
-                                {{ medicine["generic_name"] }}
-                            </div>
-
-                        {% endif %}
-
-
-
-                        <p class="medicine-description">
-
-                            {% if medicine["description"] %}
-
-                                {{ medicine["description"][:100] }}
-
-                                {% if medicine["description"]|length > 100 %}
-                                    ...
-                                {% endif %}
-
-                            {% else %}
-
-                                Medicine available through
-                                Sanjeevani Pharmacy.
-
-                            {% endif %}
-
-                        </p>
-
-
-
-                        {% if medicine["category"] %}
-
-                            <span class="medicine-category">
-                                {{ medicine["category"] }}
-                            </span>
-
-                        {% endif %}
-
-
-
-                        <div class="medicine-bottom">
-
-
-                            <div class="medicine-price">
-
-                                ₹{{ medicine["price"] }}
-
-                                <small>
-                                    per unit
-                                </small>
-
-                            </div>
-
-
-
-                            <div class="medicine-buttons">
-
-                                {% if medicine["stock_quantity"] <= 0 %}
-                                    <button type="button" class="nearby-search-btn" data-medicine="{{ medicine['medicine_name'] | e }}" onclick="findNearbyPharmacies(this)">Find Nearby</button>
-                                {% endif %}
-
-                                <a
-                                    href="/pharmacy/medicine/{{ medicine['medicine_id'] }}"
-                                    class="medicine-details-btn"
-                                >
-                                    Details
-                                </a>
-
-
-                                <form
-                                    action="/pharmacy/cart/add"
-                                    method="POST"
-                                >
-
-                                    <input
-                                        type="hidden"
-                                        name="medicine_id"
-                                        value="{{ medicine['medicine_id'] }}"
-                                    >
-
-
-                                    <input
-                                        type="hidden"
-                                        name="quantity"
-                                        value="1"
-                                    >
-
-
-                                    <button
-                                        type="submit"
-                                        class="add-cart-btn"
-                                        {% if medicine["stock_quantity"] <= 0 %}
-                                            disabled
-                                        {% endif %}
-                                    >
-                                        + Cart
-                                    </button>
-
-                                </form>
-
-
-                            </div>
-
-
-                        </div>
-
-
+        <div class="medicine-grid">
+            {% for medicine in medicines %}
+            <div class="medicine-card">
+                <div class="medicine-top">
+                    <div class="medicine-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg>
                     </div>
-
-
-                {% endfor %}
-
-
-            </div>
-
-
-        {% else %}
-
-
-            <div class="empty-pharmacy">
-
-
-                <div class="empty-pharmacy-icon">
-                    Rx
+                    {% if medicine["stock_quantity"] > 0 %}
+                    <span class="stock-badge">In Stock</span>
+                    {% else %}
+                    <span class="stock-badge out">Out of Stock</span>
+                    {% endif %}
                 </div>
 
+                <h3>{{ medicine["medicine_name"] }}</h3>
+                {% if medicine["generic_name"] %}<div class="medicine-generic">{{ medicine["generic_name"] }}</div>{% endif %}
 
-                {% if search_term %}
+                <p class="medicine-description">
+                    {% if medicine["description"] %}
+                        {{ medicine["description"][:100] }}{% if medicine["description"]|length > 100 %}...{% endif %}
+                    {% else %}
+                        Medicine available through Sanjeevani Pharmacy.
+                    {% endif %}
+                </p>
 
-                    <h3>
-                        No medicines found
-                    </h3>
+                {% if medicine["category"] %}<span class="medicine-category">{{ medicine["category"] }}</span>{% endif %}
 
-                    <p>
-                        Try another medicine name,
-                        generic name or category.
-                    </p>
-
-                    <div class="nearby-pharmacy-box">
-                        <h4>Medicine not available?</h4>
-                        <p>Find nearby pharmacies and contact them to confirm whether they have this medicine.</p>
-                        <button type="button" class="nearby-search-btn" data-medicine="{{ search_term | e }}" onclick="findNearbyPharmacies(this)">Find Nearby Pharmacies</button>
-                        <div class="nearby-results" aria-live="polite"></div>
+                <div class="medicine-bottom">
+                    <div class="medicine-price">₹{{ medicine["price"] }}<small>per unit</small></div>
+                    <div class="medicine-buttons">
+                        {% if medicine["stock_quantity"] <= 0 %}
+                        <button type="button" class="nearby-search-btn" data-medicine="{{ medicine['medicine_name'] | e }}" onclick="findNearbyPharmacies(this)">Find Nearby</button>
+                        {% endif %}
+                        <a href="/pharmacy/medicine/{{ medicine['medicine_id'] }}" class="medicine-details-btn">Details</a>
+                        <form action="/pharmacy/cart/add" method="POST">
+                            <input type="hidden" name="medicine_id" value="{{ medicine['medicine_id'] }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="add-cart-btn" {% if medicine["stock_quantity"] <= 0 %}disabled{% endif %}>Add to Cart</button>
+                        </form>
                     </div>
+                </div>
 
-                {% else %}
-
-                    <h3>
-                        No medicines available
-                    </h3>
-
-                    <p>
-                        Pharmacy medicines will appear here
-                        when they are available.
-                    </p>
-
-                {% endif %}
-
-
+                {% if medicine["stock_quantity"] <= 0 %}<div class="nearby-results" aria-live="polite"></div>{% endif %}
             </div>
-
-
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-pharmacy">
+            <div class="empty-pharmacy-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg>
+            </div>
+            {% if search_term %}
+                <h3>No medicines found</h3>
+                <p>Try another medicine name, generic name or category.</p>
+                <div class="nearby-pharmacy-box">
+                    <h4>Medicine not available?</h4>
+                    <p>Find nearby pharmacies and contact them to confirm whether they have this medicine.</p>
+                    <button type="button" class="nearby-search-btn" data-medicine="{{ search_term | e }}" onclick="findNearbyPharmacies(this)">Find Nearby Pharmacies</button>
+                    <div class="nearby-results" aria-live="polite"></div>
+                </div>
+            {% else %}
+                <h3>No medicines available</h3>
+                <p>Pharmacy medicines will appear here when they are available.</p>
+            {% endif %}
+        </div>
         {% endif %}
-
 
     </section>
 
-
-
     <footer class="dashboard-footer">
-
-        <span>
-            © 2026 Sanjeevani Clinic
-        </span>
-
-        <span>
-            Digital Healthcare Assistance Platform
-        </span>
-
+        <div>© 2026 Sanjeevani Clinic</div>
+        <div>Digital Healthcare Assistance Platform</div>
     </footer>
-
-
 </main>
 
-
-
-<!-- FLOATING AI -->
-
-<button
-    type="button"
-    class="chatbot-floating-btn"
-    onclick="openChatbot()"
-    aria-label="Open AI Health Assistant"
->
-
+<!-- FLOATING AI BUTTON -->
+<button type="button" class="chatbot-floating-btn" onclick="openChatbot()" aria-label="Open AI Health Assistant">
     <span class="chatbot-icon">
-        ◉
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.4-4 8-9 8-1.1 0-2.2-.18-3.2-.5L3 21l1.6-4.3C3.6 15.4 3 13.8 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/></svg>
     </span>
-
-    <span class="chatbot-label">
-        AI Health
-    </span>
-
+    <span class="chatbot-label">AI Health</span>
 </button>
-
-
 
 <script>
 async function findNearbyPharmacies(button) {
-    const results = button.parentElement.querySelector(".nearby-results") ||
-        button.closest(".empty-pharmacy")?.querySelector(".nearby-results") ||
-        button.closest(".medicine-card")?.querySelector(".nearby-results");
-    let target = results || button.closest(".empty-pharmacy")?.querySelector(".nearby-results") ||
-        button.closest(".medicine-card")?.querySelector(".nearby-results");
+    const container = button.closest(".empty-pharmacy, .medicine-card, .nearby-pharmacy-box");
+    let target = container ? container.querySelector(".nearby-results") : null;
     if (!target) {
         target = document.createElement("div");
         target.className = "nearby-results";
         button.insertAdjacentElement("afterend", target);
     }
+
     const medicineName = button.dataset.medicine || "medicine";
+    const originalText = button.textContent;
     button.disabled = true;
     button.textContent = "Finding nearby pharmacies...";
-    if (target) target.innerHTML = '<p>Requesting your location...</p>';
+    target.innerHTML = "<p>Requesting your location...</p>";
 
     if (!navigator.geolocation) {
-        if (target) target.innerHTML = '<p class="nearby-error">Your browser does not support location access.</p>';
+        target.innerHTML = '<p class="nearby-error">Your browser does not support location access.</p>';
         button.disabled = false;
-        button.textContent = "Find Nearby Pharmacies";
+        button.textContent = originalText;
         return;
     }
 
@@ -1326,18 +565,19 @@ async function findNearbyPharmacies(button) {
                 })
             });
             const data = await response.json();
-            if (!target) return;
+            if (!response.ok) throw new Error(data.detail || data.response || "Unable to find nearby pharmacies.");
             if (!data.success) {
                 target.innerHTML = `<p class="nearby-error">${escapeNearbyText(data.response || "Unable to find pharmacies.")}</p>`;
                 return;
             }
+
             let html = `<p>${escapeNearbyText(data.response || "Nearby pharmacies:")}</p>`;
             if (data.pharmacies && data.pharmacies.length) {
-                html += data.pharmacies.map((p, i) => `
+                html += data.pharmacies.map((pharmacy, index) => `
                     <div class="nearby-result-card">
-                        <strong>${i + 1}. ${escapeNearbyText(p.name || "Pharmacy")}</strong>
-                        <p>${escapeNearbyText(p.address || "Address unavailable")}</p>
-                        <a class="nearby-card-link" href="${safeMapsUrl(p.google_maps_url)}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                        <strong>${index + 1}. ${escapeNearbyText(pharmacy.name || "Pharmacy")}</strong>
+                        <p>${escapeNearbyText(pharmacy.address || "Address unavailable")}</p>
+                        <a class="nearby-card-link" href="${safeMapsUrl(pharmacy.google_maps_url)}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
                     </div>`).join("");
             } else if (data.fallback_url) {
                 html += `<a class="nearby-card-link" href="${safeMapsUrl(data.fallback_url)}" target="_blank" rel="noopener noreferrer">Search pharmacies on Google Maps</a>`;
@@ -1345,18 +585,18 @@ async function findNearbyPharmacies(button) {
             target.innerHTML = html;
         } catch (error) {
             console.error("Nearby pharmacy error:", error);
-            if (target) target.innerHTML = '<p class="nearby-error">Could not load nearby pharmacies. Please try again.</p>';
+            target.innerHTML = `<p class="nearby-error">${escapeNearbyText(error.message || "Could not load nearby pharmacies. Please try again.")}</p>`;
         } finally {
             button.disabled = false;
-            button.textContent = "Find Nearby Pharmacies";
+            button.textContent = originalText;
         }
     }, (error) => {
         let message = "Location access was denied. Allow location permission in your browser and try again.";
         if (error.code === error.POSITION_UNAVAILABLE) message = "Your current location is unavailable. Try again or enable device location.";
         if (error.code === error.TIMEOUT) message = "Location request timed out. Please try again.";
-        if (target) target.innerHTML = `<p class="nearby-error">${escapeNearbyText(message)}</p>`;
+        target.innerHTML = `<p class="nearby-error">${escapeNearbyText(message)}</p>`;
         button.disabled = false;
-        button.textContent = "Find Nearby Pharmacies";
+        button.textContent = originalText;
     }, {enableHighAccuracy: true, timeout: 12000, maximumAge: 60000});
 }
 
@@ -1374,21 +614,11 @@ function safeMapsUrl(value) {
         return "#";
     }
 }
-</script>
-
-<script>
 
 function openChatbot() {
-
-    /*
-       Existing chatbot can be connected here.
-    */
-
+    /* Change this only if your existing chatbot uses a different route. */
+    window.location.href = "/chat";
 }
-
 </script>
-
-
 </body>
-
 </html>
