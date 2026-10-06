@@ -1,0 +1,9 @@
+[2026-10-06 12:44:26,238] 622 main -INFO -Screening request received from user 1
+[2026-10-06 12:44:26,243] 76 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-10-06 12:44:26,478] 686 main -ERROR -Screening error: 'Severe' is not a supported value for cough. Supported values: Mild, Strong.
+[2026-10-06 12:44:44,650] 622 main -INFO -Screening request received from user 1
+[2026-10-06 12:44:44,650] 76 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-10-06 12:44:44,659] 686 main -ERROR -Screening error: 'Moderate' is not a supported value for cough. Supported values: Mild, Strong.
+[2026-10-06 12:45:49,585] 271 main -INFO -Home page accessed...
+[2026-10-06 12:46:04,733] 622 main -INFO -Screening request received from user 1
+[2026-10-06 12:46:04,733] 667 main -WARNING -CustomData field mapping requires the existing project-specific implementation.

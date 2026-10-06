@@ -594,9 +594,7 @@ async def predict_form(request: Request):
     "/predict",
     response_class=HTMLResponse
 )
-async def predict_data(
-    request: Request
-):
+async def predict_data(request: Request):
 
     user = require_login(request)
 
@@ -604,89 +602,46 @@ async def predict_data(
         return user
 
     try:
-
         form_data = await request.form()
 
-        # -------------------------------------------------
-        # Existing screening fields
-        # -------------------------------------------------
-        #
-        # IMPORTANT:
-        # This section reads the fields from your existing
-        # predict.html dynamically so the existing screening
-        # form remains compatible.
-        #
-
-        data = dict(form_data)
-
         logger.info(
-            f"Screening request received from user "
-            f"{user['user_id']}"
+            f"Screening request received from user {user['user_id']}"
         )
 
-        # -------------------------------------------------
-        # Try to create CustomData using the existing
-        # project pipeline.
-        #
-        # Your existing predict.html / CustomData mapping
-        # should remain the source of the actual screening
-        # fields.
-        # -------------------------------------------------
-
-        try:
-
-            custom_data = CustomData(
-                **data
-            )
-
-            final_data = custom_data.get_data_as_dataframe()
-
-            predict_pipeline = PredictPipeline()
-
-            prediction = predict_pipeline.predict(
-                final_data
-            )
-
-            return templates.TemplateResponse(
-                request,
-                "result.html",
-                {
-                    "user": user,
-                    "prediction": prediction
-                }
-            )
-
-        except TypeError:
-
-            # -------------------------------------------------
-            # If the existing CustomData class does not accept
-            # the exact form field names as **kwargs, redirect
-            # back to the existing screening form.
-            # -------------------------------------------------
-
-            logger.warning(
-                "CustomData field mapping requires the "
-                "existing project-specific implementation."
-            )
-
-            return templates.TemplateResponse(
-                request,
-                "predict.html",
-                {
-                    "user": user,
-                    "error": (
-                        "Please check the screening form "
-                        "field names with CustomData."
-                    )
-                }
-            )
-
-    except Exception as e:
-
-        logger.error(
-            f"Screening error: {str(e)}"
+        custom_data = CustomData(
+            age=int(form_data.get("age")),
+            gender=form_data.get("gender"),
+            fever=float(form_data.get("fever")),
+            cough=form_data.get("cough"),
+            city=form_data.get("city")
         )
 
+        final_data = custom_data.get_data_as_dataframe()
+
+        prediction = PredictPipeline().predict(final_data)
+
+        return templates.TemplateResponse(
+            request,
+            "result.html",
+            {
+                "user": user,
+                "prediction": prediction
+            }
+        )
+
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Screening validation error: {e}")
+        return templates.TemplateResponse(
+            request,
+            "predict.html",
+            {
+                "user": user,
+                "error": str(e)
+            }
+        )
+
+    except Exception:
+        logger.exception("Screening error")
         return templates.TemplateResponse(
             request,
             "predict.html",
@@ -695,7 +650,6 @@ async def predict_data(
                 "error": "Unable to process screening."
             }
         )
-
 
 # =========================================================
 # PRETRAINED NLP - GET

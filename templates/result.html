@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screening Result | Sanjeevani</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+* { box-sizing: border-box; }
+
+:root {
+    --forest: #1E3A2B;
+    --sage: #3E6B49;
+    --sage-light: #E7F0E6;
+    --gold: #B8823D;
+    --gold-light: #F5E9D6;
+    --ivory: #FAF8F2;
+    --ink: #24291F;
+    --muted: #6C7362;
+    --line: #E4E1D2;
+    --danger: #B2493F;
+    --danger-light: #FBEEEC;
+}
+
+html, body { margin: 0; padding: 0; font-family: "Inter", Arial, sans-serif; background: var(--ivory); color: var(--ink); }
+body { min-height: 100vh; }
+h1, h2, h3 { font-family: "Fraunces", Georgia, serif; font-weight: 600; letter-spacing: -0.01em; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; border: none; }
+svg { display: block; }
+
+/* ---------- SIDEBAR ---------- */
+.sidebar { width: 250px; min-height: 100vh; background: var(--forest); color: #fff; display: flex; flex-direction: column; padding: 24px 16px; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; }
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px 10px 28px; }
+.brand-logo { width: 42px; height: 42px; border-radius: 13px; background: rgba(255,255,255,0.14); color: #fff; display: flex; align-items: center; justify-content: center; font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 700; }
+.brand-text h2 { margin: 0; font-size: 18px; font-weight: 600; color: #fff; }
+.brand-text span { display: block; margin-top: 3px; font-size: 11px; color: rgba(255,255,255,0.58); }
+.sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
+.nav-item { width: 100%; min-height: 46px; padding: 0 13px; border-radius: 12px; display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 500; transition: 0.2s ease; }
+.nav-item:hover { background: rgba(255,255,255,0.09); color: #fff; }
+.nav-item.active { background: #fff; color: var(--forest); font-weight: 700; }
+.nav-icon { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-icon svg { width: 17px; height: 17px; }
+.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.12); }
+.logout-link { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.72); font-size: 13px; padding: 10px; }
+.logout-link:hover { color: #fff; }
+
+/* ---------- MAIN / TOPBAR ---------- */
+.main-content { width: calc(100% - 250px); margin-left: 250px; min-height: 100vh; }
+.topbar { height: 78px; background: #fff; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 34px; position: sticky; top: 0; z-index: 50; }
+.mobile-brand { display: none; }
+.topbar-right { display: flex; align-items: center; gap: 18px; margin-left: auto; }
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 39px; height: 39px; border-radius: 50%; background: var(--sage-light); color: var(--forest); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.user-details { display: flex; flex-direction: column; gap: 3px; }
+.user-details strong { font-size: 12px; color: var(--ink); }
+.user-details span { font-size: 10px; color: var(--muted); }
+
+.dashboard-container { padding: 32px 34px 50px; max-width: 900px; margin: 0 auto; }
+.dashboard-footer { padding: 18px 34px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; }
+
+/* ---------- RESULT ---------- */
+.result-heading { margin-bottom: 24px; }
+.result-heading h1 { margin: 0 0 8px; font-size: clamp(25px, 3vw, 32px); line-height: 1.2; }
+.result-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: clamp(22px, 3vw, 32px); }
+
+.result-main { display: flex; align-items: center; gap: 18px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+.result-icon { width: 56px; height: 56px; flex: 0 0 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+.result-icon svg { width: 26px; height: 26px; }
+.result-icon.negative { background: var(--sage-light); color: var(--forest); }
+.result-icon.positive { background: var(--danger-light); color: var(--danger); }
+.result-main small { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.result-main h2 { margin: 0; font-size: 26px; }
+.result-main h2.negative { color: var(--forest); }
+.result-main h2.positive { color: var(--danger); }
+
+.confidence { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.confidence-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 10px; }
+.bar { height: 10px; border-radius: 6px; background: #F0EDE0; overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 6px; }
+.bar > span.negative { background: var(--sage); }
+.bar > span.positive { background: var(--danger); }
+.confidence p { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
+
+.guidance { padding-top: 22px; }
+.guidance h3 { margin: 0 0 8px; font-size: 16px; }
+.guidance p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.btn { min-height: 46px; padding: 0 22px; border-radius: 11px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s; }
+.btn-primary { background: var(--forest); color: #fff; }
+.btn-primary:hover { background: var(--sage); }
+.btn-secondary { background: var(--sage-light); color: var(--forest); }
+.btn-secondary:hover { background: #D8E7D6; }
+
+.health-note { margin-top: 18px; border: 1px solid #EADFC7; background: var(--gold-light); border-radius: 15px; padding: 15px; display: flex; align-items: flex-start; gap: 12px; }
+.health-note-icon { width: 30px; height: 30px; border-radius: 9px; background: #ECD8AE; color: #8A5E22; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.health-note-icon svg { width: 15px; height: 15px; }
+.health-note strong { display: block; font-size: 11px; }
+.health-note p { margin: 4px 0 0; font-size: 10px; color: #8A7E5C; line-height: 1.6; }
+
+@media (max-width: 1100px) {
+    .sidebar { width: 220px; }
+    .main-content { width: calc(100% - 220px); margin-left: 220px; }
+}
+@media (max-width: 800px) {
+    .sidebar { width: 70px; padding: 18px 10px; }
+    .brand { justify-content: center; padding: 5px 0 25px; }
+    .brand-text, .nav-item span:last-child, .logout-link { display: none; }
+    .nav-item { justify-content: center; padding: 0; }
+    .main-content { width: calc(100% - 70px); margin-left: 70px; }
+    .topbar { padding: 0 18px; }
+    .user-details { display: none; }
+    .dashboard-container { padding: 22px 18px 40px; }
+}
+@media (max-width: 600px) {
+    .sidebar { display: none; }
+    .main-content { width: 100%; margin-left: 0; }
+    .topbar { height: 66px; padding: 0 14px; }
+    .mobile-brand { display: flex; align-items: center; gap: 10px; }
+    .mobile-brand .brand-logo { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; }
+    .dashboard-container { padding: 15px 13px 30px; }
+    .actions .btn { width: 100%; justify-content: center; }
+    .dashboard-footer { padding: 15px; flex-direction: column; gap: 5px; }
+}
+</style>
+</head>
+
+<body>
+
+{# prediction is the tuple (result, probability) returned by PredictPipeline.predict #}
+{% set outcome = prediction[0] if prediction else "Negative" %}
+{% set confidence = prediction[1] if prediction and prediction|length > 1 else none %}
+{% set is_positive = (outcome == "Positive") %}
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-logo">S</div>
+        <div class="brand-text"><h2>Sanjeevani</h2><span>Healthcare AI</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="/" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span>
+            <span>Dashboard</span>
+        </a>
+        <a href="/doctors" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 8v6a5 5 0 0 0 10 0V8"/><circle cx="12" cy="20" r="1.6"/></svg></span>
+            <span>Find Doctor</span>
+        </a>
+        <a href="/profile#appointments" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span>Appointments</span>
+        </a>
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-4 4.2-6 7-6s5.7 2 7 6"/></svg></span>
+            <span>My Profile</span>
+        </a>
+        <a href="/pharmacy" class="nav-item">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg></span>
+            <span>Pharmacy</span>
+        </a>
+        <a href="/predict" class="nav-item active">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg></span>
+            <span>Health Screening</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="/logout" class="logout-link">
+            <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span>
+            Logout
+        </a>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <header class="topbar">
+        <div class="mobile-brand">
+            <div class="brand-logo">S</div>
+            <strong>Sanjeevani</strong>
+        </div>
+
+        <div class="topbar-right">
+            {% if user %}
+            <a href="/profile" class="user-chip">
+                <div class="user-avatar">{{ user.full_name[0] | upper }}</div>
+                <div class="user-details"><strong>{{ user.full_name }}</strong><span>Patient</span></div>
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="dashboard-container">
+
+        <div class="result-heading">
+            <h1>Your screening result</h1>
+            <p>Based on the details you entered.</p>
+        </div>
+
+        <div class="panel">
+
+            <div class="result-main">
+                <div class="result-icon {{ 'positive' if is_positive else 'negative' }}" aria-hidden="true">
+                    {% if is_positive %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3L12 3Z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    {% endif %}
+                </div>
+                <div>
+                    <small>Screening outcome</small>
+                    <h2 class="{{ 'positive' if is_positive else 'negative' }}">{{ outcome }}</h2>
+                </div>
+            </div>
+
+            {% if confidence is not none %}
+            <div class="confidence">
+                <div class="confidence-row">
+                    <span>Model confidence</span>
+                    <span>{{ confidence }}%</span>
+                </div>
+                <div class="bar" role="progressbar" aria-valuenow="{{ confidence }}" aria-valuemin="0" aria-valuemax="100">
+                    <span class="{{ 'positive' if is_positive else 'negative' }}" style="width: {{ confidence }}%;"></span>
+                </div>
+                <p>How sure the model is about this outcome. It is not a medical probability.</p>
+            </div>
+            {% endif %}
+
+            <div class="guidance">
+                <h3>What to do next</h3>
+                {% if is_positive %}
+                <p>Your details match a pattern that needs attention. Consider getting a confirmatory test and speaking with a doctor. Rest, drink fluids, and avoid close contact with others until you have advice.</p>
+                {% else %}
+                <p>Your details do not match a high-risk pattern. If symptoms continue or get worse, speak with a doctor.</p>
+                {% endif %}
+            </div>
+
+            <div class="actions">
+                {% if is_positive %}
+                <a href="/doctors" class="btn btn-primary">Find a doctor</a>
+                <a href="/predict" class="btn btn-secondary">Screen again</a>
+                {% else %}
+                <a href="/predict" class="btn btn-primary">Screen again</a>
+                <a href="/doctors" class="btn btn-secondary">Find a doctor</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="health-note">
+            <div class="health-note-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3L12 3Z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+                <strong>Important health reminder</strong>
+                <p>This screening tool supports triage and does not replace a medical diagnosis. For emergencies or severe symptoms, seek immediate medical care.</p>
+            </div>
+        </div>
+
+    </section>
+
+    <footer class="dashboard-footer">
+        <div>© 2026 Sanjeevani Clinic</div>
+        <div>Digital Healthcare Assistance Platform</div>
+    </footer>
+</main>
+
+</body>
+</html>

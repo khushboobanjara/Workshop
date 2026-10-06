@@ -1,0 +1,10 @@
+[2026-10-06 13:12:03,624] 88 __main__ -INFO -Loading training and testing datasets
+[2026-10-06 13:12:03,685] 93 __main__ -INFO -Training data shape: (80, 6)
+[2026-10-06 13:12:03,685] 94 __main__ -INFO -Testing data shape: (20, 6)
+[2026-10-06 13:12:03,701] 138 __main__ -INFO -Input features and target variables separated
+[2026-10-06 13:12:03,701] 80 __main__ -INFO -Preprocessor object created successfully
+[2026-10-06 13:12:03,705] 142 __main__ -INFO -Fitting preprocessor on training data
+[2026-10-06 13:12:03,869] 15 src.utils -INFO -Object saved successfully at : artifacts\preprocessor.pkl
+[2026-10-06 13:12:03,869] 164 __main__ -INFO -Preprocessor saved successfully
+[2026-10-06 13:12:03,869] 165 __main__ -INFO -Transformed training data shape: (80, 10)
+[2026-10-06 13:12:03,869] 166 __main__ -INFO -Transformed testing data shape: (20, 10)

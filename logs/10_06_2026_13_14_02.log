@@ -1,0 +1,35 @@
+[2026-10-06 13:14:34,430] 271 main -INFO -Home page accessed...
+[2026-10-06 13:14:37,087] 271 main -INFO -Home page accessed...
+[2026-10-06 13:14:39,857] 576 main -INFO -Predict form page accessed.....
+[2026-10-06 13:14:55,565] 607 main -INFO -Screening request received from user 1
+[2026-10-06 13:14:55,575] 76 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-10-06 13:14:55,874] 633 main -WARNING -Screening validation error: 'Chennai' is not a supported value for city. Supported values: Bangalore, Delhi, Kolkata, Mumbai.
+[2026-10-06 13:15:16,943] 607 main -INFO -Screening request received from user 1
+[2026-10-06 13:15:16,946] 76 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-10-06 13:15:16,949] 633 main -WARNING -Screening validation error: 'Jaipur' is not a supported value for city. Supported values: Bangalore, Delhi, Kolkata, Mumbai.
+[2026-10-06 13:15:37,277] 607 main -INFO -Screening request received from user 1
+[2026-10-06 13:15:37,281] 76 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
+[2026-10-06 13:15:37,459] 91 src.pipeline.predict_pipeline -INFO -Prediction completed: Negative, confidence_score = 81.77
+[2026-10-06 13:15:37,461] 644 main -ERROR -Screening error
+Traceback (most recent call last):
+  File "C:\Users\khush\OneDrive\Desktop\workshop\main.py", line 623, in predict_data
+    return templates.TemplateResponse(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\starlette\templating.py", line 148, in TemplateResponse
+    template = self.get_template(name)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\starlette\templating.py", line 115, in get_template
+    return self.env.get_template(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\jinja2\environment.py", line 1016, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\jinja2\environment.py", line 975, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\khush\OneDrive\Desktop\workshop\venv\Lib\site-packages\jinja2\loaders.py", line 209, in get_source
+    raise TemplateNotFound(
+jinja2.exceptions.TemplateNotFound: 'result.html' not found in search path: 'templates'

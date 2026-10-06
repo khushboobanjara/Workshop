@@ -1,0 +1,27 @@
+[2026-10-06 13:13:54,566] 11 __main__ -INFO -TRAINING PIPELINE STARTED....
+[2026-10-06 13:13:54,566] 23 src.components.data_ingestion -INFO -Data Ingestion started....
+[2026-10-06 13:13:54,599] 26 src.components.data_ingestion -INFO -Data read successfullywith shape: (100, 6)
+[2026-10-06 13:13:54,619] 31 src.components.data_ingestion -INFO -Performing train-test-split
+[2026-10-06 13:13:54,722] 37 src.components.data_ingestion -INFO -Data Ingestion completed successfully...
+[2026-10-06 13:13:54,722] 38 src.components.data_ingestion -INFO -Jo log online class le rhe h , unko bhi congration , unka bhi data ingestion ho chuka h , leptop per apna hath rkh kr apne aap ko pawan kare.
+[2026-10-06 13:13:54,722] 39 src.components.data_ingestion -INFO -----------
+[2026-10-06 13:13:54,728] 40 src.components.data_ingestion -INFO -Jinka net nhi chl rha online me , unka bhi data ingestion complete
+[2026-10-06 13:13:54,728] 88 src.components.data_transformation -INFO -Loading training and testing datasets
+[2026-10-06 13:13:54,737] 93 src.components.data_transformation -INFO -Training data shape: (20, 6)
+[2026-10-06 13:13:54,737] 94 src.components.data_transformation -INFO -Testing data shape: (80, 6)
+[2026-10-06 13:13:54,745] 138 src.components.data_transformation -INFO -Input features and target variables separated
+[2026-10-06 13:13:54,745] 80 src.components.data_transformation -INFO -Preprocessor object created successfully
+[2026-10-06 13:13:54,745] 142 src.components.data_transformation -INFO -Fitting preprocessor on training data
+[2026-10-06 13:13:54,797] 15 src.utils -INFO -Object saved successfully at : artifacts\preprocessor.pkl
+[2026-10-06 13:13:54,797] 164 src.components.data_transformation -INFO -Preprocessor saved successfully
+[2026-10-06 13:13:54,797] 165 src.components.data_transformation -INFO -Transformed training data shape: (20, 10)
+[2026-10-06 13:13:54,797] 166 src.components.data_transformation -INFO -Transformed testing data shape: (80, 10)
+[2026-10-06 13:13:54,797] 23 src.components.model_trainer -INFO -Spliting train and test input data
+[2026-10-06 13:13:54,955] 34 src.utils -INFO -LogisiticRegression -> Test Accuracy: 0.50
+[2026-10-06 13:13:54,968] 34 src.utils -INFO -DecisionTree -> Test Accuracy: 0.47
+[2026-10-06 13:13:55,174] 34 src.utils -INFO -RandomForest -> Test Accuracy: 0.38
+[2026-10-06 13:13:55,187] 34 src.utils -INFO -KNeighboursClassifier -> Test Accuracy: 0.47
+[2026-10-06 13:13:55,189] 43 src.components.model_trainer -INFO -Best Model saved as model.pkl ::: LogisiticRegression
+[2026-10-06 13:13:55,191] 15 src.utils -INFO -Object saved successfully at : artifacts\model.pkl
+[2026-10-06 13:13:55,191] 46 src.components.model_trainer -INFO -Best Model saved: LogisiticRegression
+[2026-10-06 13:13:55,191] 25 __main__ -INFO -TRAINING PIPELINE COMPLETED | BEST MODEL: LogisiticRegression, Accuracy: 0.50
