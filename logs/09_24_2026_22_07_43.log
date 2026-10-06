@@ -1,6 +1,0 @@
-[2026-09-24 22:08:31,153] 2119 main -INFO -Pharmacy Cashfree order created: pharmacy_6_d40289546d
-[2026-09-24 22:08:57,751] 2304 main -INFO -Pharmacy Cashfree order pharmacy_6_d40289546d payment status: PAID
-[2026-09-24 22:12:27,294] 2304 main -INFO -Pharmacy Cashfree order pharmacy_6_d40289546d payment status: PAID
-[2026-09-24 22:12:51,758] 2119 main -INFO -Pharmacy Cashfree order created: pharmacy_7_514a121a79
-[2026-09-24 22:13:20,948] 2304 main -INFO -Pharmacy Cashfree order pharmacy_7_514a121a79 payment status: PAID
-[2026-09-24 22:14:12,111] 2119 main -INFO -Pharmacy Cashfree order created: pharmacy_8_641c414304

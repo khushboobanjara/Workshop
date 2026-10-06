@@ -1,5 +1,0 @@
-[2026-09-27 22:07:01,432] 450 main -INFO -Predict form page accessed.....
-[2026-09-27 22:07:45,071] 496 main -INFO -Screening request received from user 1
-[2026-09-27 22:07:45,079] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
-[2026-09-27 22:07:45,561] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Severe'] in column 0 during transform]
-[2026-09-27 22:07:45,561] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Severe'] in column 0 during transform]

@@ -1,8 +1,0 @@
-[2026-09-27 22:51:09,284] 496 main -INFO -Screening request received from user 1
-[2026-09-27 22:51:09,286] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
-[2026-09-27 22:51:09,586] 20 src.exception -ERROR -Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
-[2026-09-27 22:51:09,586] 560 main -ERROR -Screening error: Error occured in python script: [C:\Users\khush\OneDrive\Desktop\workshop\src\pipeline\predict_pipeline.py]at line number: [41]with error message: [Found unknown categories ['Moderate'] in column 0 during transform]
-[2026-09-27 22:51:20,912] 496 main -INFO -Screening request received from user 1
-[2026-09-27 22:51:20,912] 37 src.pipeline.predict_pipeline -INFO -Loading Model and Preprocessor
-[2026-09-27 22:51:20,947] 49 src.pipeline.predict_pipeline -INFO -Prediction completed: Positive, confidence_score = 100.0
-[2026-09-27 22:51:20,953] 560 main -ERROR -Screening error: 'result.html' not found in search path: 'templates'
