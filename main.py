@@ -4,7 +4,6 @@ import sys
 import base64
 import secrets
 from pathlib import Path
-import uvicorn
 from uuid import uuid4
 
 from datetime import date, time
@@ -3009,14 +3008,3 @@ async def pharmacy_cashfree_return(
 
 
 # =========================================================
-# APPLICATION START
-# =========================================================
-
-if __name__ == "__main__":
-
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
