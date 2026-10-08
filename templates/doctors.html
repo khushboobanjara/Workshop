@@ -4,26 +4,632 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>{{ doctor["doctor_name"] }} | Sanjeevani</title>
-
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/doctor_details.css">
+    <title>Find a Doctor | Sanjeevani Clinic</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --forest: #1E3A2B;
+            --forest-dark: #142A1E;
+            --sage: #3E6B49;
+            --sage-light: #E7F0E6;
+            --gold: #B8823D;
+            --gold-light: #F5E9D6;
+            --ivory: #FAF8F2;
+            --paper: #ffffff;
+            --ink: #24291F;
+            --muted: #6C7362;
+            --line: #E4E1D2;
+            --danger: #B2493F;
+            --danger-light: #F8E6E3;
+            --info: #4766A6;
+            --info-light: #E8EEFB;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
+            background: var(--ivory);
+            color: var(--ink);
+        }
+
+        body { min-height: 100vh; }
+
+        h1, h2, h3 {
+            font-family: "Fraunces", Georgia, serif;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        button, input { font-family: inherit; }
+        button { border: none; }
+        svg { display: block; }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: var(--forest);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 10px 28px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.14);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .brand-text h2 { margin: 0; font-size: 18px; font-weight: 600; }
+
+        .brand-text span {
+            display: block;
+            margin-top: 3px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.58);
+        }
+
+        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; }
+
+        .nav-item {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 13px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.72);
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.2s ease;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.09); color: #ffffff; }
+        .nav-item.active { background: #ffffff; color: var(--forest); font-weight: 700; }
+
+        .nav-icon {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nav-icon svg { width: 17px; height: 17px; }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .logout-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.72);
+            font-size: 13px;
+            padding: 10px;
+        }
+
+        .logout-link:hover { color: #ffffff; }
+
+        /* MAIN + TOPBAR */
+
+        .main-content {
+            width: calc(100% - 250px);
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            height: 78px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 34px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .mobile-brand { display: none; }
+
+        .search-box {
+            width: 390px;
+            height: 43px;
+            background: #F5F2E9;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 9px;
+        }
+
+        .search-box svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+
+        .search-box input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 12px;
+            color: var(--ink);
+        }
+
+        .search-box input::placeholder { color: #9AA091; }
+
+        .topbar-right { display: flex; align-items: center; gap: 18px; }
+
+        .notification-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: #F5F2E9;
+            color: var(--sage);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-btn svg { width: 17px; height: 17px; }
+
+        .user-chip { display: flex; align-items: center; gap: 10px; }
+
+        .user-avatar {
+            width: 39px;
+            height: 39px;
+            border-radius: 50%;
+            background: var(--sage-light);
+            color: var(--forest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .user-details { display: flex; flex-direction: column; gap: 3px; }
+        .user-details strong { font-size: 12px; color: var(--ink); }
+        .user-details span { font-size: 10px; color: var(--muted); }
+
+        /* PAGE */
+
+        .page-container {
+            padding: 32px 34px 50px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            display: inline-block;
+            color: var(--sage);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+        }
+
+        .page-heading { margin-bottom: 22px; }
+
+        .page-heading h1 {
+            margin: 6px 0 8px;
+            font-size: 30px;
+            color: var(--ink);
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* PROFILE HERO (same gradient as dashboard welcome) */
+
+        .profile-hero {
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--forest) 0%, var(--sage) 100%);
+            padding: 30px 34px;
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .large-avatar {
+            width: 76px;
+            height: 76px;
+            flex-shrink: 0;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.28);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Fraunces", Georgia, serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .profile-info { flex: 1; min-width: 0; }
+
+        .profile-info h2 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            color: #ffffff;
+        }
+
+        .profile-info p {
+            margin: 4px 0 0;
+            color: rgba(255,255,255,0.80);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-tag {
+            padding: 8px 14px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.28);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .doctor-cta {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 11px 16px;
+            border-radius: 11px;
+            background: #ffffff;
+            color: var(--forest);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .doctor-cta:hover { background: #EFEADB; }
+
+        /* SECTIONS */
+
+        .section { margin-top: 34px; }
+
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 { margin: 5px 0 0; font-size: 21px; color: var(--ink); }
+        .section-header p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+
+        .section-count {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--sage-light);
+            color: #276441;
+            font-size: 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* CARDS */
+
+        .appointment-list, .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .appointment-card, .order-card {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            padding: 20px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            transition: 0.2s ease;
+        }
+
+        .appointment-card:hover, .order-card:hover {
+            border-color: #BFD6C4;
+            box-shadow: 0 12px 28px rgba(30,58,43,0.08);
+        }
+
+        .card-lead {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            background: var(--sage-light);
+            color: var(--forest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg { width: 18px; height: 18px; }
+
+        .appointment-main, .order-main { flex: 1; min-width: 0; }
+
+        .doctor-name, .order-main h3 {
+            margin: 0 0 4px;
+            font-size: 15px;
+            color: var(--ink);
+        }
+
+        .specialization {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .order-main h3 { margin-bottom: 10px; }
+
+        .appointment-meta, .order-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 9px;
+            background: #F8F6EF;
+            color: #55604B;
+            font-size: 11px;
+        }
+
+        .meta-item svg { width: 13px; height: 13px; color: var(--sage); }
+
+        .appointment-actions, .order-actions {
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 9px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            background: var(--sage-light);
+            color: #276441;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+
+        .status-badge.cancelled { background: var(--danger-light); color: var(--danger); }
+        .status-badge.completed { background: var(--info-light); color: var(--info); }
+
+        .payment-status { color: var(--muted); font-size: 11px; }
+        .payment-status.paid { color: var(--sage); font-weight: 600; }
+        .payment-status.pending { color: var(--gold); font-weight: 600; }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .action-buttons form { margin: 0; }
+
+        .btn {
+            min-height: 36px;
+            padding: 9px 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .btn svg { width: 14px; height: 14px; }
+
+        .btn-pay { background: var(--forest); color: #ffffff; }
+        .btn-pay:hover { background: var(--sage); }
+
+        .btn-reschedule { background: #F5F2E9; color: var(--forest); border: 1px solid var(--line); }
+        .btn-reschedule:hover { background: #EDE9DA; }
+
+        .btn-cancel { background: var(--danger-light); color: var(--danger); }
+        .btn-cancel:hover { background: #F2D5D1; }
+
+        .btn:focus-visible, .doctor-cta:focus-visible, .small-primary-btn:focus-visible {
+            outline: 2px solid var(--sage);
+            outline-offset: 2px;
+        }
+
+        /* EMPTY STATE */
+
+        .empty-state {
+            background: #ffffff;
+            border: 1px dashed #BFD6C4;
+            border-radius: 17px;
+            text-align: center;
+            padding: 32px 16px;
+        }
+
+        .empty-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            margin: 0 auto 12px;
+            background: var(--sage-light);
+            color: var(--sage);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon svg { width: 22px; height: 22px; }
+
+        .empty-state h3 { margin: 0; font-size: 14px; }
+        .empty-state p { margin: 7px 0 14px; color: var(--muted); font-size: 11px; }
+
+        .small-primary-btn {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 10px;
+            background: var(--forest);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .small-primary-btn:hover { background: var(--sage); }
+
+        /* FOOTER */
+
+        .dashboard-footer {
+            padding: 18px 34px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1100px) {
+            .sidebar { width: 220px; }
+            .main-content { width: calc(100% - 220px); margin-left: 220px; }
+        }
+
+        @media (max-width: 800px) {
+            .sidebar { width: 70px; padding: 18px 10px; }
+            .brand { justify-content: center; padding: 5px 0 25px; }
+            .brand-text, .nav-item span:last-child, .logout-link { display: none; }
+            .nav-item { justify-content: center; padding: 0; }
+            .main-content { width: calc(100% - 70px); margin-left: 70px; }
+            .topbar { padding: 0 18px; }
+            .search-box { width: 260px; }
+            .user-details { display: none; }
+            .page-container { padding: 22px 18px 40px; }
+            .appointment-card, .order-card { align-items: flex-start; }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { display: none; }
+            .main-content { width: 100%; margin-left: 0; }
+            .topbar { height: 66px; padding: 0 14px; }
+            .mobile-brand { display: flex; align-items: center; gap: 10px; }
+            .mobile-brand .brand-logo { width: 32px; height: 32px; border-radius: 9px; font-size: 15px; }
+            .mobile-brand strong { font-size: 14px; margin-left: 7px; }
+            .search-box { display: none; }
+            .topbar-right { margin-left: auto; }
+            .page-container { padding: 15px 13px 30px; }
+            .page-heading h1 { font-size: 25px; }
+            .profile-hero { flex-direction: column; align-items: flex-start; padding: 24px 20px; border-radius: 18px; }
+            .appointment-card, .order-card { flex-direction: column; align-items: stretch; }
+            .appointment-actions, .order-actions { min-width: 0; align-items: flex-start; }
+            .action-buttons { justify-content: flex-start; }
+            .dashboard-footer { padding: 15px; flex-direction: column; gap: 5px; }
+        }
+
+        /* FIND DOCTOR PAGE */
+        .fd-filter { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 22px; }
+        .fd-filter select {
+            padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px;
+            font: inherit; font-size: 13px; min-width: 240px; background: var(--paper); color: var(--ink);
+        }
+        .fd-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 11px 18px; border-radius: 12px; background: var(--forest); color: #fff;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .fd-btn:hover { background: var(--sage); }
+        .fd-btn.secondary { background: var(--sage-light); color: var(--forest); }
+        .fd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .fd-card {
+            background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+            padding: 20px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .fd-avatar {
+            width: 46px; height: 46px; border-radius: 14px; background: var(--forest); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 600;
+        }
+        .fd-card h3 { margin: 0; font-size: 17px; }
+        .fd-spec { color: var(--sage); font-weight: 600; font-size: 12px; }
+        .fd-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+        .fd-meta strong { color: var(--ink); }
+    </style>
 </head>
 
 <body>
 
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
+{% set is_doctor = (user.get("role") or "")|upper == "DOCTOR" %}
+{% set display_name = user.get("full_name") or ("Doctor" if is_doctor else "Patient") %}
 
+<!-- SIDEBAR -->
 <aside class="sidebar">
 
     <div class="brand">
@@ -36,50 +642,75 @@
 
     <nav class="sidebar-nav">
 
-        {% if (user.role or "")|upper == "DOCTOR" %}
+        {% if is_doctor %}
         <a href="/doctor/dashboard" class="nav-item">
-            <span class="nav-icon">✚</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 8v6a5 5 0 0 0 10 0V8"/><circle cx="12" cy="20" r="1.6"/></svg>
+            </span>
             <span>Doctor Dashboard</span>
         </a>
         {% endif %}
 
         <a href="/" class="nav-item">
-            <span class="nav-icon">▦</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+            </span>
             <span>Dashboard</span>
         </a>
 
-        <button type="button" class="nav-item nav-button" onclick="openChatbot()">
-            <span class="nav-icon">◉</span>
+        <a href="/" class="nav-item">
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12c0 4.4-4 8-9 8-1.1 0-2.2-.18-3.2-.5L3 21l1.6-4.3C3.6 15.4 3 13.8 3 12c0-4.4 4-8 9-8s9 3.6 9 8Z"/><path d="M9 12h.01M12 12h.01M15 12h.01"/></svg>
+            </span>
             <span>AI Health Chat</span>
-        </button>
+        </a>
+
+        <a href="/" class="nav-item">
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 15l-4.3-4.3a2 2 0 0 0-2.8 0L7 18"/></svg>
+            </span>
+            <span>Image Analysis</span>
+        </a>
 
         <a href="/doctors" class="nav-item active">
-            <span class="nav-icon">+</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3"/><path d="M7 8v6a5 5 0 0 0 10 0V8"/><circle cx="12" cy="20" r="1.6"/></svg>
+            </span>
             <span>Find Doctor</span>
         </a>
 
         <a href="/profile#appointments" class="nav-item">
-            <span class="nav-icon">▣</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            </span>
             <span>Appointments</span>
         </a>
 
         <a href="/profile" class="nav-item">
-            <span class="nav-icon">□</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-4 4.2-6 7-6s5.7 2 7 6"/></svg>
+            </span>
             <span>My Profile</span>
         </a>
 
         <a href="/pharmacy" class="nav-item">
-            <span class="nav-icon">+</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7.5" width="17" height="9" rx="4.5" transform="rotate(-20 12 12)"/><line x1="12" y1="7" x2="12" y2="17" transform="rotate(-20 12 12)"/></svg>
+            </span>
             <span>Pharmacy</span>
         </a>
 
         <a href="/predict" class="nav-item">
-            <span class="nav-icon">◌</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+            </span>
             <span>Health Screening</span>
         </a>
 
         <a href="/profile" class="nav-item">
-            <span class="nav-icon">?</span>
+            <span class="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 0 1 4.8.9c0 1.6-2.3 2-2.3 3.4"/><path d="M12 17h.01"/></svg>
+            </span>
             <span>Help &amp; Support</span>
         </a>
 
@@ -87,7 +718,9 @@
 
     <div class="sidebar-bottom">
         <a href="/logout" class="logout-link">
-            <span>↪</span>
+            <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+            </span>
             Logout
         </a>
     </div>
@@ -95,29 +728,32 @@
 </aside>
 
 
-<!-- =====================================================
-     MAIN CONTENT
-===================================================== -->
-
+<!-- MAIN -->
 <main class="main-content">
 
-    <!-- TOPBAR -->
     <header class="topbar">
 
+        <div class="mobile-brand">
+            <div class="brand-logo">S</div>
+            <strong>Sanjeevani</strong>
+        </div>
+
         <div class="search-box">
-            <span>⌕</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" placeholder="Search doctors, medicines, services...">
         </div>
 
         <div class="topbar-right">
 
-            <button type="button" class="notification-btn">♢</button>
+            <button type="button" class="notification-btn" aria-label="Notifications">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+            </button>
 
             <a href="/profile" class="user-chip">
-                <div class="user-avatar">{{ user.full_name[0] | upper }}</div>
+                <div class="user-avatar">{{ (user.get("full_name") or "U")[0]|upper }}</div>
                 <div class="user-details">
-                    <strong>{{ user.full_name }}</strong>
-                    <span>{{ (user.role or "Patient")|title }}</span>
+                    <strong>{{ display_name }}</strong>
+                    <span>{{ "Doctor" if is_doctor else "Patient" }}</span>
                 </div>
             </a>
 
@@ -126,261 +762,65 @@
     </header>
 
 
-    <!-- PAGE CONTENT -->
-    <section class="dashboard-container doctor-details-page">
+<section class="page-container">
 
-        <a href="/doctors" class="details-back-link">← Back to Doctors</a>
-
-
-        <!-- DOCTOR PROFILE -->
-        <div class="details-profile-card">
-
-            <div class="details-avatar">{{ doctor["doctor_name"][0] | upper }}</div>
-
-            <div class="details-profile-info">
-
-                <span class="section-label">DOCTOR PROFILE</span>
-
-                <h1>{{ doctor["doctor_name"] }}</h1>
-
-                <p class="details-specialization">{{ doctor["specialization"] }}</p>
-
-                <div class="details-profile-stats">
-
-                    <div>
-                        <span>Experience</span>
-                        <strong>{{ doctor["experience"] or 0 }} years</strong>
-                    </div>
-
-                    <div>
-                        <span>Consultation Fee</span>
-                        <strong>₹{{ "{:,.0f}".format(doctor["consultation_fee"] or 0) }}</strong>
-                    </div>
-
-                    <div>
-                        <span>Status</span>
-                        {% if doctor["available"] %}
-                            <strong class="available-text">Available</strong>
-                        {% else %}
-                            <strong class="unavailable-text">Unavailable</strong>
-                        {% endif %}
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="page-heading">
+            <span class="section-label">Care</span>
+            <h1>Find a Doctor</h1>
+            <p>Choose a specialization, then pick a doctor to see available appointment slots.</p>
         </div>
 
-
-        <!-- SLOTS HEADING -->
-        <div class="details-section-heading">
-            <span class="section-label">APPOINTMENT BOOKING</span>
-            <h2>Available appointment slots</h2>
-            <p>Choose a date and time that works for you.</p>
-        </div>
-
-
-        {% if availability and doctor["available"] %}
-
-            <div class="details-slots-grid">
-
-                {% for slot in availability %}
-
-                    <div class="details-slot-card">
-
-                        <div class="details-slot-icon">▣</div>
-
-                        <div class="details-slot-content">
-                            <span>Available Date</span>
-                            <h3>{{ slot["date_label"] }}</h3>
-                            <p>{{ slot["start_label"] }} – {{ slot["end_label"] }}</p>
-                        </div>
-
-                        <a
-                            href="/appointments/book?doctor_id={{ doctor['doctor_id'] }}&availability_id={{ slot['availability_id'] }}"
-                            class="details-book-btn"
-                        >
-                            Book Appointment
-                            <span>→</span>
-                        </a>
-
-                    </div>
-
+        <form method="get" action="/doctors" class="fd-filter">
+            <select name="specialization" aria-label="Specialization">
+                <option value="">All specializations</option>
+                {% for spec in specializations %}
+                <option value="{{ spec }}" {% if spec|lower == (specialization or "")|lower %}selected{% endif %}>{{ spec }}</option>
                 {% endfor %}
+            </select>
+            <button type="submit" class="fd-btn">Search</button>
+            {% if specialization %}
+            <a href="/doctors" class="fd-btn secondary">Clear</a>
+            {% endif %}
+        </form>
 
-            </div>
-
-        {% else %}
-
-            <div class="details-empty-state">
-
-                <div class="details-empty-icon">▣</div>
-
-                <h3>No available schedules</h3>
-
-                <p>
-                    There are currently no available appointment slots for this doctor.
-                </p>
-
-                <a href="/doctors" class="details-book-btn">
-                    Find Another Doctor
-                    <span>→</span>
-                </a>
-
-            </div>
-
-        {% endif %}
-
-
-        <!-- BOOKING INFORMATION -->
-        <div class="details-help-card">
-
-            <div>
-                <span class="section-label">BOOKING INFORMATION</span>
-                <h3>What happens next?</h3>
-                <p>
-                    Select an available appointment slot. You will then enter your
-                    patient details and choose Cash or Online payment.
-                </p>
-            </div>
-
-            <a href="/profile#appointments">My Appointments →</a>
-
+        {% if doctors %}
+        <div class="fd-grid">
+            {% for doctor in doctors %}
+            <article class="fd-card">
+                <div class="fd-avatar">{{ (doctor["doctor_name"] or "?")[0] | upper }}</div>
+                <h3>{{ doctor["doctor_name"] }}</h3>
+                <span class="fd-spec">{{ doctor["specialization"] }}</span>
+                <div class="fd-meta">
+                    <span>{{ doctor["experience"] or 0 }} years experience</span>
+                    <strong>&#8377;{{ "{:,.0f}".format(doctor["consultation_fee"] or 0) }}</strong>
+                </div>
+                <a href="/doctors/{{ doctor['doctor_id'] }}" class="fd-btn">View slots &amp; book</a>
+            </article>
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No doctors found</h3>
+            <p>
+                {% if specialization %}
+                    No available doctors for &ldquo;{{ specialization }}&rdquo;.
+                {% else %}
+                    No doctors are available right now.
+                {% endif %}
+            </p>
+            {% if specialization %}<a href="/doctors" class="small-primary-btn">Show all doctors</a>{% endif %}
+        </div>
+        {% endif %}
 
     </section>
 
 
-    <!-- FOOTER -->
-    <footer class="dashboard-footer">
-        <span>© 2026 Sanjeevani Clinic</span>
-        <span>Digital Healthcare Assistance Platform</span>
+        <footer class="dashboard-footer">
+        <div>© 2026 Sanjeevani Clinic</div>
+        <div>Digital Healthcare Assistance Platform</div>
     </footer>
 
 </main>
 
-
-<!-- =====================================================
-     FLOATING CHATBOT
-===================================================== -->
-
-<button
-    type="button"
-    class="chatbot-floating-btn"
-    onclick="openChatbot()"
-    aria-label="Open AI Health Assistant"
->
-    <span class="chatbot-icon">◉</span>
-    <span class="chatbot-label">AI Health</span>
-</button>
-
-<div id="chatbot" class="chatbot">
-
-    <div class="chatbot-header">
-
-        <div>
-            <strong>Sanjeevani AI</strong>
-            <span>Health Assistant</span>
-        </div>
-
-        <button type="button" onclick="closeChatbot()" aria-label="Close chat">×</button>
-
-    </div>
-
-    <div id="chatMessages" class="chatbot-messages">
-        <div class="chat-message bot-message">
-            Hello {{ user.full_name }}.<br><br>How can I help you today?
-        </div>
-    </div>
-
-    <div class="chatbot-input-area">
-        <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
-        <button type="button" onclick="sendMessage()">→</button>
-    </div>
-
-</div>
-
-
-<script>
-
-function openChatbot() {
-    document.getElementById("chatbot").classList.add("open");
-
-    setTimeout(function () {
-        const input = document.getElementById("chatInput");
-        if (input) { input.focus(); }
-    }, 200);
-}
-
-
-function closeChatbot() {
-    document.getElementById("chatbot").classList.remove("open");
-}
-
-
-async function sendMessage() {
-
-    const input = document.getElementById("chatInput");
-    const messages = document.getElementById("chatMessages");
-    const message = input.value.trim();
-
-    if (!message) { return; }
-
-    const userMessage = document.createElement("div");
-    userMessage.className = "chat-message user-message";
-    userMessage.textContent = message;
-    messages.appendChild(userMessage);
-
-    input.value = "";
-    messages.scrollTop = messages.scrollHeight;
-
-    try {
-
-        const response = await fetch("/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: message })
-        });
-
-        if (response.status === 401) {
-            window.location.href = "/login";
-            return;
-        }
-
-        const data = await response.json();
-
-        const botMessage = document.createElement("div");
-        botMessage.className = "chat-message bot-message";
-        botMessage.textContent =
-            data.response ||
-            data.message ||
-            "Sorry, I could not process your request.";
-
-        messages.appendChild(botMessage);
-        messages.scrollTop = messages.scrollHeight;
-
-    } catch (error) {
-
-        const errorMessage = document.createElement("div");
-        errorMessage.className = "chat-message bot-message";
-        errorMessage.textContent = "Unable to connect to the AI assistant right now.";
-        messages.appendChild(errorMessage);
-        messages.scrollTop = messages.scrollHeight;
-
-    }
-}
-
-
-document.getElementById("chatInput").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        sendMessage();
-    }
-});
-
-</script>
-
 </body>
-
 </html>

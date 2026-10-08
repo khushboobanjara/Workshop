@@ -16,6 +16,11 @@ from src.services.email_service import send_otp_email
 import secrets
 from datetime import datetime
 
+# A 6-digit OTP has only 900,000 possibilities, so wrong guesses must be limited.
+# In-memory counter per email (resets on server restart; use Redis/DB for multi-worker setups).
+MAX_OTP_ATTEMPTS = 5
+_otp_attempts = {}
+
 
 def generate_otp():
     """Generate a six-digit OTP."""
@@ -69,6 +74,7 @@ def request_registration_otp(
     otp_hash = hash_password(otp)
 
     save_otp(email, otp_hash)
+    _otp_attempts.pop(email, None)
 
     if not send_otp_email(email, otp):
         delete_otp(email)
@@ -101,7 +107,13 @@ def complete_registration(
         delete_otp(email)
         return False, "OTP has expired. Please request a new OTP."
 
+    if _otp_attempts.get(email, 0) >= MAX_OTP_ATTEMPTS:
+        delete_otp(email)
+        _otp_attempts.pop(email, None)
+        return False, "Too many incorrect attempts. Please request a new OTP."
+
     if not verify_password(otp, otp_record["otp_hash"]):
+        _otp_attempts[email] = _otp_attempts.get(email, 0) + 1
         return False, "Invalid OTP."
 
     user_id = create_user(
@@ -116,5 +128,6 @@ def complete_registration(
         return False, "Registration failed."
 
     delete_otp(email)
+    _otp_attempts.pop(email, None)
 
     return True, "Registration successful."

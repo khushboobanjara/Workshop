@@ -5,11 +5,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression 
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier 
-import pandas as pd 
 from src.exception import CustomException 
 from src.logger import get_logger 
 logger = get_logger(__name__) 
-from src.utils import evaluate_models, load_object, save_object 
+from src.utils import evaluate_models, save_object 
 
 @dataclass 
 class ModelTrainerConfig:

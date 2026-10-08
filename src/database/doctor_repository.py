@@ -94,3 +94,51 @@ def get_doctor_availability(doctor_id: int):
     connection.close()
 
     return availability
+
+
+def get_all_available_doctors():
+    """All doctors currently accepting appointments (for the Find Doctor page)."""
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                doctor_id,
+                doctor_name,
+                specialization,
+                experience,
+                consultation_fee,
+                available
+            FROM doctors
+            WHERE available = TRUE
+            ORDER BY specialization, doctor_name
+            """
+        )
+        return cursor.fetchall()
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def get_specializations():
+    """Distinct specializations of available doctors (for the filter dropdown)."""
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT DISTINCT specialization
+            FROM doctors
+            WHERE available = TRUE
+            ORDER BY specialization
+            """
+        )
+        return [row[0] for row in cursor.fetchall() if row[0]]
+
+    finally:
+        cursor.close()
+        connection.close()

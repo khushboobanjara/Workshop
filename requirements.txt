@@ -13,4 +13,6 @@ bcrypt
 mysql-connector-python
 cashfree-pg
 itsdangerous
-python-dotenv
+requests
+fastmcp
+pydantic

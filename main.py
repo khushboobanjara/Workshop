@@ -1,15 +1,12 @@
 import os
 import json
-import sys
 import base64
-import secrets
 from pathlib import Path
 from uuid import uuid4
 
 from datetime import date, time
 
 from dotenv import load_dotenv
-import httpx
 
 from fastapi import (
     FastAPI,
@@ -37,12 +34,16 @@ from starlette.middleware.sessions import SessionMiddleware
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
+# Public URL of this app. Used for payment return URLs, so it must NOT be
+# hard-coded to localhost once deployed. Set APP_BASE_URL in .env.
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+SESSION_HTTPS_ONLY = os.getenv("SESSION_HTTPS_ONLY", "false").strip().lower() == "true"
+
 
 # =========================================================
 # PROJECT IMPORTS
 # =========================================================
 
-from src.exception import CustomException
 from src.logger import get_logger
 
 from src.pipeline.predict_pipeline import (
@@ -81,6 +82,8 @@ from src.database.database import get_db_connection
 
 from src.database.doctor_repository import (
     find_doctors_by_specialization,
+    get_all_available_doctors,
+    get_specializations,
     get_doctor_by_id,
     get_doctor_availability
 )
@@ -108,7 +111,6 @@ from src.database.appointment_repository import (
 # =========================================================
 
 from src.database.pharmacy_repository import (
-    get_all_medicines,
     search_medicines,
     get_medicine_by_id,
     add_to_cart,
@@ -119,7 +121,6 @@ from src.database.pharmacy_repository import (
     create_pharmacy_order,
     get_pharmacy_order,
     save_pharmacy_cashfree_order,
-    get_pharmacy_order_by_cashfree_order_id,
     update_pharmacy_payment_success,
     update_pharmacy_payment_failed,
     get_nearby_pharmacies
@@ -170,7 +171,7 @@ app.add_middleware(
     secret_key=SESSION_SECRET,
     max_age=60 * 60 * 24 * 7,
     same_site="lax",
-    https_only=False  # Set to True when deployed behind HTTPS.
+    https_only=SESSION_HTTPS_ONLY  # Set SESSION_HTTPS_ONLY=true in .env when deployed behind HTTPS.
 )
 
 # Doctor dashboard routes (/doctor/...)
@@ -319,7 +320,7 @@ async def login(
 ):
 
     result = login_user(
-        email=email,
+        email=email.strip().lower(),
         password=password
     )
 
@@ -417,6 +418,14 @@ async def register(
             request,
             "register.html",
             {"error": "All fields are required."},
+            status_code=400
+        )
+
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"error": "Password must be at least 8 characters long."},
             status_code=400
         )
 
@@ -874,15 +883,31 @@ def _format_result(data: dict, force_final: bool) -> dict:
     return {"response": response_text, "question": question.strip(), "options": options, "is_final": False}
 
 
+def _sniff_image_type(data: bytes):
+    """Detect the real image type from magic bytes (the client-sent
+    Content-Type header can be faked)."""
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
 async def _read_and_validate_image(image: UploadFile) -> tuple[bytes, str]:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Please upload a JPG, PNG or WEBP image.")
-    data = await image.read()
+    # Read at most MAX+1 bytes so an oversized upload is not loaded fully into memory.
+    data = await image.read(MAX_IMAGE_BYTES + 1)
     if not data:
         raise HTTPException(status_code=400, detail="The image file is empty.")
     if len(data) > MAX_IMAGE_BYTES:
         raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB.")
-    return data, image.content_type
+    real_type = _sniff_image_type(data)
+    if real_type is None:
+        raise HTTPException(status_code=400, detail="The file is not a valid JPG, PNG or WEBP image.")
+    return data, real_type
 
 
 async def _run_image_analysis(
@@ -1001,12 +1026,21 @@ async def doctors_page(
     if isinstance(user, RedirectResponse):
         return user
 
-    doctors = []
+    try:
+        if specialization.strip():
+            doctors = find_doctors_by_specialization(
+                specialization.strip()
+            )
+        else:
+            doctors = get_all_available_doctors()
 
-    if specialization.strip():
+        specializations = get_specializations()
 
-        doctors = find_doctors_by_specialization(
-            specialization.strip()
+    except Exception:
+        logger.exception("Failed to load doctors list")
+        return HTMLResponse(
+            content="Unable to load doctors right now. Please try again shortly.",
+            status_code=500
         )
 
     return templates.TemplateResponse(
@@ -1015,7 +1049,8 @@ async def doctors_page(
         {
             "user": user,
             "doctors": doctors,
-            "specialization": specialization
+            "specializations": specializations,
+            "specialization": specialization.strip()
         }
     )
 
@@ -1609,7 +1644,7 @@ async def appointment_pay(
 
             cashfree_order_id = f"appointment_{appointment_id}_{uuid4().hex[:8]}"
             return_url = (
-                "http://127.0.0.1:8000/payments/cashfree/return"
+                f"{APP_BASE_URL}/payments/cashfree/return"
                 f"?order_id={cashfree_order_id}"
             )
 
@@ -2687,7 +2722,7 @@ async def pharmacy_place_order(
         cashfree_order_id = f"pharmacy_{order_id}"
 
         return_url = (
-            "http://localhost:8000"
+            f"{APP_BASE_URL}"
             "/pharmacy/payment/return"
             f"?order_id={order_id}"
         )

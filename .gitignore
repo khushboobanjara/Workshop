@@ -1,11 +1,14 @@
+# Secrets and local environment
 .env
-__pycache__/
-*.pyc
 
-.env
+# Python
 __pycache__/
 *.pyc
 venv/
 .venv/
+
+# Deployment / runtime
 .vercel/
 logs/
+.pytest_cache/
+backup/*.sql
