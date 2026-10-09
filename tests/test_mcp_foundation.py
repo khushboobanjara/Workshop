@@ -45,7 +45,8 @@ def test_ten_servers_5_3_2():
 def test_server_roles_are_separated():
     for s in build_registry().servers():
         if s.server_type is ServerType.SYSTEM:
-            assert s.allowed_roles == {Role.SYSTEM}
+            # SYSTEM plus SUPER_ADMIN (read-only audit/monitoring, enforced per tool). Nobody else.
+            assert s.allowed_roles == {Role.SYSTEM, Role.SUPER_ADMIN}
         else:
             assert Role.SYSTEM not in s.allowed_roles
         if s.server_type is ServerType.ADMIN:
@@ -147,7 +148,7 @@ def test_tool_exception_is_sanitized():
 
     r = run(g.invoke(UID, "mcp_01_patient_profile", "boom"))
     assert not r.success and r.verified is False
-    assert "hunter2" not in json.dumps(r.model_dump())
+    assert "hunter2" not in json.dumps(r.model_dump(mode="json"))
 
 
 def test_raw_tool_output_is_not_trusted():

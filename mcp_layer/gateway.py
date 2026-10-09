@@ -15,6 +15,7 @@ import asyncio
 import contextvars
 import json
 import logging
+import re
 import time
 import uuid
 from dataclasses import dataclass
@@ -53,6 +54,34 @@ class Authorizer(Protocol):
               arguments: Dict[str, Any]) -> Decision: ...
 
 
+@dataclass(frozen=True)
+class SafetyDecision:
+    allowed: bool
+    reason: str = ""
+
+
+class SafetyGate(Protocol):
+    """Phase 10 plugs the real safety layer in here. Runs AFTER RBAC allows the call and BEFORE
+    the tool executes. RBAC asks 'may this role do it?'; safety asks 'is it safe to run?'."""
+    def check(self, principal: Principal, server: MCPServerSpec, tool: ToolMeta,
+              arguments: Dict[str, Any]) -> SafetyDecision: ...
+
+
+class NoSafety:
+    def check(self, principal, server, tool, arguments) -> SafetyDecision:
+        return SafetyDecision(True)
+
+
+_NAME_CLEAN = re.compile(r"[^A-Za-z0-9_]")
+
+
+def safe_argument_names(arguments: Any) -> list:
+    """Names are caller-controlled, so bound and clean them before they reach logs or the DB."""
+    if not isinstance(arguments, dict):
+        return []
+    return sorted({_NAME_CLEAN.sub("_", str(k))[:40] for k in arguments})[:20]
+
+
 class DenyAllAuthorizer:
     """Safe default. Phase 3 replaces this with the real RBAC engine."""
 
@@ -73,8 +102,10 @@ class LoggingAuditor:
 
 class MCPGateway:
     def __init__(self, registry: MCPRegistry, authorizer: Optional[Authorizer] = None,
-                 auditor: Optional[Auditor] = None, settings: Optional[MCPSettings] = None):
+                 auditor: Optional[Auditor] = None, settings: Optional[MCPSettings] = None,
+                 safety: Optional[SafetyGate] = None):
         self.registry = registry
+        self.safety = safety or NoSafety()
         self.authorizer = authorizer or DenyAllAuthorizer()
         self.auditor = auditor or LoggingAuditor()
         self.settings = settings or load_settings()
@@ -85,9 +116,11 @@ class MCPGateway:
         started = time.perf_counter()
         request_id = uuid.uuid4().hex
         arguments = arguments or {}
-        result, permission = await self._run(principal, server_id, tool_name, arguments, request_id)
+        ctx: Dict[str, str] = {}
+        result, permission = await self._run(principal, server_id, tool_name, arguments, request_id, ctx)
         result.request_id = request_id
-        self._audit(principal, server_id, tool_name, arguments, permission, result, started)
+        await asyncio.to_thread(self._audit, principal, server_id, tool_name, arguments, permission,
+                                result, started, ctx)
         return result
 
     async def health_check(self) -> Dict[str, str]:
@@ -103,7 +136,7 @@ class MCPGateway:
         return report
 
     # --------------------------------------------------------------- private
-    async def _run(self, principal, server_id, tool_name, arguments, request_id):
+    async def _run(self, principal, server_id, tool_name, arguments, request_id, ctx):
         if not self.settings.enabled:
             return MCPResult.fail(ErrorCode.MCP_DISABLED, message="MCP is turned off."), "NOT_CHECKED"
         if principal is None:
@@ -121,12 +154,26 @@ class MCPGateway:
         if tool is None:
             return MCPResult.fail(ErrorCode.TOOL_NOT_FOUND, message="Unknown action."), "NOT_CHECKED"
 
-        decision = self.authorizer.check(principal, server, tool, arguments)
+        try:
+            decision = self.authorizer.check(principal, server, tool, arguments)
+        except Exception as exc:   # an authorizer bug must deny, never allow or crash the request
+            log.error("authorizer failed", extra={"extra_data": {"exc_type": type(exc).__name__}})
+            decision = Decision(False, "authorizer_error")
         if not decision.allowed:
+            ctx["denial_reason"] = decision.reason[:60]   # audit only; the caller sees a generic message
             return MCPResult.fail(ErrorCode.ACCESS_DENIED, message="You do not have access to this action."), "DENIED"
 
         if server.status != "active":
             return MCPResult.fail(ErrorCode.MCP_UNAVAILABLE, message="This service is currently unavailable."), "ALLOWED"
+        try:
+            verdict = self.safety.check(principal, server, tool, arguments)
+        except Exception as exc:   # a broken safety layer blocks; it never waves calls through
+            log.error("safety layer failed", extra={"extra_data": {"exc_type": type(exc).__name__}})
+            verdict = SafetyDecision(False, "safety_error")
+        if not verdict.allowed:
+            ctx["security_result"], ctx["denial_reason"] = "BLOCKED", verdict.reason[:60]
+            return MCPResult.fail(ErrorCode.SAFETY_BLOCKED, message="This request cannot be processed."), "ALLOWED"
+        ctx["security_result"] = "PASSED"
         return await self._execute(principal, server, tool_name, arguments), "ALLOWED"
 
     async def _execute(self, principal: Principal, server: MCPServerSpec, tool_name: str,
@@ -156,7 +203,8 @@ class MCPGateway:
         finally:
             _current_principal.reset(token)
 
-    def _audit(self, principal, server_id, tool_name, arguments, permission, result, started):
+    def _audit(self, principal, server_id, tool_name, arguments, permission, result, started, ctx=None):
+        ctx = ctx or {}
         try:
             self.auditor.record({
                 "request_id": result.request_id,
@@ -164,8 +212,10 @@ class MCPGateway:
                 "role": principal.role.value if principal else None,
                 "server_id": server_id if isinstance(server_id, str) else None,
                 "tool": tool_name if isinstance(tool_name, str) else None,
-                "argument_names": sorted(arguments) if isinstance(arguments, dict) else [],
+                "argument_names": safe_argument_names(arguments),
                 "permission_result": permission,
+                "security_result": ctx.get("security_result", "NOT_CHECKED"),
+                "denial_reason": ctx.get("denial_reason") or None,
                 "success": result.success,
                 "error_code": result.error_code,
                 "source": result.source,

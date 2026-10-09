@@ -1,8 +1,9 @@
 """Shared types: roles, tool metadata, the common MCP result, the caller identity."""
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -11,6 +12,7 @@ class Role(str, Enum):
     USER = "USER"        # DB role PATIENT
     DOCTOR = "DOCTOR"    # DB role DOCTOR (scoped admin: own doctor_id only)
     ADMIN = "ADMIN"
+    SUPER_ADMIN = "SUPER_ADMIN"   # DB role SUPER_ADMIN: RBAC management, audit, monitoring
     SYSTEM = "SYSTEM"    # internal service identity, never stored on a user row
 
 
@@ -44,7 +46,10 @@ class ErrorCode:
     INVALID_TOOL_OUTPUT = "INVALID_TOOL_OUTPUT"
     DATABASE_UNAVAILABLE = "DATABASE_UNAVAILABLE"
     TIMEOUT = "TIMEOUT"
+    SAFETY_BLOCKED = "SAFETY_BLOCKED"
     INTERNAL_ERROR = "INTERNAL_ERROR"
+    NOT_FOUND = "NOT_FOUND"
+    CONFLICT = "CONFLICT"
 
 
 class MCPResult(BaseModel):
@@ -58,6 +63,8 @@ class MCPResult(BaseModel):
     error_code: Optional[str] = None
     message: Optional[str] = None      # safe, user-presentable text only
     request_id: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)   # non-sensitive context (e.g. row_count)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @model_validator(mode="after")
     def _consistent(self):
@@ -98,7 +105,11 @@ class ToolMeta(BaseModel):
     @model_validator(mode="after")
     def _rules(self):
         if Role.SYSTEM in self.allowed_roles and len(self.allowed_roles) > 1 and self.permission != "mcp.ping":
-            raise ValueError("SYSTEM tools must not be shared with other roles")
+            # The only role allowed alongside SYSTEM is SUPER_ADMIN, and only for READ tools
+            # (e.g. viewing audit logs). SYSTEM write tools stay internal.
+            others = self.allowed_roles - {Role.SYSTEM}
+            if others != {Role.SUPER_ADMIN} or self.kind is not ToolKind.READ:
+                raise ValueError("SYSTEM tools may only be shared with SUPER_ADMIN, and only for READ tools")
         if self.kind is ToolKind.DESTRUCTIVE:
             if not self.audit_required:
                 raise ValueError("destructive tools must be audited")

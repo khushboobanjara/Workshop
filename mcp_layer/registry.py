@@ -7,6 +7,7 @@ from typing import Callable, Dict, Iterable, List, Optional
 
 from fastmcp import FastMCP
 
+from .guard import guarded
 from .schemas import Role, ServerType, ToolMeta
 
 # A tool must never take identity or raw-SQL style parameters from the caller.
@@ -38,9 +39,12 @@ class MCPServerSpec:
             bad = params & FORBIDDEN_PARAMS
             if meta.ownership.value == "current_user_only":
                 bad |= params & OWN_DATA_FORBIDDEN_PARAMS
+            elif meta.ownership.value == "doctor_own":
+                bad |= params & (OWN_DATA_FORBIDDEN_PARAMS | {"doctor_id"})
             if bad:
                 raise ValueError(f"{meta.name}: forbidden parameter(s) {sorted(bad)}")
-            self.mcp.tool(name=meta.name, description=meta.description or fn.__doc__ or meta.name)(fn)
+            self.mcp.tool(name=meta.name, description=meta.description or fn.__doc__ or meta.name)(
+                guarded(fn, self.server_id, meta.name))
             self.tools[meta.name] = meta
             return fn
 

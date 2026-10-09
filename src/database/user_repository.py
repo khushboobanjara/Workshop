@@ -97,3 +97,30 @@ def get_user_by_email(email: str):
     finally:
         cursor.close()
         connection.close()
+
+
+def get_user_auth_by_id(user_id: int):
+    """
+    Minimal identity row for authorization (used by the MCP layer).
+
+    Deliberately excludes password_hash and every other sensitive column.
+    """
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT user_id, email, role, doctor_status
+            FROM users
+            WHERE user_id = %s
+            """,
+            (user_id,),
+        )
+
+        return cursor.fetchone()
+
+    finally:
+        cursor.close()
+        connection.close()

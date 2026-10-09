@@ -1,7 +1,7 @@
 """Maps the role string stored in users.role to an MCP Role.
 
 Unknown / NULL / empty -> None (no access). SYSTEM can never come from the
-database, so a tampered row cannot become an internal identity.
+database (nor can any unlisted string), so a tampered row cannot become an internal identity.
 """
 from typing import Optional
 
@@ -11,6 +11,7 @@ _DB_TO_ROLE = {
     "PATIENT": Role.USER,
     "DOCTOR": Role.DOCTOR,
     "ADMIN": Role.ADMIN,
+    "SUPER_ADMIN": Role.SUPER_ADMIN,
 }
 BLOCKED_DOCTOR_STATUSES = frozenset({"PENDING", "REJECTED", "SUSPENDED", "BLOCKED"})  # mirrors doctor_dashboard.py
 
