@@ -120,9 +120,9 @@ def test_mcp_09_tools_are_system_or_super_admin_only():
         assert tools[name].kind is ToolKind.READ
 
 
-def test_only_mcp_10_is_still_ping_only():
+def test_mcp_10_has_real_tools_from_phase_8():
     reg = build_registry(with_tools=True)
-    assert set(reg.get("mcp_10_llm_monitoring").tools) == {"server_ping"}
+    assert len(reg.get("mcp_10_llm_monitoring").tools) > 1   # Phase 8 added the MCP 10 tools
     assert len(reg.get(P09).tools) > 1
 
 

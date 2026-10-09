@@ -177,7 +177,7 @@ def test_user_servers_have_real_tools_and_system_servers_do_not_yet():
     reg = build_registry(with_tools=True)
     for sid in (P01, P02, P03, P04, P05):
         assert len(reg.get(sid).tools) > 1
-    assert set(reg.get("mcp_10_llm_monitoring").tools) == {"server_ping"}   # 06-08 got tools in Phase 6, 09 in Phase 7
+    assert len(reg.get("mcp_10_llm_monitoring").tools) > 1   # 06-08 got tools in Phase 6, 09 in 7, 10 in 8
 
 
 # ============================================================================ RBAC on the new tools

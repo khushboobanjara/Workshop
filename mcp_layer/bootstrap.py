@@ -6,13 +6,14 @@ import logging
 from typing import Any, Callable, Dict, Optional
 
 from .audit_db import CompositeAuditor, DbAuditor
-from .config import MCPSettings
+from .config import MCPSettings, load_settings
 from .gateway import Auditor, LoggingAuditor, MCPGateway, SafetyGate
 from .overrides import DbPermissionOverrides, NoOverrides
 from .permissions import validate_registry_permissions
 from .rbac import RBACAuthorizer
 from .registry import MCPRegistry
 from .registry_sync import sync_registry_to_db
+from .safety import SafetyLayer
 from .servers import build_registry
 
 log = logging.getLogger("mcp.bootstrap")
@@ -28,6 +29,8 @@ def build_gateway(registry: Optional[MCPRegistry] = None, *, use_db_overrides: b
     if auditor is None:
         # Always log to file (survives a DB outage); additionally store in mcp_audit_logs.
         auditor = CompositeAuditor([LoggingAuditor(), DbAuditor()] if use_db_audit else [LoggingAuditor()])
+    settings = settings or load_settings()
+    safety = safety or SafetyLayer.from_settings(settings)   # Phase 10: on by default; pass safety= to replace
     authorizer = RBACAuthorizer(DbPermissionOverrides() if use_db_overrides else NoOverrides())
     gateway = MCPGateway(registry, authorizer=authorizer, auditor=auditor, settings=settings, safety=safety)
     if registry.get("mcp_05_ai_assistant") and "get_verified_context" in registry.get("mcp_05_ai_assistant").tools:
@@ -36,6 +39,9 @@ def build_gateway(registry: Optional[MCPRegistry] = None, *, use_db_overrides: b
     if registry.get("mcp_09_security_audit") and "check_permission" in registry.get("mcp_09_security_audit").tools:
         from .servers.mcp_09_security_audit import bind_gateway as bind_security   # check_permission uses the real authorizer
         bind_security(gateway)
+    if registry.get("mcp_10_llm_monitoring") and "get_mcp_health" in registry.get("mcp_10_llm_monitoring").tools:
+        from .servers.mcp_10_llm_monitoring import bind_gateway as bind_monitoring   # get_mcp_health pings the servers
+        bind_monitoring(gateway)
     return gateway
 
 

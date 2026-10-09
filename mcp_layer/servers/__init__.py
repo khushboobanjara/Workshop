@@ -64,7 +64,7 @@ def register_tools(registry: MCPRegistry) -> None:
     import gateway.current_principal and gateway itself imports this package."""
     from . import (mcp_01_patient, mcp_02_appointment, mcp_03_pharmacy, mcp_04_screening, mcp_05_assistant,
                    mcp_06_doctor_admin, mcp_07_pharmacy_admin, mcp_08_user_admin,
-                   mcp_09_security_audit)
+                   mcp_09_security_audit, mcp_10_llm_monitoring)
 
     mcp_01_patient.register(registry.get("mcp_01_patient_profile"))
     mcp_02_appointment.register(registry.get("mcp_02_doctor_appointment"))
@@ -75,3 +75,4 @@ def register_tools(registry: MCPRegistry) -> None:
     mcp_07_pharmacy_admin.register(registry.get("mcp_07_pharmacy_admin"))
     mcp_08_user_admin.register(registry.get("mcp_08_user_system_admin"))
     mcp_09_security_audit.register(registry.get("mcp_09_security_audit"))
+    mcp_10_llm_monitoring.register(registry.get("mcp_10_llm_monitoring"))

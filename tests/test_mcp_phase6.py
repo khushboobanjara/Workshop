@@ -154,7 +154,7 @@ def test_permission_matrix_covers_every_tool_including_admin_ones():
 
 def test_only_system_servers_are_still_ping_only():
     reg = build_registry(with_tools=True)
-    assert set(reg.get("mcp_10_llm_monitoring").tools) == {"server_ping"}   # MCP 09 got tools in Phase 7
+    assert len(reg.get("mcp_10_llm_monitoring").tools) > 1   # MCP 09 got tools in Phase 7, MCP 10 in Phase 8
     for sid in (P06, P07, P08):
         assert len(reg.get(sid).tools) > 1
 
