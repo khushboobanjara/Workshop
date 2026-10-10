@@ -14,7 +14,6 @@ from difflib import SequenceMatcher
 
 from chatbot.llm import generate_response
 from chatbot.router import detect_intent, is_greeting
-from chatbot import mcp_bridge, mcp_handlers  # MCP-PHASE11A
 from chatbot.prompts import SYSTEM_PROMPT
 
 
@@ -2588,8 +2587,7 @@ async def handle_booking_message(
 async def handle_doctor_search(
     message,
     intent_data,
-    user=None,
-    principal=None  # MCP-PHASE11A
+    user=None
 ):
 
     specialty = None
@@ -2607,29 +2605,9 @@ async def handle_doctor_search(
 
         specialty = normalize_specialty(message)
 
-    if mcp_bridge.enabled():
-
-        # MCP-PHASE11A: read through the MCP gateway (identity, RBAC, safety, audit), not the repository.
-        if not specialty:
-
-            doctors = []
-
-        else:
-
-            doctors, failure = await mcp_handlers.fetch_doctors(
-                specialty,
-                principal
-            )
-
-            if failure is not None:
-
-                return failure
-
-    else:
-
-        doctors = find_doctors_by_specialization(
-            specialty
-        )
+    doctors = find_doctors_by_specialization(
+        specialty
+    )
 
     if not doctors:
 
@@ -2693,35 +2671,21 @@ async def handle_doctor_search(
 # ============================================================
 
 async def handle_patient_history(
-    user,
-    principal=None  # MCP-PHASE11A
+    user
 ):
 
-    if mcp_bridge.enabled():
+    try:
 
-        # MCP-PHASE11A: the appointments of the VERIFIED principal, not of whatever the session dict says.
-        appointments, failure = await mcp_handlers.fetch_my_appointments(
-            principal
+        appointments = get_user_appointments(
+            user["user_id"]
         )
 
-        if failure is not None:
+    except Exception:
 
-            return failure
-
-    else:
-
-        try:
-
-            appointments = get_user_appointments(
-                user["user_id"]
-            )
-
-        except Exception:
-
-            return chatbot_response(
-                "I could not retrieve your "
-                "appointment history right now."
-            )
+        return chatbot_response(
+            "I could not retrieve your "
+            "appointment history right now."
+        )
 
     if not appointments:
 
@@ -4017,8 +3981,7 @@ async def handle_emergency():
 async def process_message(
     user_message,
     conversation_history=None,
-    user=None,
-    principal=None  # MCP-PHASE11A
+    user=None
 ):
 
     """
@@ -4055,20 +4018,6 @@ async def process_message(
 
     if nearby_result is not None:
         return nearby_result
-
-    # MCP-PHASE11A: block prompt-injection / SQL / unsafe text before it reaches NLU or the LLM.
-    if mcp_bridge.enabled():
-
-        blocked_reply = await mcp_bridge.screen_message(
-            message,
-            principal
-        )
-
-        if blocked_reply is not None:
-
-            return chatbot_response(
-                blocked_reply
-            )
 
     state = get_booking_state(
         user
@@ -4219,8 +4168,7 @@ async def process_message(
         return await handle_doctor_search(
             message,
             intent_data,
-            user,
-            principal  # MCP-PHASE11A
+            user
         )
 
     # ========================================================
@@ -4252,8 +4200,7 @@ async def process_message(
     if intent == "PATIENT_HISTORY":
 
         return await handle_patient_history(
-            user,
-            principal  # MCP-PHASE11A
+            user
         )
 
     # ========================================================
@@ -4279,23 +4226,6 @@ async def process_message(
     # ========================================================
     # GENERAL
     # ========================================================
-
-    # MCP-PHASE11A: 'my appointment / my order / my profile' questions used to reach the LLM with no
-    # data. They now go MCP 05 -> grounding gate -> LLM, and are blocked if the data is unverified.
-    if mcp_bridge.enabled():
-
-        personal_topics = mcp_handlers.personal_topics(
-            message
-        )
-
-        if personal_topics:
-
-            return await mcp_handlers.answer_personal_question(
-                message,
-                personal_topics,
-                principal,
-                conversation_history
-            )
 
     response = await _generate_llm_response(
         message,

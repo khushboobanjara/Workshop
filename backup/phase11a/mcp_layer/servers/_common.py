@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import inspect
 import re
-from datetime import date, datetime, time, timedelta  # MCP-PHASE11A
+from datetime import date, datetime, time
 from typing import Any, Callable, Iterable, Optional
 
 from ..schemas import ErrorCode, MCPResult
@@ -25,36 +25,14 @@ class BadInput(Exception):
 
 
 # ------------------------------------------------------------------ results
-def plain(value: Any) -> Any:
-    """JSON-safe copy of a database value, applied to every tool result.  # MCP-PHASE11A
-
-    mysql-connector returns TIME columns as `timedelta`, and pydantic would serialise that as an
-    ISO-8601 DURATION ("PT10H30M"), which a chatbot or UI would show to the user verbatim. Times of
-    day are normalised to "HH:MM:SS" here, once, so no tool has to remember. Dates, numbers and
-    strings are left to pydantic (dates become "YYYY-MM-DD", Decimal becomes "800.00").
-    """
-    if isinstance(value, timedelta):
-        total = int(value.total_seconds())
-        if total < 0:                       # not a time of day: leave it for pydantic rather than invent one
-            return value
-        return f"{total // 3600:02d}:{(total % 3600) // 60:02d}:{total % 60:02d}"
-    if isinstance(value, time):
-        return value.replace(microsecond=0).isoformat()
-    if isinstance(value, dict):
-        return {key: plain(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [plain(item) for item in value]
-    return value
-
-
 def ok(data: Any, source: str = SOURCE_DB, message: Optional[str] = None, **metadata) -> dict:
-    return MCPResult.ok(plain(data), source=source, message=message, metadata=metadata).model_dump(mode="json")
+    return MCPResult.ok(data, source=source, message=message, metadata=metadata).model_dump(mode="json")
 
 
 def ok_rows(rows: Optional[Iterable], empty_message: str, source: str = SOURCE_DB) -> dict:
     """Verified list result. An empty list is a real answer ("nothing found"), not an error,
     but it is flagged with row_count=0 so the grounding gate (Phase 9) can give a controlled reply."""
-    items = plain(list(rows or []))
+    items = list(rows or [])
     return MCPResult.ok(items, source=source, message=None if items else empty_message,
                         metadata={"row_count": len(items)}).model_dump(mode="json")
 

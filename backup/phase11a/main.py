@@ -769,18 +769,13 @@ async def chat(request: Request):
         # IMPORTANT: appointment_repository.py must not import chatbot.service;
         # chatbot.service may import appointment_repository.py, not vice versa.
         from chatbot.service import process_message
-        from chatbot.mcp_bridge import principal_for_request  # MCP-PHASE11A
 
         # process_message returns a structured response dictionary.
         # Return it directly so the frontend receives response/type/options
         # at the expected top level instead of a nested object.
-        # MCP-PHASE11A: the verified caller (None while MCP_CHATBOT_ENABLED is off).
-        principal = await principal_for_request(request)
-
         result = await process_message(
             message,
-            user=user,
-            principal=principal
+            user=user
         )
 
         if isinstance(result, dict):
