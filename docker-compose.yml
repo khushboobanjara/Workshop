@@ -1,0 +1,83 @@
+# docker compose up --build            -> API + dashboard at http://localhost:8000 and a folder watcher on ./inbox
+# docker compose --profile mail up     -> additionally poll an IMAP mailbox (set OPSPILOT_IMAP_* in .env)
+# Variables below are read from your shell or from a .env file next to this file (copy .env.example to .env first;
+# OPSPILOT_DB_USER, OPSPILOT_DB_PASSWORD and MYSQL_ROOT_PASSWORD are required, nothing is hardcoded here).
+# To use an existing MySQL server instead of the bundled one, remove the `mysql` service and the depends_on entry,
+# and set OPSPILOT_DB_HOST/PORT/NAME/USER/PASSWORD in .env.
+services:
+  mysql:
+    image: mysql:8.0
+    # The app installs triggers that make audit_log append-only. With binary logging on (the MySQL 8 default) a non-SUPER
+    # user may only create triggers when log_bin_trust_function_creators is enabled.
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin", "--log-bin-trust-function-creators=1"]
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}"
+      MYSQL_DATABASE: "${OPSPILOT_DB_NAME:-opspilot}"
+      MYSQL_USER: "${OPSPILOT_DB_USER:?set OPSPILOT_DB_USER in .env}"
+      MYSQL_PASSWORD: "${OPSPILOT_DB_PASSWORD:?set OPSPILOT_DB_PASSWORD in .env}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  api:
+    build: .
+    image: opspilot:latest
+    ports:
+      - "8000:8000"
+    environment:
+      OPSPILOT_DEMO_MODE: "${OPSPILOT_DEMO_MODE:-false}"
+      OPSPILOT_API_KEY: "${OPSPILOT_API_KEY:-}"
+      OPSPILOT_DB_HOST: "${OPSPILOT_DB_HOST_IN_DOCKER:-mysql}"
+      OPSPILOT_DB_PORT: "${OPSPILOT_DB_PORT_IN_DOCKER:-3306}"
+      OPSPILOT_DB_NAME: "${OPSPILOT_DB_NAME:-opspilot}"
+      OPSPILOT_DB_USER: "${OPSPILOT_DB_USER:?set OPSPILOT_DB_USER in .env}"
+      OPSPILOT_DB_PASSWORD: "${OPSPILOT_DB_PASSWORD:?set OPSPILOT_DB_PASSWORD in .env}"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+  watcher:                      # drop .eml files into ./inbox and they are processed within seconds
+    image: opspilot:latest
+    command: ["python", "-m", "app.ingestion.folder", "inbox", "--watch", "5"]
+    environment:
+      OPSPILOT_API_URL: "http://api:8000"
+      OPSPILOT_API_KEY: "${OPSPILOT_API_KEY:-}"
+    volumes:
+      - ./inbox:/app/inbox
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mailbox:                      # optional: real IMAP polling
+    image: opspilot:latest
+    profiles: ["mail"]
+    command: ["python", "-m", "app.ingestion.poll"]
+    environment:
+      OPSPILOT_API_URL: "http://api:8000"
+      OPSPILOT_API_KEY: "${OPSPILOT_API_KEY:-}"
+      OPSPILOT_IMAP_HOST: "${OPSPILOT_IMAP_HOST:-}"
+      OPSPILOT_IMAP_PORT: "${OPSPILOT_IMAP_PORT:-993}"
+      OPSPILOT_IMAP_USER: "${OPSPILOT_IMAP_USER:-}"
+      OPSPILOT_IMAP_PASSWORD: "${OPSPILOT_IMAP_PASSWORD:-}"
+      OPSPILOT_IMAP_FOLDER: "${OPSPILOT_IMAP_FOLDER:-INBOX}"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

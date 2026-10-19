@@ -1,0 +1,48 @@
+OpsPilot AI benchmark - regex vs learned field extractor
+
+Trained on the first 1062 hard-dataset invoices.
+
+=== A) Hard dataset, held-out last 456 invoices (same wording as training)
+field                                        regex                           learned
+                     found right / WRONG / missing     found right / WRONG / missing
+vendor_name                    81.1% /   86 /    0               90.4% /    0 /   44
+invoice_number                 55.3% /    0 /  204               91.9% /    0 /   37
+invoice_date                   28.3% /    0 /  327              100.0% /    0 /    0
+due_date                       32.9% /    0 /  306               90.1% /    0 /   45
+currency                       51.8% /    0 /  220              100.0% /    0 /    0
+total_amount                   51.1% /    3 /  220              100.0% /    0 /    0
+po_number                      92.8% /    0 /   33              100.0% /    0 /    0
+
+=== B) synthetic_emails_shifted: 1465 invoices (development set - used to find and fix weaknesses)
+field                                        regex                           learned
+                     found right / WRONG / missing     found right / WRONG / missing
+vendor_name                    60.3% /  581 /    0               91.1% /    0 /  130
+invoice_number                 57.3% /    1 /  625               91.2% /    0 /  129
+invoice_date                    0.0% /    0 / 1465               86.1% /    0 /  204
+due_date                        3.5% /    0 / 1414               79.0% /    0 /  307
+currency                        8.2% /    0 / 1345              100.0% /    0 /    0
+total_amount                    8.1% /    1 / 1345              100.0% /    0 /    0
+po_number                      89.6% /    0 /  152               89.6% /    0 /  152
+
+=== C) synthetic_emails_shifted_test: 1502 invoices (clean test set - different unseen wording, never used for development)
+field                                        regex                           learned
+                     found right / WRONG / missing     found right / WRONG / missing
+vendor_name                    63.6% /  547 /    0               90.9% /    0 /  136
+invoice_number                 58.1% /    1 /  629               78.8% /    0 /  319
+invoice_date                    0.0% /    0 / 1502               85.8% /    0 /  214
+due_date                        2.7% /    0 / 1461               78.8% /    0 /  318
+currency                        7.1% /    0 / 1395              100.0% /    0 /    0
+total_amount                    6.9% /    4 / 1395              100.0% /    0 /    0
+po_number                      89.4% /    0 /  159               89.4% /    0 /  159
+
+=== End to end, hard dataset, last 30% scored
+                        auto-approved   bad auto-approved  good sent to human   approved w/ WRONG field
+regex                            9.9%             1 of 47               89.2%                   3 of 45
+learned                         65.6%             4 of 47               27.9%                  0 of 299
+true fields (ceiling)           85.7%             3 of 47                5.1%                  0 of 391
+
+=== End to end, shifted_test (clean), last 30% scored (extractor trained on the hard dataset only)
+                        auto-approved   bad auto-approved  good sent to human   approved w/ WRONG field
+regex                            0.9%             0 of 41               99.0%                    1 of 4
+learned                         49.0%             3 of 41               46.8%                  0 of 221
+true fields (ceiling)           85.8%             2 of 41                6.1%                  0 of 387

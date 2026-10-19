@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # A throwaway MySQL that exists only for this job and is not reachable from outside it. Root with an empty password
+    # keeps credentials out of the repo and gives the SUPER right needed to create the audit_log triggers.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+          MYSQL_DATABASE: opspilot_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      OPSPILOT_TEST_DB_HOST: 127.0.0.1
+      OPSPILOT_TEST_DB_PORT: "3306"
+      OPSPILOT_TEST_DB_NAME: opspilot_test
+      OPSPILOT_TEST_DB_USER: root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Train models
+        run: |
+          python -m app.ml.train_classifier
+          python -m app.ml.train_anomaly
+          python -m app.ml.train_extractor
+      - name: Tests
+        run: pytest -q
+      - name: Evaluation report
+        run: |
+          python -m scripts.evaluate_duplicates
+          python -m scripts.evaluate_decisions

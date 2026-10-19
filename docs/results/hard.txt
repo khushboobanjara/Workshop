@@ -1,0 +1,101 @@
+OpsPilot AI benchmark - dataset: hard (data/synthetic_emails_hard.jsonl)
+
+======================================================================
+EMAIL CLASSIFIER
+======================================================================
+                precision    recall  f1-score   support
+
+       invoice      1.000     1.000     1.000       304
+    newsletter      1.000     1.000     1.000        59
+purchase_order      1.000     1.000     1.000        56
+       receipt      1.000     1.000     1.000        57
+       support      1.000     1.000     1.000        62
+
+      accuracy                          1.000       538
+     macro avg      1.000     1.000     1.000       538
+  weighted avg      1.000     1.000     1.000       538
+
+Labels: ['invoice', 'newsletter', 'purchase_order', 'receipt', 'support']
+[[304   0   0   0   0]
+ [  0  59   0   0   0]
+ [  0   0  56   0   0]
+ [  0   0   0  57   0]
+ [  0   0   0   0  62]]
+
+Threshold 0.7: auto-handles 100.0% of emails, accuracy on those = 100.0%, sent to review = 0.0%
+Saved model to models/bench_hard_classifier.joblib
+
+======================================================================
+FIELD EXTRACTION
+======================================================================
+1518 invoice emails
+
+field             correct   wrong  missing  accuracy
+vendor_name          1226     292        0     80.8%
+invoice_number        810       2      706     53.4%
+invoice_date          461       0     1057     30.4%
+due_date              502       0     1016     33.1%
+currency              774       0      744     51.0%
+total_amount          761      13      744     50.1%
+po_number            1400       0      118     92.2%
+
+Confidence check: values with conf >= 0.9 are right 99.7% of the time (3409 values); below 0.9: 79.3% (1432 values)
+
+======================================================================
+DUPLICATE DETECTION
+======================================================================
+TP=22 FP=0 FN=57 TN=1439  precision=100.0% recall=27.8%
+
+By duplicate kind (caught / total):
+  amount_rounded     0 / 6
+  exact             11 / 33
+  number_fmt         5 / 5
+  resubmitted        0 / 15
+  vendor_variant     6 / 20
+
+======================================================================
+ANOMALY DETECTION
+======================================================================
+690 scored invoices (42 skipped: vendor cold start < 3 prior invoices, 707 skipped: vendor/amount not extracted)
+NOT SCORED: 6 anomalies hidden by cold start, 45 by failed extraction (counted as misses in the end-to-end report)
+train=482 test=208 | anomalies in test: 10
+
+Baseline |robust z| > 4.0:  TP=6 FP=4 FN=4  precision=60.0% recall=60.0%
+IsolationForest signal >= 0.9:  TP=6 FP=8 FN=4  precision=42.9% recall=60.0%
+IsolationForest signal >= 0.95:  TP=1 FP=4 FN=9  precision=20.0% recall=10.0%
+IsolationForest signal >= 0.97:  TP=0 FP=3 FN=10  precision=0.0% recall=0.0%
+
+Recall by anomaly kind in the test split (caught / total):  baseline | IsolationForest@0.95
+  burst         0 / 3     |     0 / 3
+  near_limit    1 / 1     |     0 / 1
+  spike_big     4 / 5     |     1 / 5
+  spike_mild    1 / 1     |     0 / 1
+
+Saved model -> models/bench_hard_anomaly.joblib
+
+======================================================================
+END TO END DECISIONS
+======================================================================
+1518 invoices replayed | thresholds: approve<=0.3 reject>=0.85 amount cap 10,000
+
+Decisions: {'human_review': 1388, 'auto_approved': 125, 'rejected': 5}
+Automation rate:      8.2%  (125 of 1518 approved with no human touch)
+Leakage:              7 of 173 bad invoices were auto-approved
+   leaked by kind: {'burst': 4, 'vendor_variant': 1, 'exact': 1, 'spike_big': 1}
+False alarms:         1227 of 1345 good invoices went to a human or were rejected (91.2%)
+Rules behind false alarms: {'missing_required_fields': 1220, 'risk_above_approve_threshold': 7}
+Duplicates:           5 rejected, 72 sent to review, 2 leaked, of 79
+Anomalies:            89 stopped (review or reject), 5 leaked, of 94
+
+Estimated saving: 125 auto-approved x 6 min = 12.5 h = $375 at $30/h  (assumptions, not measured)
+
+Threshold sweep (auto_approve_max_risk):
+  threshold  automation  leakage  false_alarm_rate
+  0.1             2.6%        2            97.2%
+  0.15            4.8%        4            94.9%
+  0.2             7.3%        6            92.2%
+  0.25            8.0%        7            91.5%
+  0.3             8.2%        7            91.2%
+  0.4             8.4%        8            91.1%
+  0.5             8.5%        8            91.0%
+  0.6             8.6%        9            91.0%

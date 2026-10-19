@@ -1,0 +1,90 @@
+OpsPilot AI benchmark - dataset: easy (data/synthetic_emails.jsonl)
+
+======================================================================
+EMAIL CLASSIFIER
+======================================================================
+                precision    recall  f1-score   support
+
+       invoice      1.000     1.000     1.000       163
+    newsletter      1.000     1.000     1.000        33
+purchase_order      1.000     1.000     1.000        34
+       receipt      1.000     1.000     1.000        37
+       support      1.000     1.000     1.000        33
+
+      accuracy                          1.000       300
+     macro avg      1.000     1.000     1.000       300
+  weighted avg      1.000     1.000     1.000       300
+
+Labels: ['invoice', 'newsletter', 'purchase_order', 'receipt', 'support']
+[[163   0   0   0   0]
+ [  0  33   0   0   0]
+ [  0   0  34   0   0]
+ [  0   0   0  37   0]
+ [  0   0   0   0  33]]
+
+Threshold 0.7: auto-handles 100.0% of emails, accuracy on those = 100.0%, sent to review = 0.0%
+Saved model to models/bench_easy_classifier.joblib
+
+======================================================================
+FIELD EXTRACTION
+======================================================================
+816 invoice emails
+
+field             correct   wrong  missing  accuracy
+vendor_name           816       0        0    100.0%
+invoice_number        816       0        0    100.0%
+invoice_date          699       0      117     85.7%
+due_date              816       0        0    100.0%
+currency              816       0        0    100.0%
+total_amount          816       0        0    100.0%
+po_number             749       0       67     91.8%
+
+Confidence check: values with conf >= 0.9 are right 100.0% of the time (4311 values); below 0.9: 100.0% (468 values)
+
+======================================================================
+DUPLICATE DETECTION
+======================================================================
+TP=47 FP=2 FN=0 TN=767  precision=95.9% recall=100.0%
+
+By duplicate kind (caught / total):
+  exact             47 / 47
+False positives by cause: {'other': 2}
+
+======================================================================
+ANOMALY DETECTION
+======================================================================
+745 scored invoices (24 skipped: vendor cold start < 3 prior invoices, 0 skipped: vendor/amount not extracted)
+train=521 test=224 | anomalies in test: 9
+
+Baseline |robust z| > 4.0:  TP=9 FP=0 FN=0  precision=100.0% recall=100.0%
+IsolationForest signal >= 0.9:  TP=9 FP=11 FN=0  precision=45.0% recall=100.0%
+IsolationForest signal >= 0.95:  TP=9 FP=1 FN=0  precision=90.0% recall=100.0%
+IsolationForest signal >= 0.97:  TP=5 FP=0 FN=4  precision=100.0% recall=55.6%
+
+Saved model -> models/bench_easy_anomaly.joblib
+
+======================================================================
+END TO END DECISIONS
+======================================================================
+816 invoices replayed | thresholds: approve<=0.3 reject>=0.85 amount cap 10,000
+
+Decisions: {'auto_approved': 701, 'human_review': 68, 'rejected': 47}
+Automation rate:      85.9%  (701 of 816 approved with no human touch)
+Leakage:              0 of 78 bad invoices were auto-approved
+False alarms:         37 of 738 good invoices went to a human or were rejected (5.0%)
+Rules behind false alarms: {'new_vendor_large_amount': 9, 'risk_above_approve_threshold': 28}
+Duplicates:           47 rejected, 0 sent to review, 0 leaked, of 47
+Anomalies:            31 stopped (review or reject), 0 leaked, of 31
+
+Estimated saving: 701 auto-approved x 6 min = 70.1 h = $2,103 at $30/h  (assumptions, not measured)
+
+Threshold sweep (auto_approve_max_risk):
+  threshold  automation  leakage  false_alarm_rate
+  0.1            69.9%        0            22.8%
+  0.15           71.9%        0            20.5%
+  0.2            73.2%        0            19.1%
+  0.25           84.6%        0             6.5%
+  0.3            85.9%        0             5.0%
+  0.4            87.3%        0             3.5%
+  0.5            88.6%        0             2.0%
+  0.6            89.0%        0             1.6%

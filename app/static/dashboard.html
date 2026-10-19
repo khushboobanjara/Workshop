@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpsPilot AI - Invoice Operations</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1c2230; --muted:#667085; --line:#e4e7ec; --accent:#3556d8;
+          --green:#157f4b; --amber:#b25e09; --red:#c0342b; --greenbg:#e3f5ec; --amberbg:#fdf0dc; --redbg:#fbe5e3; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#12151c; --card:#1b2029; --text:#e8ebf2; --muted:#9aa3b5; --line:#2c3342; --accent:#7d98ff;
+            --green:#4ccf8d; --amber:#f0b155; --red:#ff7b72; --greenbg:#15332a; --amberbg:#3a2d14; --redbg:#3d1f1d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; padding:16px 24px; }
+  h1 { font-size:20px; margin:0; } h1 small { color:var(--muted); font-weight:400; font-size:13px; margin-left:8px; }
+  button { font:inherit; cursor:pointer; border:1px solid var(--line); background:var(--card); color:var(--text); padding:6px 12px; border-radius:6px; }
+  button:hover { border-color:var(--accent); } button:disabled { opacity:.5; cursor:default; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.danger { color:var(--red); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:20px; }
+  .metric, .item { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .metric b { display:block; font-size:22px; } .metric span { color:var(--muted); font-size:12px; }
+  .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:16px; }
+  .tab { border:none; border-bottom:2px solid transparent; border-radius:0; background:none; padding:8px 14px; }
+  .tab.active { border-bottom-color:var(--accent); color:var(--accent); font-weight:600; }
+  .item { margin-bottom:12px; } .row { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; }
+  .title { font-weight:600; font-size:15px; } .muted { color:var(--muted); }
+  .pill { display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600; }
+  .pill.green { background:var(--greenbg); color:var(--green); } .pill.amber { background:var(--amberbg); color:var(--amber); }
+  .pill.red { background:var(--redbg); color:var(--red); } .pill.gray { background:var(--line); color:var(--muted); }
+  ul.reasons { margin:8px 0; padding-left:18px; }
+  .bars { display:grid; grid-template-columns:150px 1fr 40px; gap:4px 8px; align-items:center; font-size:12px; margin:8px 0; }
+  .bar { height:8px; background:var(--line); border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
+  details { margin:8px 0; } summary { cursor:pointer; color:var(--muted); }
+  pre { white-space:pre-wrap; background:var(--bg); padding:10px; border-radius:6px; margin:6px 0; font-size:12px; }
+  .form { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+  .fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:8px; margin-bottom:8px; }
+  label { display:block; font-size:12px; color:var(--muted); }
+  input, select { width:100%; font:inherit; padding:5px 8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--text); }
+  .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:end; } .actions .grow { flex:1; min-width:160px; }
+  .err { color:var(--red); margin-top:6px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th, td { padding:8px 10px; text-align:left; border-bottom:1px solid var(--line); } th { color:var(--muted); font-size:12px; }
+  tbody tr { cursor:pointer; } tbody tr:hover { background:var(--bg); }
+  [hidden] { display:none !important; }
+  .notice { background:var(--amberbg); color:var(--amber); border:1px solid var(--amber); border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
+  .mcard { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  .mcard h3 { margin:0 0 4px; } .mcard table { margin-top:10px; } .mcard .sub { color:var(--muted); font-size:12px; margin:2px 0; }
+  .mstats { display:flex; gap:22px; flex-wrap:wrap; margin-top:10px; } .mstats div { font-size:12px; color:var(--muted); } .mstats b { display:block; font-size:22px; color:var(--text); }
+  .cm td, .cm th { text-align:center; } .cm td.diag { font-weight:700; }
+  #login { position:fixed; inset:0; background:rgba(10,18,40,.82); display:grid; place-items:center; z-index:50; }
+  #login form { background:var(--card); color:var(--text); border-radius:12px; padding:24px; width:min(360px,92vw); display:grid; gap:10px; }
+  #login label { display:grid; gap:4px; font-size:12px; } #login .hint { font-size:12px; color:var(--muted); }
+  .whobox { font-size:12px; color:#9fb0dd; display:grid; gap:6px; } .whobox b { color:#fff; font-size:13px; }
+  dialog { width:min(760px,94vw); border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--text); padding:16px; }
+  .step { border-left:2px solid var(--line); padding:0 0 10px 12px; margin-left:4px; }
+  .empty { text-align:center; padding:40px; color:var(--muted); }
+
+  /* ---- app shell */
+  .app { display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+  .side { background:#14213d; color:#dbe4ff; padding:18px 12px; display:flex; flex-direction:column; gap:6px; position:sticky; top:0; height:100vh; }
+  .brand { font-size:19px; font-weight:700; color:#fff; padding:0 8px; } .brand b { color:#7d98ff; }
+  .brand small { display:block; font-size:11px; font-weight:400; color:#9fb0dd; margin:2px 0 14px; }
+  .nav { display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; background:none; border:none; color:#dbe4ff; padding:9px 10px; border-radius:8px; }
+  .nav:hover { background:#22325a; } .nav.active { background:var(--accent); color:#fff; font-weight:600; }
+  .badge { background:#e5484d; color:#fff; border-radius:99px; font-size:11px; padding:0 7px; } .badge:empty { display:none; }
+  .sidefoot { margin-top:auto; display:flex; flex-direction:column; gap:8px; padding:0 4px; } .sidefoot a { color:#9fb0dd; font-size:12px; }
+  .sidefoot button { background:#22325a; border-color:#2f4278; color:#fff; }
+  .content { min-width:0; } .topbar { display:flex; gap:10px; padding:14px 24px; align-items:center; }
+  .topbar input { flex:1; max-width:520px; padding:8px 12px; border-radius:8px; }
+  #view { padding:0 24px 40px; max-width:1200px; }
+  h2.hello { margin:6px 0 2px; font-size:24px; } h2.hello b { color:var(--accent); }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:16px 0; }
+  .kpi { border-radius:12px; padding:14px 16px; border:1px solid var(--line); background:var(--card); }
+  .kpi span { font-size:12px; color:var(--muted); } .kpi b { display:block; font-size:28px; line-height:1.2; } .kpi small { color:var(--muted); }
+  .kpi.g { border-left:4px solid var(--green); } .kpi.a { border-left:4px solid var(--amber); } .kpi.r { border-left:4px solid var(--red); } .kpi.p { border-left:4px solid #8b5cf6; } .kpi.b { border-left:4px solid var(--accent); }
+  .charts { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:12px; margin-bottom:16px; }
+  .chart { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; } .chart h3 { margin:0 0 10px; font-size:14px; }
+  .legend { display:grid; gap:4px; font-size:12px; } .legend i { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
+  .barlist { display:grid; gap:10px; font-size:12px; }
+  .legend div { display:flex; justify-content:space-between; gap:12px; } .donutwrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .chart svg { max-width:100%; height:auto; } .axis { fill:var(--muted); font-size:9px; }
+  textarea { width:100%; font:inherit; padding:8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--text); min-height:150px; }
+  .pill.purple { background:#ece6fd; color:#6d3fd1; }
+  @media (max-width:760px) { .app { grid-template-columns:1fr; } .side { position:static; height:auto; flex-direction:row; flex-wrap:wrap; align-items:center; } .sidefoot { margin:0; flex-direction:row; } }
+
+  /* ---- AI assistant */
+  .chat { max-width:900px; display:flex; flex-direction:column; height:calc(100vh - 140px); min-height:440px; }
+  .chathead { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .chatlog { flex:1; overflow-y:auto; padding:12px 2px; display:flex; flex-direction:column; gap:12px; }
+  .msg { max-width:88%; padding:10px 14px; border-radius:14px; line-height:1.5; overflow-wrap:anywhere; }
+  .msg p { margin:4px 0; } .msg ul { margin:6px 0; padding-left:20px; }
+  .msg.user { align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px; }
+  .msg.bot { align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
+  .msg.err { align-self:flex-start; background:var(--redbg); color:var(--red); border:1px solid var(--red); }
+  .msgmeta { margin-top:8px; font-size:12px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .msgmeta a.pill { cursor:pointer; text-decoration:none; } .msgmeta details { width:100%; margin:2px 0 0; } .msgmeta li { margin:2px 0; }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 10px; } .chip { border-radius:99px; font-size:13px; padding:6px 12px; }
+  .composer { display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--line); padding-top:10px; }
+  .composer textarea { min-height:44px; max-height:140px; resize:none; flex:1; }
+  .typing span { display:inline-block; animation:blink 1.2s infinite; } .typing span:nth-child(2) { animation-delay:.2s; } .typing span:nth-child(3) { animation-delay:.4s; }
+  @keyframes blink { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+  .chatempty { text-align:center; color:var(--muted); margin:auto; padding:20px; } .chatempty h3 { color:var(--text); margin:0 0 6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">OpsPilot <b>AI</b><small>Intelligent Business Workflow Automation</small></div>
+    <button class="nav active" data-tab="home">Home</button>
+    <button class="nav" data-tab="chat">AI Assistant</button>
+    <button class="nav" data-tab="process" data-roles="admin reviewer">Process Email</button>
+    <button class="nav" data-tab="all">Invoices</button>
+    <button class="nav" data-tab="queue" data-roles="admin reviewer">Review Queue <span class="badge" id="qcount"></span></button>
+    <button class="nav" data-tab="triage" data-roles="admin reviewer">Triage <span class="badge" id="tcount"></span></button>
+    <button class="nav" data-tab="vendors">Vendors</button>
+    <button class="nav" data-tab="reports">Reports</button>
+    <button class="nav" data-tab="models">Model Performance</button>
+    <button class="nav" data-tab="audit" data-roles="admin">Audit Logs</button>
+    <button class="nav" data-tab="settings" data-roles="admin">Settings</button>
+    <button class="nav" data-tab="users" data-roles="admin">Users</button>
+    <div class="sidefoot"><div class="whobox" id="who" hidden><span>Signed in as <b id="whoName"></b> (<span id="whoRole"></span>)</span><button id="logout">Sign out</button></div><button id="demo" data-roles="admin reviewer">Load demo data</button><a href="/docs">API docs</a></div>
+  </aside>
+  <div class="content">
+    <div id="banner" hidden style="background:#3b2f0b;color:#f5d98b;padding:8px 16px;font-size:13px;text-align:center"></div>
+    <div class="topbar"><input id="search" placeholder="Search invoices by number, vendor or email..."><button id="refresh">Refresh</button></div>
+    <main id="view"></main>
+  </div>
+</div>
+<div id="login" hidden><form id="loginForm"><h2 style="margin:0">Sign in to OpsPilot</h2>
+  <label>Username<input id="lu" autocomplete="username" maxlength="100"></label>
+  <label>Password<input id="lp" type="password" autocomplete="current-password" maxlength="200"></label>
+  <div class="err" id="lerr"></div><button class="primary">Sign in</button><div class="hint" id="demoHint"></div></form></div>
+<dialog id="audit"><div id="auditBody"></div><div style="text-align:right"><button id="closeAudit">Close</button></div></dialog>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// Everything that comes from an email goes through esc(): email content is untrusted input.
+
+const FIELDS = [["vendor_name", "Vendor"], ["invoice_number", "Invoice no."], ["invoice_date", "Invoice date"],
+                ["due_date", "Due date"], ["currency", "Currency"], ["total_amount", "Total amount"], ["po_number", "PO number"]];
+const SIGNALS = { duplicate: "Duplicate", anomaly: "Amount anomaly", burst: "Burst of invoices", validation_issues: "Validation", extraction_uncertainty: "Extraction doubt" };
+let tab = "home", filter = "", me = null, authEnabled = false;
+const can = roles => !authEnabled || !roles || (me && roles.split(" ").includes(me.role));
+function fillReviewer() {
+  const saved = me ? me.username : (localStorage.getItem("reviewer") || "");
+  document.querySelectorAll(".reviewer").forEach(i => { i.value = saved; if (me) { i.readOnly = true; i.title = "You are signed in; this name is recorded automatically."; } });
+}
+function setActive() { document.querySelectorAll(".nav").forEach(b => b.classList.toggle("active", b.dataset.tab === tab)); }
+function applyRole() {
+  document.querySelectorAll("[data-roles]").forEach(el => (el.hidden = !can(el.dataset.roles)));
+  $("#who").hidden = !(authEnabled && me);
+  if (me) { $("#whoName").textContent = me.username; $("#whoRole").textContent = me.role; }
+  const nav = document.querySelector(`.nav[data-tab="${tab}"]`);
+  if (nav && nav.hidden) { tab = "home"; setActive(); }
+}
+function showLogin(msg) { chatLog = []; chatStatus = null; $("#login").hidden = false; $("#lerr").textContent = msg || ""; $("#view").innerHTML = ""; $("#lu").focus(); }
+
+async function api(path, opts = {}, retried = false) {
+  const key = sessionStorage.getItem("opspilot_key");
+  const r = await fetch(path, { ...opts, headers: { "Content-Type": "application/json", ...(key ? { "X-API-Key": key } : {}) } });
+  if (r.status === 401 && authEnabled) { me = null; showLogin("Please sign in again."); throw new Error("Sign-in required"); }
+  if (r.status === 401 && !retried) {                       // legacy mode: server needs an API key, ask once for this tab
+    const k = prompt("This server requires an API key:");
+    if (k) { sessionStorage.setItem("opspilot_key", k.trim()); return api(path, opts, true); }
+  }
+  const data = await r.json().catch(() => null);
+  if (!r.ok) {
+    const d = data && data.detail;
+    throw new Error(typeof d === "string" ? d : d ? JSON.stringify(d) : r.statusText);
+  }
+  return data;
+}
+const money = (amt, cur) => {
+  if (amt == null) return "-";
+  try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD" }).format(amt); }
+  catch { return `${cur || ""} ${Number(amt).toFixed(2)}`; }
+};
+const riskClass = r => r == null ? "gray" : r <= 0.30 ? "green" : r < 0.85 ? "amber" : "red";
+const riskPill = r => `<span class="pill ${riskClass(r)}">risk ${r == null ? "?" : r.toFixed(2)}</span>`;
+const statusPill = s => `<span class="pill ${s === "approved" ? "green" : s === "rejected" ? "red" : "amber"}">${esc(s.replace("_", " "))}</span>`;
+
+// ---------- charts (plain SVG, no libraries, so the page works offline)
+const COLORS = { auto: "#22a06b", rev: "#4c7be8", pend: "#f0a23b", rej: "#e5484d", dup: "#8b5cf6" };
+function donut(slices, total) {
+  let off = 25;
+  const arcs = slices.filter(x => x.value > 0).map(x => { const p = x.value / total * 100;
+    const e = `<circle r="15.9155" cx="21" cy="21" fill="none" stroke="${x.color}" stroke-width="5" stroke-dasharray="${p} ${100 - p}" stroke-dashoffset="${off}"/>`; off -= p; return e; }).join("");
+  return `<svg viewBox="0 0 42 42" width="160" height="160">${total ? arcs : '<circle r="15.9155" cx="21" cy="21" fill="none" stroke="var(--line)" stroke-width="5"/>'}
+    <text x="21" y="22" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor">${total}</text>
+    <text x="21" y="27.5" text-anchor="middle" font-size="2.7" fill="var(--muted)">Total invoices</text></svg>`;
+}
+function lineChart(t) {
+  if (t.length < 2) return `<div class="empty">Not enough dates yet to draw a trend.</div>`;
+  const W = 320, H = 150, L = 26, B = 18, max = Math.max(...t.map(x => x.invoices), 1);
+  const X = i => L + i * (W - L - 6) / (t.length - 1), Y = v => H - B - v / max * (H - B - 8);
+  const pts = k => t.map((x, i) => `${X(i).toFixed(1)},${Y(x[k]).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}"><line x1="${L}" y1="${Y(0)}" x2="${W}" y2="${Y(0)}" stroke="var(--line)"/>
+    <text class="axis" x="0" y="${Y(max) + 3}">${max}</text><text class="axis" x="0" y="${Y(0) + 3}">0</text>
+    <polyline fill="none" stroke="${COLORS.rev}" stroke-width="2" points="${pts("invoices")}"/>
+    <polyline fill="none" stroke="${COLORS.auto}" stroke-width="2" points="${pts("auto_approved")}"/>
+    <text class="axis" x="${L}" y="${H - 4}">${esc(t[0].date.slice(5))}</text><text class="axis" x="${W - 6}" y="${H - 4}" text-anchor="end">${esc(t[t.length - 1].date.slice(5))}</text></svg>
+    <div class="legend"><div><span><i style="background:${COLORS.rev}"></i>Invoices per day</span></div><div><span><i style="background:${COLORS.auto}"></i>Auto processed</span></div></div>`;
+}
+function barChart(obj) {
+  const e = Object.entries(obj).sort((a, b) => b[1] - a[1]), max = Math.max(...e.map(x => x[1]), 1);
+  return e.length ? `<div class="barlist">${e.map(([k, v]) => `<div style="display:grid;grid-template-columns:110px 1fr 28px;gap:8px;align-items:center">
+    <span>${esc(k.replace("_", " "))}</span><div class="bar"><i style="width:${v / max * 100}%"></i></div><b>${v}</b></div>`).join("")}</div>` : `<div class="empty">No emails yet.</div>`;
+}
+
+// ---------- stats + home page
+let stats = null;
+const riskLevel = r => r == null ? ["-", "gray"] : r <= 0.30 ? ["Low", "green"] : r < 0.60 ? ["Medium", "amber"] : ["High", "red"];
+function statusLabel(i) {
+  if (i.duplicate_of) return ["Duplicate", "purple"];
+  if (i.status === "approved") return [i.decision === "auto_approved" ? "Auto processed" : "Approved", "green"];
+  if (i.status === "rejected") return ["Rejected", "red"];
+  return ["Pending review", "amber"];
+}
+async function loadStats() {
+  stats = await api("/stats");
+  $("#qcount").textContent = stats.pending_review || "";
+  $("#tcount").textContent = stats.needs_triage || "";
+}
+function recentTable(list) {
+  return list.length ? `<table><thead><tr><th>#</th><th>Vendor</th><th>Invoice</th><th>Amount</th><th>Status</th><th>Risk</th></tr></thead><tbody>` +
+    list.map(i => { const [sl, sc] = statusLabel(i), [rl, rc] = riskLevel(i.risk_score);
+      return `<tr data-id="${i.id}"><td>${i.id}</td><td>${esc(i.vendor_name || "-")}</td><td>${esc(i.invoice_number || "-")}</td><td>${esc(money(i.total_amount, i.currency))}</td>
+        <td><span class="pill ${sc}">${sl}</span></td><td><span class="pill ${rc}">${rl}</span></td></tr>`; }).join("") + `</tbody></table>`
+    : `<div class="empty">No invoices yet. Use "Load demo data" or Process Email.</div>`;
+}
+function renderHome() {
+  const st = stats, n = st.invoices, d = st.donut, pct = v => n ? Math.round(v / n * 100) + "%" : "-";
+  const slices = [["Auto processed", d.auto_processed, COLORS.auto], ["Approved by reviewer", d.approved_by_reviewer, COLORS.rev],
+    ["Pending review", d.pending_review, COLORS.pend], ["Rejected", d.rejected, COLORS.rej], ["Duplicates", d.duplicates, COLORS.dup]];
+  const sv = st.estimated_savings;
+  $("#view").innerHTML = `
+    <div class="row"><div><h2 class="hello">Welcome to OpsPilot <b>AI</b></h2><div class="muted">Automate business workflows. Reduce manual effort. Focus on what matters.</div></div>
+      ${can("admin reviewer") ? '<button class="primary" data-tab="process">Process New Email</button>' : ""}</div>
+    <div class="kpis">
+      <div class="kpi b"><span>Total invoices</span><b>${n}</b><small>${st.emails_received} emails received</small></div>
+      <div class="kpi g"><span>Auto processed</span><b>${st.by_decision.auto_approved || 0}</b><small>${pct(st.by_decision.auto_approved || 0)} of invoices</small></div>
+      <div class="kpi a"><span>Pending review</span><b>${st.pending_review}</b><small>${pct(st.pending_review)} of invoices</small></div>
+      <div class="kpi r"><span>High risk</span><b>${st.high_risk}</b><small>risk at or above ${st.high_risk_threshold}</small></div>
+      <div class="kpi p"><span>Duplicates</span><b>${st.duplicates}</b><small>${pct(st.duplicates)} of invoices</small></div></div>
+    <div class="charts">
+      <div class="chart"><h3>Invoice processing status</h3><div class="donutwrap">${donut(slices.map(([l, v, c]) => ({ label: l, value: v, color: c })), n)}
+        <div class="legend">${slices.map(([l, v, c]) => `<div><span><i style="background:${c}"></i>${l}</span><b>${v}</b></div>`).join("")}</div></div></div>
+      <div class="chart"><h3>Invoices over time</h3>${lineChart(st.timeline)}</div>
+      <div class="chart"><h3>What arrives in the inbox</h3>${barChart(st.categories)}</div></div>
+    <div class="row" style="margin-bottom:8px"><h3 style="margin:0">Recent invoices</h3><button data-tab="all">View all</button></div>
+    ${recentTable(st.recent)}
+    <p class="muted" style="font-size:12px">Estimated time saved: ${sv.hours} h (about ${sv.cost} in cost). ${esc(sv.assumptions)}. This is an estimate, not a measurement. Average pipeline time ${st.avg_pipeline_ms_per_email ?? "-"} ms per email.</p>`;
+}
+
+// ---------- process a pasted email
+function renderProcess() {
+  $("#view").innerHTML = `<h2 class="hello">Process an email</h2><div class="muted" style="margin-bottom:12px">Paste an invoice email. It goes through the same pipeline as mail arriving from the inbox.</div>
+    <div class="item"><div class="fields"><div><label>From</label><input id="pFrom" value="billing@acme.example"></div><div><label>Subject</label><input id="pSubj" value="Invoice INV-20001"></div></div>
+    <label>Body</label><textarea id="pBody">Hello,\n\nPlease find invoice INV-20001 attached.\nVendor: Acme Supplies Ltd\nInvoice Date: ${new Date().toISOString().slice(0, 10)}\nDue Date: ${new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)}\nTotal Amount: USD 1250.00\n\nRegards,\nAcme Supplies Ltd</textarea>
+    <div class="actions" style="margin-top:10px"><button class="primary" id="pGo">Process</button></div><div id="pOut"></div></div>`;
+  $("#pGo").onclick = async () => {
+    const out = $("#pOut"); out.innerHTML = "";
+    try {
+      const r = await api("/emails", { method: "POST", body: JSON.stringify({ message_id: "manual-" + Date.now(), sender: $("#pFrom").value, subject: $("#pSubj").value, body: $("#pBody").value }) });
+      const inv = r.invoice;
+      out.innerHTML = `<div class="item" style="margin-top:12px"><b>Decision: ${esc((r.decision || "").replace("_", " "))}</b>${inv ? ` ${riskPill(inv.risk_score)} <span class="muted">${esc(inv.vendor_name || "")} ${esc(inv.invoice_number || "")} ${esc(money(inv.total_amount, inv.currency))}</span>` : ""}
+        <ul class="reasons">${((inv && inv.decision_reasons) || r.flags || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul>${inv ? `<button data-action="audit-id" data-id="${inv.id}">Audit trail</button>` : ""}</div>`;
+      await loadStats();
+    } catch (e) { out.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+  };
+}
+
+// ---------- review queue
+function queueCard(inv) {
+  const bars = Object.entries(SIGNALS).map(([k, label]) => {
+    const v = (inv.risk_breakdown || {})[k] || 0;
+    return `<div>${esc(label)}</div><div class="bar"><i style="width:${Math.round(v * 100)}%"></i></div><div>${v.toFixed(2)}</div>`;
+  }).join("");
+  const inputs = FIELDS.map(([k, label]) =>
+    `<div><label>${esc(label)}</label><input data-field="${k}" data-orig="${esc(inv[k] ?? "")}" value="${esc(inv[k] ?? "")}" ${inv[k] == null ? 'placeholder="missing"' : ""}></div>`).join("");
+  return `<div class="item" data-id="${inv.id}">
+    <div class="row"><div><span class="title">${esc(inv.vendor_name || "Unknown vendor")}</span>
+      <span class="muted"> ${esc(inv.invoice_number || "no invoice number")} - #${inv.id}</span></div>
+      <div>${riskPill(inv.risk_score)} <b>${esc(money(inv.total_amount, inv.currency))}</b></div></div>
+    <ul class="reasons">${(inv.decision_reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+    ${inv.duplicate_of ? `<div class="muted">Similar to invoice #${inv.duplicate_of}</div>` : ""}
+    <div class="bars">${bars}</div>
+    <details><summary>Original email: ${esc(inv.email ? inv.email.subject : "")}</summary>
+      <pre>${esc(inv.email ? "From: " + inv.email.sender + "\n\n" + inv.email.body : "")}</pre></details>
+    <div class="form">
+      <details><summary>Correct extracted fields (optional)</summary><div class="fields" style="margin-top:8px">${inputs}</div></details>
+      <div class="actions">
+        <div><label>Your name</label><input class="reviewer" placeholder="e.g. Khushboo"></div>
+        <div class="grow"><label>Comment</label><input class="comment" placeholder="Why?"></div>
+        <button class="primary" data-action="approve">Approve</button>
+        <button class="danger" data-action="reject">Reject</button>
+        <button data-action="audit">Audit trail</button>
+      </div>
+      <div class="err"></div>
+    </div></div>`;
+}
+
+async function renderQueue() {
+  const q = await api("/review-queue");
+  $("#view").innerHTML = q.length ? q.map(queueCard).join("") : `<div class="empty">Nothing waiting for review. Use "Load demo data" to see the workflow.</div>`;
+  fillReviewer();
+}
+
+async function submitReview(card, action) {
+  const err = $(".err", card), reviewer = $(".reviewer", card).value.trim();
+  err.textContent = "";
+  if (!reviewer) { err.textContent = "Enter your name so the decision is recorded in the audit log."; return; }
+  localStorage.setItem("reviewer", reviewer);
+  const corrections = {};
+  card.querySelectorAll("[data-field]").forEach(i => {
+    const v = i.value.trim();
+    if (v !== i.dataset.orig && v !== "") corrections[i.dataset.field] = i.dataset.field === "total_amount" ? parseFloat(v) : v;
+  });
+  try {
+    await api(`/invoices/${card.dataset.id}/review`, { method: "POST", body: JSON.stringify(
+      { action, reviewer, comment: $(".comment", card).value, corrections: Object.keys(corrections).length ? corrections : null }) });
+    await refresh();
+  } catch (e) { err.textContent = e.message; }
+}
+
+// ---------- all invoices
+async function renderAll() {
+  const q = $("#search").value.trim().toLowerCase();
+  let list = await api("/invoices?limit=1000" + (filter ? `&status=${filter}` : ""));
+  if (q) list = list.filter(i => [i.vendor_name, i.invoice_number, "#" + i.id].some(v => String(v || "").toLowerCase().includes(q)));
+  $("#view").innerHTML = `<div style="margin-bottom:10px;max-width:220px"><select id="statusFilter">
+      ${["", "approved", "pending_review", "rejected"].map(s => `<option value="${s}" ${s === filter ? "selected" : ""}>${s ? s.replace("_", " ") : "All statuses"}</option>`).join("")}
+    </select></div>` + (list.length ? `<table><thead><tr><th>#</th><th>Vendor</th><th>Invoice</th><th>Amount</th><th>Risk</th><th>System decision</th><th>Status</th><th>Reviewed by</th></tr></thead><tbody>` +
+    list.map(i => `<tr data-id="${i.id}"><td>${i.id}</td><td>${esc(i.vendor_name || "-")}</td><td>${esc(i.invoice_number || "-")}</td>
+      <td>${esc(money(i.total_amount, i.currency))}</td><td>${riskPill(i.risk_score)}</td><td>${esc((i.decision || "").replace("_", " "))}</td>
+      <td>${statusPill(i.status)}</td><td>${esc(i.reviewed_by || "-")}</td></tr>`).join("") + `</tbody></table>`
+    : `<div class="empty">No invoices yet.</div>`);
+}
+
+// ---------- audit trail
+async function showAudit(id) {
+  const rows = await api(`/invoices/${id}/audit`);
+  $("#auditBody").innerHTML = `<h3 style="margin-top:0">Audit trail - invoice #${id}</h3>` + rows.map(r => {
+    const d = r.details || {};
+    const bits = [];
+    if (d.rule) bits.push(`rule: ${d.rule}`);
+    if (d.comment) bits.push(`comment: ${d.comment}`);
+    if (d.corrections && Object.keys(d.corrections).length) bits.push("corrections: " + JSON.stringify(d.corrections));
+    if (d.flags && d.flags.length) bits.push(d.flags.join(" | "));
+    return `<div class="step"><b>${esc(r.stage)}</b> - ${esc(r.action)}
+      <span class="muted">by ${esc(r.actor)}${r.duration_ms != null ? `, ${r.duration_ms} ms` : ""} - ${esc(new Date(r.timestamp + "Z").toLocaleString())}</span>
+      ${bits.length ? `<div class="muted">${esc(bits.join("  /  "))}</div>` : ""}</div>`;
+  }).join("");
+  $("#audit").showModal();
+}
+
+// DEMO-START
+function demoEmails() {
+  const run = Math.random().toString(36).slice(2, 7);
+  let seq = 0;
+  const num = () => "INV-" + (10000 + Math.floor(Math.random() * 89999));
+  const iso = d => d.toISOString().slice(0, 10);
+  const mk = (vendor, number, amount, opts = {}) => {
+    const d = new Date(Date.UTC(2026, 2 + Math.floor(Math.random() * 5), 1 + Math.floor(Math.random() * 27)));
+    const due = new Date(d.getTime() + 30 * 86400000);
+    // random cents so loading the demo twice does not look like a resubmission of the same amount
+    if (!opts.exact) amount += Math.floor(Math.random() * 100) / 100;
+    const body = `Hello,\n\nPlease find invoice ${number} attached.\nVendor: ${vendor}\nInvoice Date: ${iso(d)}\n` +
+      (opts.noDue ? "" : `Due Date: ${iso(due)}\n`) + `Total Amount: USD ${amount.toFixed(2)}\n\nRegards,\n${vendor}`;
+    return { message_id: `demo-${run}-${seq++}`, sender: `billing@${vendor.toLowerCase().replace(/[^a-z]/g, "")}.com`,
+             subject: `Invoice ${number}`, body };
+  };
+  const out = [];
+  [1000, 1040, 980, 1020, 1010].forEach(a => out.push(mk("Acme Supplies Ltd", num(), a)));
+  [450, 470, 430, 465].forEach(a => out.push(mk("BrightCloud Hosting", num(), a)));
+  out.push(mk("Acme Supplies Ltd", num(), 6400));                       // unusual amount for this vendor
+  const dupNumber = num(), dupAmount = 512 + Math.floor(Math.random() * 100) / 100;
+  out.push(mk("BrightCloud Hosting", dupNumber, dupAmount, { exact: true }));
+  out.push({ ...mk("BrightCloud Hosting", dupNumber, dupAmount, { exact: true }), message_id: `demo-${run}-${seq++}` });  // exact duplicate
+  out.push(mk("Northwind Logistics", num(), 2210.00, { noDue: true }));  // missing due date
+  out.push({ message_id: `demo-${run}-${seq++}`, sender: "events@cloudconf.com", subject: "Webinar invitation",
+             body: "Hi there,\n\nJoin our free webinar on cloud cost optimisation next Thursday. Register now to save your seat.\n\nCheers,\nThe CloudConf team" });
+  return out;
+}
+// DEMO-END
+
+async function loadDemo() {
+  const btn = $("#demo"), emails = demoEmails();
+  btn.disabled = true;
+  try {
+    for (let i = 0; i < emails.length; i++) {
+      btn.textContent = `Processing ${i + 1}/${emails.length}...`;
+      await api("/emails", { method: "POST", body: JSON.stringify(emails[i]) });   // sequential: order builds vendor history
+    }
+  } catch (e) { alert("Demo failed: " + e.message); }
+  btn.textContent = "Load demo data"; btn.disabled = false;
+  await refresh();
+}
+
+// ---------- wiring
+async function renderTriage() {
+  const list = await api("/triage");
+  $("#view").innerHTML = `<h2 class="hello">Triage</h2><div class="muted" style="margin-bottom:12px">The system could not tell whether these emails are invoices, so nothing was extracted. Decide once; invoices then follow the normal rules and review.</div>` +
+    (list.length ? list.map(t => `<div class="item" data-email="${t.email_id}"><div class="row"><b>${esc(t.subject || "(no subject)")}</b><span class="pill amber">classifier unsure: ${esc(t.predicted_category || "?")} ${t.confidence == null ? "" : Math.round(t.confidence * 100) + "%"}</span></div>
+      <div class="muted">${esc(t.sender || "unknown sender")} - ${esc((t.received_at || "").replace("T", " ").slice(0, 16))}</div>
+      <details><summary>Email text</summary><pre style="white-space:pre-wrap;font-size:12px">${esc(t.preview)}</pre></details>
+      <div class="row" style="margin-top:8px"><input class="reviewer" placeholder="Your name"><input class="comment" placeholder="Why? (optional)">
+      <button class="primary" data-action="triage-convert">It is an invoice</button><button data-action="triage-dismiss">Not an invoice</button></div><div class="err"></div></div>`).join("")
+    : `<div class="empty">Nothing to triage. Emails the system cannot classify will appear here instead of in the invoice list.</div>`);
+  fillReviewer();
+}
+
+async function submitTriage(card, action) {
+  const err = $(".err", card), reviewer = $(".reviewer", card).value.trim();
+  err.textContent = "";
+  if (!reviewer) { err.textContent = "Enter your name so the decision is recorded in the audit log."; return; }
+  localStorage.setItem("reviewer", reviewer);
+  try { await api(`/triage/${card.dataset.email}`, { method: "POST", body: JSON.stringify({ action, reviewer, comment: $(".comment", card).value }) }); await refresh(); }
+  catch (e) { err.textContent = e.message; }
+}
+
+// ---------- vendors, reports, audit logs, settings
+const table = (head, rows, empty) => rows.length ? `<table><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table>` : `<div class="empty">${empty}</div>`;
+const day = t => (t || "").slice(0, 10) || "-";
+
+// ---------- model performance (reads /models; nothing here is hard-coded)
+const pct = v => (v == null ? "-" : (v * 100).toFixed(1) + "%");
+const versionPill = st => `<span class="pill ${st === "production" ? "green" : st === "candidate" ? "amber" : "gray"}">${esc(st)}</span>`;
+const stat = (label, v) => `<div>${label}<b>${v}</b></div>`;
+
+function classifierBody(m) {
+  const cm = m.confusion_matrix, labels = cm.labels;
+  const heat = (v, row) => { const mx = Math.max(...row, 1); return `rgba(51,92,214,${(v / mx * 0.55).toFixed(2)})`; };
+  return `<div class="mstats">${stat("Accuracy", pct(m.accuracy))}${stat("Macro precision", pct(m.macro_precision))}${stat("Macro recall", pct(m.macro_recall))}${stat("Macro F1", pct(m.macro_f1))}</div>
+    <p class="sub">${esc(m.evaluation.split)}; ${m.evaluation.n_train} train / ${m.evaluation.n_test} test emails. ${esc(m.evaluation.note)}</p>
+    ${table(["Class", "Precision", "Recall", "F1", "Test emails"], Object.entries(m.per_class).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${pct(v.precision)}</td><td>${pct(v.recall)}</td><td>${pct(v.f1)}</td><td>${v.support}</td></tr>`), "")}
+    <h4 style="margin:14px 0 4px">Confusion matrix <span class="muted" style="font-weight:400">(rows = true class, columns = predicted)</span></h4>
+    <table class="cm"><thead><tr><th></th>${labels.map(l => `<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>
+    ${cm.matrix.map((row, i) => `<tr><th style="text-align:left">${esc(labels[i])}</th>${row.map((v, j) => `<td class="${i === j ? "diag" : ""}" style="background:${heat(v, row)}">${v}</td>`).join("")}</tr>`).join("")}</tbody></table>
+    <p class="sub">Confidence threshold ${m.confidence_threshold.threshold}: ${pct(m.confidence_threshold.auto_handled_share)} of test emails handled automatically, ${pct(m.confidence_threshold.accuracy_when_auto_handled)} correct among them.</p>`;
+}
+
+function anomalyBody(m) {
+  const row = (name, r) => `<tr><td>${name}</td><td>${pct(r.precision)}</td><td>${pct(r.recall)}</td><td>${pct(r.fpr)}</td><td>${pct(r.fnr)}</td><td>${r.tp} / ${r.fp} / ${r.fn} / ${r.tn}</td></tr>`;
+  return `<p class="sub">${esc(m.evaluation.split)}; ${m.evaluation.n_train} train / ${m.evaluation.n_test} test invoices, <b>${m.evaluation.anomalies_in_test} anomalies</b> in the test split. ${esc(m.evaluation.note)}</p>
+    ${table(["Method", "Precision", "Recall", "False-positive rate", "False-negative rate", "TP / FP / FN / TN"], [row("Robust z-score baseline", m.baseline_robust_z), row("Isolation Forest (cutoff " + m.isolation_forest.cutoff + ")", m.isolation_forest)], "")}
+    <p class="sub">With only ${m.evaluation.anomalies_in_test} anomalies in the test split, small differences between the methods are not statistically meaningful. ${m.skipped.cold_start} invoices were skipped because the vendor had too little history to score.</p>`;
+}
+
+async function renderModels() {
+  const d = await api("/models");
+  const cards = Object.entries(d.models).map(([name, versions]) => {
+    const live = versions.find(v => v.status === "production") || versions[0], m = live.metrics;
+    const body = !m ? `<p class="sub">${esc(live.notes || "No evaluation metrics recorded.")}</p>` : m.confusion_matrix ? classifierBody(m) : m.isolation_forest ? anomalyBody(m) : "";
+    const others = versions.filter(v => v !== live);
+    return `<div class="mcard"><h3>${esc(name)} <span class="muted" style="font-weight:400">${esc(live.version)}</span> ${versionPill(live.status)}
+      <span class="pill purple">${esc(((live.dataset || {}).source || "unknown").toUpperCase())} DATA</span></h3>
+      <div class="sub">${esc(live.algorithm || "algorithm not recorded")}</div>
+      <div class="sub">Trained ${esc(day(live.trained_at))}; dataset ${esc((live.dataset || {}).name || (live.dataset || {}).files?.join(", ") || "-")} (${(live.dataset || {}).rows ?? "?"} rows); ${live.stage_runs_audited} audited stage runs used this version</div>
+      ${body}
+      ${others.length ? `<h4 style="margin:14px 0 4px">Other versions</h4>${table(["Version", "Status", "Trained", "Headline metric"], others.map(v => `<tr><td>${esc(v.version)}</td><td>${versionPill(v.status)}</td><td>${day(v.trained_at)}</td><td>${v.metrics && v.metrics.accuracy != null ? "accuracy " + pct(v.metrics.accuracy) : v.metrics && v.metrics.isolation_forest ? "forest recall " + pct(v.metrics.isolation_forest.recall) : "-"}</td></tr>`), "")}` : ""}
+    </div>`;
+  });
+  $("#view").innerHTML = `<h2 class="hello">Model performance</h2><div class="notice"><b>Read this first.</b> ${esc(d.data_notice)}</div>` +
+    (cards.length ? cards.join("") : `<div class="empty">No models registered yet. Train them with python -m app.ml.train_classifier and the other training scripts.</div>`);
+}
+
+async function renderUsers() {
+  const list = await api("/users");
+  $("#view").innerHTML = `<h2 class="hello">Users</h2><div class="muted" style="margin-bottom:12px">Changing a role or password, or deactivating a user, signs that person out everywhere. At least one active admin must remain.</div>` +
+    table(["Username", "Role", "Active", "Last sign-in", ""], list.map(u => `<tr data-user="${u.id}"><td>${esc(u.username)}${me && u.username === me.username ? " (you)" : ""}</td>
+      <td><select data-uact="role">${["viewer", "reviewer", "admin"].map(r => `<option ${r === u.role ? "selected" : ""}>${r}</option>`).join("")}</select></td>
+      <td><input type="checkbox" data-uact="active" ${u.is_active ? "checked" : ""}></td><td>${day(u.last_login_at)}</td><td><button data-uact="pw">Reset password</button></td></tr>`), "No users.") +
+    `<h3>Add user</h3><div class="row"><input id="nu" placeholder="username" maxlength="40"><input id="np" type="password" placeholder="password (10+ characters)" maxlength="200">
+     <select id="nr"><option>viewer</option><option>reviewer</option><option>admin</option></select><button class="primary" id="addUser">Add</button></div><div class="err" id="uerr"></div>`;
+}
+async function userAction(row, field, value) {
+  try { await api(`/users/${row.dataset.user}`, { method: "PATCH", body: JSON.stringify({ [field]: value }) }); }
+  catch (e) { alert(e.message); }
+  renderUsers();
+}
+
+async function renderVendors() {
+  const list = await api("/vendors");
+  $("#view").innerHTML = `<h2 class="hello">Vendors</h2><div class="muted" style="margin-bottom:12px">Spend excludes duplicates and rejected invoices.</div>` +
+    table(["Vendor", "Invoices", "Total spend", "Avg risk", "Pending", "Auto-approved", "Duplicates", "Last invoice"],
+      list.map(v => `<tr><td>${esc(v.vendor)}</td><td>${v.invoices}</td><td>${esc(money(v.total_spend, v.currency))}</td><td>${riskPill(v.avg_risk)}</td>
+        <td>${v.pending}</td><td>${Math.round(v.auto_approved / v.invoices * 100)}%</td><td>${v.duplicates}</td><td>${day(v.last_invoice)}</td></tr>`), "No vendors yet.");
+}
+
+async function renderAudit() {
+  const items = await api("/audit?limit=300");
+  const stages = [...new Set(items.map(i => i.stage))].sort();
+  const pick = $("#auditStage") ? $("#auditStage").value : "";
+  const shown = pick ? items.filter(i => i.stage === pick) : items;
+  $("#view").innerHTML = `<div class="row"><h2 class="hello">Audit logs</h2><select id="auditStage" style="max-width:200px"><option value="">All stages</option>
+    ${stages.map(x => `<option ${x === pick ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>` +
+    table(["Time", "Invoice", "Stage", "Action", "Actor", "ms"], shown.map(i => `<tr><td>${esc((i.timestamp || "").replace("T", " ").slice(0, 19))}</td>
+      <td>${i.invoice_id ? `<a href="#" data-action="audit-id" data-id="${i.invoice_id}">#${i.invoice_id}</a>` : "-"}</td><td>${esc(i.stage)}</td><td>${esc(i.action)}</td>
+      <td>${esc(i.actor)}</td><td>${i.duration_ms ?? "-"}</td></tr>`), "No activity yet.");
+}
+
+async function downloadCsv() {
+  const key = sessionStorage.getItem("opspilot_key");
+  const r = await fetch("/invoices.csv", { headers: key ? { "X-API-Key": key } : {} });
+  if (!r.ok) return alert("Export failed (" + r.status + ")");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "opspilot-invoices.csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function renderReports() {
+  const st = stats, sv = st.estimated_savings, rate = st.automation_rate;
+  const card = (cls, label, val, note) => `<div class="kpi ${cls}"><span>${label}</span><b>${val}</b><small>${note}</small></div>`;
+  $("#view").innerHTML = `<div class="row"><h2 class="hello">Reports</h2><button class="primary" data-action="csv">Export invoices (CSV)</button></div>
+    <div class="kpis">${card("g", "Automation rate", rate == null ? "-" : Math.round(rate * 100) + "%", "approved with no human")}
+      ${card("b", "Time saved (est.)", sv.hours + " h", "about " + sv.cost + " in cost")}
+      ${card("p", "Duplicates caught", st.duplicates, "kept out of payment")}
+      ${card("r", "High risk", st.high_risk, "risk at or above " + st.high_risk_threshold)}
+      ${card("a", "Avg processing", (st.avg_pipeline_ms_per_email ?? "-") + " ms", "per email, all stages")}</div>
+    <p class="muted" style="font-size:12px">${esc(sv.assumptions)}. Savings are an estimate, not a measurement. The CSV has one row per invoice; text cells that start with = + - or @ are prefixed with an apostrophe so spreadsheets cannot run them as formulas.</p>`;
+}
+
+const SETTING_LABELS = { auto_approve_max_risk: "Auto-approve only if risk is at most", auto_reject_min_risk: "Reject automatically if risk is at least",
+  auto_approve_max_amount: "Never auto-approve above this amount", new_vendor_review_amount: "First invoice from a new vendor is reviewed above",
+  classifier_min_confidence: "Minimum email-classifier confidence", max_payment_terms_days: "Payment terms flagged above (days)",
+  max_reasonable_amount: "Amounts above this fail the sanity check", allowed_currencies: "Accepted currencies" };
+
+async function renderSettings() {
+  const c = await api("/settings");
+  const rows = o => Object.entries(o).map(([k, v]) => `<tr><td>${esc(SETTING_LABELS[k] || k.replace(/_/g, " "))}</td><td><b>${esc(v)}</b></td></tr>`).join("");
+  $("#view").innerHTML = `<h2 class="hello">Settings</h2><div class="muted" style="margin-bottom:12px">Read-only. Rules are changed in configuration (OPSPILOT_* environment variables), not from this page, because there are no user accounts yet.</div>
+    <h3>Decision rules</h3><table><tbody>${rows(c.thresholds)}<tr><td>Flagged "high risk" at</td><td><b>${c.high_risk_at}</b></td></tr></tbody></table>
+    <h3>Validation rules (fixed in code)</h3><table><tbody>${rows(c.validation_rules)}</tbody></table>
+    <h3>How much each signal can add to the risk score (at most)</h3><table><tbody>${rows(c.risk_weights)}</tbody></table>
+    <h3>Mode</h3><table><tbody><tr><td>Public demo mode</td><td><b>${c.demo_mode ? "on" : "off"}</b></td></tr><tr><td>API key required</td><td><b>${c.auth_required ? "yes" : "no"}</b></td></tr></tbody></table>`;
+}
+
+// ---------- AI assistant. The browser only talks to POST /chat; the Groq key never leaves the server.
+let chatLog = [], chatBusy = false, chatStatus = null;
+const CHAT_CHIPS = {
+  viewer: ["Show invoices waiting for review", "Which vendors have the most spend?", "How are invoices being decided overall?", "Show the most recent invoice"],
+  reviewer: ["What is in my review queue?", "Show the highest-risk pending invoice", "Which vendors have the most spend?", "Show the most recent invoice"],
+  admin: ["What is in the review queue?", "Show recent assistant and MCP activity", "Is the system healthy?", "Which vendors have the most spend?"],
+};
+const chatInline = t => t.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+function chatFmt(text) {                                   // escape first, then add only <b>, <p>, <ul>: model output is never trusted as HTML
+  let out = "", list = false;
+  for (const ln of esc(text).split("\n")) {
+    const m = ln.match(/^\s*[-*•]\s+(.*)$/);
+    if (m) { if (!list) { out += "<ul>"; list = true; } out += `<li>${chatInline(m[1])}</li>`; continue; }
+    if (list) { out += "</ul>"; list = false; }
+    if (ln.trim()) out += `<p>${chatInline(ln)}</p>`;
+  }
+  return out + (list ? "</ul>" : "");
+}
+function chatMeta(r) {
+  if (!r) return "";
+  const badge = r.blocked ? `<span class="pill red">Could not verify</span>`
+    : r.grounded && r.verified ? `<span class="pill green">&#10003; ${r.fact_checked ? "Checked against database records" : "Figures checked against database records"}</span>`
+    : r.grounded ? `<span class="pill amber">Only partly checked</span>` : `<span class="pill gray">No database lookup</span>`;
+  const src = (r.sources || []).slice(0, 12).map(x => { const m = /^invoice:(\d+)$/.exec(x);
+    return m && can("admin reviewer") ? `<a href="#" class="pill gray" data-action="audit-id" data-id="${m[1]}">${esc(x)}</a>` : `<span class="pill gray">${esc(x)}</span>`; }).join("");
+  const steps = (r.tools_used || []).map(t => `<li><b>${esc(t.tool)}</b> ${esc(JSON.stringify(t.arguments))} &rarr; ${esc(t.outcome)}${t.records ? ` (${t.records} record${t.records > 1 ? "s" : ""})` : ""}</li>`).join("");
+  const warn = (r.warnings || []).map(w => `<span class="muted">${esc(w)}</span>`).join("");
+  return `<div class="msgmeta">${badge}${src}${warn}${steps ? `<details><summary>How this was answered (${r.tools_used.length} lookup${r.tools_used.length > 1 ? "s" : ""})</summary><ul>${steps}</ul></details>` : ""}</div>`;
+}
+function drawChat() {
+  const log = $("#chatLog"); if (!log) return;
+  const chips = (CHAT_CHIPS[me ? me.role : "admin"] || CHAT_CHIPS.viewer).map(c => `<button class="chip" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
+  log.innerHTML = chatLog.length ? chatLog.map(m => m.role === "user" ? `<div class="msg user">${esc(m.content).replace(/\n/g, "<br>")}</div>`
+      : m.role === "error" ? `<div class="msg err">${esc(m.content)}</div>` : `<div class="msg bot">${chatFmt(m.content)}${chatMeta(m.meta)}</div>`).join("")
+    : `<div class="chatempty"><h3>Ask about your invoices</h3><div>Answers come only from your OpsPilot database, using the tools your role is allowed to use.</div><div class="chips" style="justify-content:center;margin-top:14px">${chips}</div></div>`;
+  if (chatBusy) log.insertAdjacentHTML("beforeend", `<div class="msg bot muted typing">Checking the records <span>.</span><span>.</span><span>.</span></div>`);
+  $("#chatSend").disabled = chatBusy; log.scrollTop = log.scrollHeight;
+}
+async function sendChat(text) {
+  text = (text || "").trim(); if (!text || chatBusy) return;
+  const history = chatLog.filter(m => (m.role === "user" || (m.role === "assistant" && !(m.meta && m.meta.blocked)))).slice(-8)
+    .map(m => ({ role: m.role, content: m.content.slice(0, 2000) }));
+  chatLog.push({ role: "user", content: text }); chatBusy = true; drawChat();
+  try { const r = await api("/chat", { method: "POST", body: JSON.stringify({ message: text, history }) }); chatLog.push({ role: "assistant", content: r.answer, meta: r }); }
+  catch (e) { if (chatStatus) chatLog.push({ role: "error", content: e.message || "Something went wrong." }); }
+  chatBusy = false; if (tab === "chat") drawChat();
+}
+async function renderChat() {
+  if (!chatStatus) chatStatus = await api("/chat/status").catch(() => ({ enabled: false }));
+  if (!chatStatus.enabled) { $("#view").innerHTML = `<h2 class="hello">AI Assistant</h2><div class="notice">The AI assistant is not enabled on this server. An administrator can turn it on with <b>OPSPILOT_CHAT_ENABLED</b> and <b>OPSPILOT_GROQ_API_KEY</b> (see docs/CHAT.md).</div>`; return; }
+  $("#view").innerHTML = `<div class="chat"><div class="chathead"><div><h2 class="hello" style="margin:0">AI <b>Assistant</b></h2>
+      <div class="muted" style="font-size:12px">Read-only. It can only see what your role can see, and every lookup is audited.</div></div><button id="chatNew">New chat</button></div>
+    <div class="chatlog" id="chatLog"></div>
+    <div class="composer"><textarea id="chatIn" rows="1" maxlength="2000" placeholder="Ask about invoices, vendors, the review queue... (Enter to send, Shift+Enter for a new line)"></textarea><button class="primary" id="chatSend">Send</button></div>
+    <div class="muted" style="font-size:11px;margin-top:6px">Your question and the records needed to answer it are sent to Groq, the AI provider. Check important figures against the linked records.</div></div>`;
+  const input = $("#chatIn");
+  input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const v = input.value; input.value = ""; sendChat(v); } });
+  $("#chatSend").onclick = () => { const v = input.value; input.value = ""; sendChat(v); input.focus(); };
+  $("#chatNew").onclick = () => { if (!chatBusy) { chatLog = []; drawChat(); } };
+  $("#chatLog").addEventListener("click", e => { const c = e.target.closest("[data-chip]"); if (c) sendChat(c.dataset.chip); });
+  drawChat(); input.focus();
+}
+
+async function refresh() {
+  try {
+    await loadStats();
+    const PAGES = { home: renderHome, process: renderProcess, queue: renderQueue, all: renderAll, vendors: renderVendors,
+                    reports: renderReports, chat: renderChat, models: renderModels, triage: renderTriage, users: renderUsers, audit: renderAudit, settings: renderSettings };
+    await (PAGES[tab] || renderAll)();
+  }
+  catch (e) { $("#view").innerHTML = `<div class="empty">Could not reach the API: ${esc(e.message)}</div>`; }
+}
+document.addEventListener("click", e => {
+  const t = e.target;
+  const nav = t.closest("[data-tab]");
+  if (nav) { tab = nav.dataset.tab; setActive(); refresh(); }
+  else if (t.id === "addUser") {
+    api("/users", { method: "POST", body: JSON.stringify({ username: $("#nu").value.trim(), password: $("#np").value, role: $("#nr").value }) })
+      .then(renderUsers).catch(e => ($("#uerr").textContent = e.message));
+  }
+  else if (t.dataset.uact === "pw") { const pw = prompt("New password (at least 10 characters):"); if (pw) userAction(t.closest("tr"), "password", pw); }
+  else if (t.dataset.action === "audit-id") { e.preventDefault(); showAudit(t.dataset.id); }
+  else if (t.dataset.action === "csv") downloadCsv();
+  else if (t.dataset.action === "triage-convert") submitTriage(t.closest(".item"), "convert");
+  else if (t.dataset.action === "triage-dismiss") submitTriage(t.closest(".item"), "dismiss");
+  else if (t.dataset.action) {
+    const card = t.closest(".item");
+    if (t.dataset.action === "audit") showAudit(card.dataset.id); else submitReview(card, t.dataset.action);
+  } else if (t.closest("tbody tr[data-id]") && can("admin reviewer")) showAudit(t.closest("tr").dataset.id);
+});
+document.addEventListener("change", e => {
+  const u = e.target.dataset.uact;
+  if (u === "role") userAction(e.target.closest("tr"), "role", e.target.value);
+  if (u === "active") userAction(e.target.closest("tr"), "is_active", e.target.checked);
+  if (e.target.id === "auditStage") renderAudit(); if (e.target.id === "statusFilter") { filter = e.target.value; renderAll(); } });
+$("#search").addEventListener("input", () => { if (tab !== "all") { tab = "all"; document.querySelectorAll(".nav").forEach(b => b.classList.toggle("active", b.dataset.tab === "all")); } renderAll(); });
+$("#refresh").onclick = refresh; $("#demo").onclick = loadDemo; $("#closeAudit").onclick = () => $("#audit").close();
+$("#loginForm").onsubmit = async e => {
+  e.preventDefault();
+  const r = await fetch("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: $("#lu").value.trim(), password: $("#lp").value }) });
+  const d = await r.json().catch(() => null);
+  if (!r.ok) { $("#lerr").textContent = (d && typeof d.detail === "string" && d.detail) || "Sign-in failed"; return; }
+  me = d.user; $("#lp").value = ""; $("#login").hidden = true; applyRole(); refresh();
+};
+$("#logout").onclick = async () => { await fetch("/auth/logout", { method: "POST" }); me = null; applyRole(); showLogin(); };
+(async function boot() {
+  const h = await fetch("/health").then(r => r.json()).catch(() => ({}));
+  authEnabled = !!h.auth_enabled;
+  if (h.demo_mode) { const b = $("#banner"); b.hidden = false; b.textContent = "Public demo with sample data. Anything you do here is wiped automatically every hour."; }
+  if (authEnabled) {
+    if (h.demo_accounts) $("#demoHint").textContent = `Demo accounts (password ${h.demo_accounts.password}): ${h.demo_accounts.users.join(", ")}`;
+    const r = await fetch("/auth/me");
+    if (!r.ok) { showLogin(); return; }
+    me = await r.json();
+  }
+  applyRole();
+  refresh();
+})();
+</script>
+</body>
+</html>

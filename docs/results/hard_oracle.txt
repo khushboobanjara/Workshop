@@ -1,0 +1,61 @@
+OpsPilot AI benchmark - dataset: hard, with ORACLE extraction (true field values; isolates detection quality)
+
+======================================================================
+DUPLICATE DETECTION
+======================================================================
+TP=76 FP=12 FN=3 TN=1427  precision=86.4% recall=96.2%
+
+By duplicate kind (caught / total):
+  amount_rounded     6 / 6
+  exact             33 / 33
+  number_fmt         5 / 5
+  resubmitted       15 / 15
+  vendor_variant    17 / 20
+False positives by cause: {'legit look-alike (twin)': 12}
+
+======================================================================
+ANOMALY DETECTION
+======================================================================
+1406 scored invoices (33 skipped: vendor cold start < 3 prior invoices, 0 skipped: vendor/amount not extracted)
+NOT SCORED: 7 anomalies hidden by cold start, 0 by failed extraction (counted as misses in the end-to-end report)
+train=984 test=422 | anomalies in test: 22
+
+Baseline |robust z| > 4.0:  TP=15 FP=4 FN=7  precision=78.9% recall=68.2%
+IsolationForest signal >= 0.9:  TP=16 FP=17 FN=6  precision=48.5% recall=72.7%
+IsolationForest signal >= 0.95:  TP=15 FP=6 FN=7  precision=71.4% recall=68.2%
+IsolationForest signal >= 0.97:  TP=12 FP=2 FN=10  precision=85.7% recall=54.5%
+
+Recall by anomaly kind in the test split (caught / total):  baseline | IsolationForest@0.95
+  burst         0 / 6     |     0 / 6
+  near_limit    2 / 3     |     3 / 3
+  spike_big    10 / 10    |    10 / 10
+  spike_mild    3 / 3     |     2 / 3
+
+Saved model -> models/bench_hard_oracle_anomaly.joblib
+
+======================================================================
+END TO END DECISIONS
+======================================================================
+1518 invoices replayed | thresholds: approve<=0.3 reject>=0.85 amount cap 10,000
+
+Decisions: {'human_review': 189, 'auto_approved': 1265, 'rejected': 64}
+Automation rate:      83.3%  (1265 of 1518 approved with no human touch)
+Leakage:              20 of 173 bad invoices were auto-approved
+   leaked by kind: {'spike_mild': 6, 'burst': 12, 'vendor_variant': 2}
+False alarms:         100 of 1345 good invoices went to a human or were rejected (7.4%)
+Rules behind false alarms: {'new_vendor_large_amount': 12, 'risk_above_approve_threshold': 85, 'amount_above_auto_limit': 1, 'risk_above_reject_threshold': 2}
+Duplicates:           62 rejected, 15 sent to review, 2 leaked, of 79
+Anomalies:            76 stopped (review or reject), 18 leaked, of 94
+
+Estimated saving: 1265 auto-approved x 6 min = 126.5 h = $3,795 at $30/h  (assumptions, not measured)
+
+Threshold sweep (auto_approve_max_risk):
+  threshold  automation  leakage  false_alarm_rate
+  0.1            77.1%       12            13.8%
+  0.15           79.7%       16            11.2%
+  0.2            81.0%       18             9.9%
+  0.25           82.1%       19             8.8%
+  0.3            83.3%       20             7.4%
+  0.4            85.6%       27             5.4%
+  0.5            87.4%       30             3.6%
+  0.6            88.5%       35             2.8%
