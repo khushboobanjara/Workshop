@@ -5,7 +5,6 @@ results back as role=tool messages. The API key lives only in this object and in
 request: it is never logged, never returned to the browser and never part of an error message.
 """
 import httpx
-
 from app.chat.errors import GroqError
 
 
