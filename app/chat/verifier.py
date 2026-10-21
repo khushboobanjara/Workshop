@@ -14,6 +14,11 @@ statement with the records. A passing answer is "no unsupported figures", not a 
 The user's own text only vouches for identifiers, dates and whole numbers (so the model may repeat "INV-1001" or "#12"
 from the question), never for amounts: a user cannot make "$5,000" true by typing it. Text from earlier ASSISTANT
 turns never counts as evidence, so a forged history cannot launder a fact.
+
+One exception, switched on per turn by the caller (`allow_premises`): in a turn that consulted ONLY company documents and no
+database record, a what-if question ("an invoice worth 12,000 with risk 0.10: may it be approved?") has to restate the
+user's own values to answer. They are accepted as the user's premise, never as a fact about the records: no record was read
+in that turn, so there is nothing for them to be mistaken for, and numbers the user did not type are still checked.
 """
 import re
 from dataclasses import dataclass, field
@@ -42,6 +47,9 @@ class Evidence:
     numbers: set = field(default_factory=set)                      # Decimals that appear in tool results
     percents: set = field(default_factory=set)                     # 0-1 values expressed as percentages
     user_ints: set = field(default_factory=set)                    # whole numbers the user typed
+    premises: set = field(default_factory=set)                     # every number the user typed (Decimals)
+    premise_percents: set = field(default_factory=set)             # typed 0-1 decimals expressed as percentages
+    allow_premises: bool = False                                   # see the module docstring: off unless the caller turns it on
 
     def add_tool_payload(self, payload) -> None:
         self._walk(payload, None)
@@ -50,6 +58,15 @@ class Evidence:
         self.text += "\n" + text.lower()
         for m in re.finditer(r"\d+", text):
             self.user_ints.add(int(m.group()))
+        for m in _NUM.finditer(_IDENT.sub(" ", _ISO.sub(" ", text))):
+            raw = m.group("num").replace(",", "")
+            d = _dec(raw)
+            if d is None:
+                continue
+            self.premises.add(d)
+            if "." in raw and 0 < abs(d) <= 1:
+                for places in (0, 1, 2):
+                    self.premise_percents.add((d * 100).quantize(Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP))
 
     def add_allowed_text(self, text: str) -> None:
         self.text += "\n" + text.lower()
@@ -117,6 +134,8 @@ def find_unsupported(answer: str, ev: Evidence) -> list[str]:
         else:
             kind = "int"                                           # whole numbers, including small counts such as 0 or 3
         ok = value in ev.numbers or (kind == "percent" and value in ev.percents) or (kind == "int" and int(value) in ev.user_ints)
+        if not ok and ev.allow_premises:
+            ok = value in ev.premises or (kind == "percent" and value in ev.premise_percents)
         if not ok:
             bad.append(m.group().strip())
     seen: list[str] = []

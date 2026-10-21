@@ -14,6 +14,7 @@ Guarantees, and where each comes from
   * bounded work: rounds, calls per round, repairs, wall-clock time, tool-result size, history length
 Pure given a model client (`llm.complete(messages, tools, tool_choice) -> dict`) and an MCP server object.
 """
+import dataclasses
 import json
 import re
 import time
@@ -25,6 +26,8 @@ from app.chat.bridge import McpBridge
 from app.chat.errors import GroqError
 from app.chat.verifier import Evidence, find_unsupported
 from app.mcp_server.sanitize import clean_text
+from app.rag import grounding as rag_grounding
+from app.rag.bridge import SOURCE as DOC_SOURCE, TOOL_NAME as DOC_TOOL, DocumentBridge
 
 SMALL_TALK = re.compile(
     r"^\s*(?:(?:hi|hello|hey)(?: there)?|thanks(?: a lot)?|thank you|ok|okay|good (?:morning|afternoon|evening)|help|what can you do|who are you)\s*[!.?]*\s*$",
@@ -46,6 +49,7 @@ class Limits:
     fact_check: bool = True                # the second, statement-level check (one extra model call per answer)
     max_judge_chars: int = 14_000
     fast_path: bool = True                 # answer common simple questions from a template: 0 model calls, 0 tokens
+    rag_min_support: float = 0.40          # document answers: share of a sentence's content words that must occur in the data shown (0 = off)
 
 
 @dataclass
@@ -64,16 +68,34 @@ class ChatResult:
     groq_calls: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    rag: bool = False                      # the document tool was offered this turn
+    citations: list = field(default_factory=list)      # passages the answer cites (validated against what was retrieved)
+    document_searches: int = 0
+    passages_retrieved: int = 0
+    failed_checks: list = field(default_factory=list)  # which checks rejected an attempt: figures | citation_missing | citation_invalid | support | fact_check
 
     def to_dict(self, model: str) -> dict:
         warnings = []
         if self.blocked and self.reason == "unverified":
             warnings.append("Some statements could not be verified and the answer was withheld.")
+            warnings.extend(w for k, w in _CHECK_WARNINGS.items() if k in self.failed_checks)
         if self.fact_check_unavailable:
             warnings.append("The automatic fact check could not run, so only the figures were checked.")
-        return {"answer": self.answer, "verified": self.verified, "grounded": self.grounded, "blocked": self.blocked,
-                "fact_checked": self.fact_checked, "tools_used": self.tools_used, "sources": self.sources, "model": model,
-                "warnings": warnings}
+        out = {"answer": self.answer, "verified": self.verified, "grounded": self.grounded, "blocked": self.blocked,
+               "fact_checked": self.fact_checked, "tools_used": self.tools_used, "sources": self.sources, "model": model,
+               "warnings": warnings}
+        if self.rag:
+            out["citations"] = self.citations
+        return out
+
+
+_CHECK_WARNINGS = {
+    "figures": "It contained figures, dates or identifiers that do not appear in the documents or records.",
+    "citation_missing": "It relied on a document passage without citing it.",
+    "citation_invalid": "It cited a passage that was not retrieved for this question.",
+    "support": "Part of it used wording that the documents and records do not support.",
+    "fact_check": "A statement did not match the records.",
+}
 
 
 def _clean_answer(text, limit: int) -> str:
@@ -121,17 +143,38 @@ def _fact_check(llm, question: str, tool_texts: list[str], answer: str, limits: 
     return parse_verdict(reply.get("content"))
 
 
+def _document_problems(text: str, passages: dict, payloads: list, mcp_grounded: bool, limits: Limits) -> list[tuple[str, str]]:
+    """Deterministic checks for an answer in a turn where documents were searched: (kind, message) pairs, [] when fine."""
+    problems = [("citation_invalid", f"the citation {r} does not match any passage retrieved for this question")
+                for r in rag_grounding.invalid_citations(text, set(passages))]
+    if passages and not mcp_grounded and not rag_grounding.cited_refs(text):
+        choices = "; ".join(f"[{p['ref']}] {p.get('section') or p.get('title')}" for p in list(passages.values())[:5])
+        problems.append(("citation_missing", "the answer uses document passages but cites none: after each statement taken from a passage put its ref "
+                                              f"in square brackets, choosing from: {choices}"))
+    if passages:
+        corpus = rag_grounding.support_corpus(payloads)
+        problems += [("support", f"not supported by the passages or records: \"{s}\"") for s in
+                     rag_grounding.unsupported_sentences(text, corpus, limits.rag_min_support)]
+    return problems
+
+
 def answer(principal, message: str, history: list[dict], *, llm, server, role_label: str, limits: Limits = Limits(),
-           today: str | None = None, clock=time.monotonic) -> ChatResult:
+           today: str | None = None, clock=time.monotonic, rag=None) -> ChatResult:
     today = today or datetime.now(timezone.utc).date().isoformat()
     bridge = McpBridge(server, principal, "chat", limits.max_tool_chars)
+    docs_on = False
+    if rag is not None:                                  # RAG: the model also gets search_documents (see app/rag/bridge.py)
+        bridge = DocumentBridge(bridge, rag, principal, "chat", limits.max_tool_chars)
+        docs_on = bridge.allowed
+        if docs_on:                                      # passages can be long: let the fact checker see all of them
+            limits = dataclasses.replace(limits, max_judge_chars=max(limits.max_judge_chars, 28_000))
     specs = bridge.specs()
     small_talk = bool(SMALL_TALK.match(message))
     ev = Evidence()
     ev.add_allowed_text(today)
     ev.add_user_text(message)
 
-    messages = [{"role": "system", "content": prompts.system_prompt(role_label, today)}]
+    messages = [{"role": "system", "content": prompts.system_prompt(role_label, today, rag=docs_on)}]
     for turn in history[-limits.history_turns:]:
         text = clean_text(turn["content"], limits.max_chars, redact=False) or ""
         messages.append({"role": turn["role"], "content": text})
@@ -139,7 +182,7 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
             ev.add_user_text(text)
     messages.append({"role": "user", "content": message})
 
-    res = ChatResult()
+    res = ChatResult(rag=docs_on)
     if limits.fast_path and not small_talk:
         routed = fastpath.route(message)
         if routed and routed[0] in bridge.tool_names():
@@ -160,6 +203,9 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
     rounds = repairs = tool_failures = 0
     refs: list[str] = []
     tool_texts: list[str] = []                           # exactly what the model was shown, for the fact checker
+    payloads: list[dict] = []                            # every real result of this turn (database records and document passages)
+    passages: dict[str, dict] = {}                       # ref -> passage, for citation checks
+    doc_calls, doc_failed, mcp_grounded = 0, False, False
 
     def stop(reason: str, text: str) -> ChatResult:
         res.answer, res.verified, res.blocked, res.reason = text, False, True, reason
@@ -167,7 +213,15 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
         return res
 
     def out_of_scope() -> ChatResult:
-        res.answer, res.verified, res.blocked, res.reason = prompts.OUT_OF_SCOPE_TEXT, True, False, "out_of_scope"
+        res.answer, res.verified, res.blocked, res.reason = (prompts.OUT_OF_SCOPE_TEXT_RAG if docs_on else prompts.OUT_OF_SCOPE_TEXT), True, False, "out_of_scope"
+        res.grounded, res.sources = False, []
+        return res
+
+    def no_document_evidence() -> ChatResult:
+        """Documents were searched and nothing relevant came back (and no database record backs the question): whatever the
+        model would say is not evidence, so a fixed text replaces it."""
+        res.answer = prompts.DOCS_UNAVAILABLE_TEXT if doc_failed else rag_grounding.NO_DOCUMENT_EVIDENCE_TEXT
+        res.verified, res.blocked, res.reason = True, False, "document_search_unavailable" if doc_failed else "no_document_evidence"
         res.grounded, res.sources = False, []
         return res
 
@@ -202,10 +256,22 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
                     out = bridge.call(name, call["function"]["arguments"])
                     content = out.content
                     res.tools_used.append(out.summary())
+                    is_doc = docs_on and name == DOC_TOOL
+                    if is_doc:
+                        doc_calls += 1
+                        res.document_searches += 1
+                        doc_failed = out.payload is None                  # judged on the latest search
                     if out.payload is not None:
                         ev.add_tool_payload(out.payload)
+                        payloads.append(out.payload)
                         res.grounded = True
-                        refs.extend(r for r in out.refs if r not in refs)
+                        if is_doc and out.payload.get("source") == DOC_SOURCE:
+                            for p in (out.payload.get("data") or {}).get("passages", []):
+                                passages[p["ref"]] = p
+                            res.passages_retrieved = len(passages)
+                        else:
+                            mcp_grounded = True
+                            refs.extend(r for r in out.refs if r not in refs)
                 tool_texts.append(content)
                 messages.append({"role": "tool", "tool_call_id": call["id"], "name": name, "content": content})
             tool_choice = "auto"
@@ -228,7 +294,15 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
             tool_choice = "required"
             continue
 
+        if docs_on and doc_calls and not passages and not mcp_grounded:
+            return no_document_evidence()
+
+        ev.allow_premises = docs_on and bool(passages) and not mcp_grounded      # what-if values count as the user's premise, see verifier.py
         problems = find_unsupported(text, ev)             # check 1: figures
+        kinds = ["figures"] if problems else []
+        if docs_on and not problems:                      # check 1b: citations and word support (deterministic, no model call)
+            found = _document_problems(text, passages, payloads, mcp_grounded, limits)
+            problems, kinds = [m for _, m in found], sorted({k for k, _ in found})
         unavailable = False
         if not problems and limits.fact_check and res.tools_used:
             verdict = _fact_check(llm, message, tool_texts, text, limits, res)      # check 2: statements
@@ -236,13 +310,20 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
                 unavailable = True
             else:
                 res.fact_checked, problems = True, verdict
+                kinds = ["fact_check"] if problems else []
         if not problems:
             res.answer, res.verified, res.sources = text, not unavailable, refs
             res.fact_check_unavailable = unavailable
+            if docs_on:
+                cited = [passages[r] for r in rag_grounding.cited_refs(text) if r in passages]
+                res.citations = [{"ref": p["ref"], "document_id": p["document_id"], "title": p["title"], "page": p.get("page"),
+                                  "section": p.get("section"), "snippet": (p.get("text") or "")[:300]} for p in cited]
+                res.sources = refs + [f"document:{d}" for d in dict.fromkeys(p["document_id"] for p in cited)]
             return res
         res.unsupported = problems
+        res.failed_checks = list(dict.fromkeys(res.failed_checks + kinds))
         if repairs >= limits.max_repairs:
-            return stop("unverified", prompts.BLOCKED_TEXT)
+            return stop("unverified", prompts.BLOCKED_TEXT_RAG if docs_on else prompts.BLOCKED_TEXT)
         repairs += 1
         res.retries += 1
         messages.append({"role": "assistant", "content": text})

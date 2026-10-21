@@ -1,6 +1,4 @@
 .venv/
-venv/
-env/
 .git/
 .github/
 __pycache__/
@@ -13,6 +11,7 @@ docs/
 .env.*
 !.env.example
 inbox/
+data/rag/
 opspilot.db
 eval.db
 .idea/

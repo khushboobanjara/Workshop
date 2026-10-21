@@ -6,7 +6,7 @@
   with --proxy-headers so the real client IP is used; otherwise all visitors share one bucket,
   which is stricter, never looser.
 - Request size cap (middleware): bodies over OPSPILOT_MAX_REQUEST_BYTES get 413. This relies on the
-  Content-Length header (chunked uploads without one get 411), so keep a proxy size limit in front of anything public."""
+  Content-Length header, so keep a proxy size limit in front of anything public."""
 import secrets
 import time
 from collections import defaultdict, deque
@@ -54,12 +54,19 @@ def make_guard(limiter: WriteRateLimiter):
     return guard
 
 
+UPLOAD_PATH = "/rag/documents"
+UPLOAD_OVERHEAD_BYTES = 1_000_000        # multipart framing and form fields on top of the file itself
+
+
+def body_limit(request: Request) -> int:
+    """Every route keeps the small global limit except the document upload, which may carry a file (its own, larger limit)."""
+    if request.method == "POST" and request.url.path == UPLOAD_PATH:
+        return settings.rag_max_upload_bytes + UPLOAD_OVERHEAD_BYTES
+    return settings.max_request_bytes
+
+
 async def limit_body_size(request: Request, call_next):
     length = request.headers.get("content-length", "")
-    if length.isdigit() and int(length) > settings.max_request_bytes:
+    if length.isdigit() and int(length) > body_limit(request):
         return JSONResponse({"detail": "Request body too large"}, status_code=413)
-    # A chunked upload has no Content-Length, so the check above cannot see its size. Browsers, httpx (json=) and the mail
-    # poller always send a length; refuse the rest instead of buffering an unbounded body in memory.
-    if not length.isdigit() and "chunked" in request.headers.get("transfer-encoding", "").lower():
-        return JSONResponse({"detail": "Content-Length is required (chunked uploads are not accepted)"}, status_code=411)
     return await call_next(request)

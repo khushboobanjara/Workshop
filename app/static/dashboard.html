@@ -96,6 +96,7 @@
   .msg.bot { align-self:flex-start; background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; }
   .msg.err { align-self:flex-start; background:var(--redbg); color:var(--red); border:1px solid var(--red); }
   .msgmeta { margin-top:8px; font-size:12px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .cite { width:100%; margin:2px 0 0; } .cite blockquote { margin:4px 0 0; padding:6px 10px; border-left:3px solid var(--line); color:var(--muted); white-space:pre-wrap; }
   .msgmeta a.pill { cursor:pointer; text-decoration:none; } .msgmeta details { width:100%; margin:2px 0 0; } .msgmeta li { margin:2px 0; }
   .chips { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 10px; } .chip { border-radius:99px; font-size:13px; padding:6px 12px; }
   .composer { display:flex; gap:8px; align-items:flex-end; border-top:1px solid var(--line); padding-top:10px; }
@@ -111,6 +112,7 @@
     <div class="brand">OpsPilot <b>AI</b><small>Intelligent Business Workflow Automation</small></div>
     <button class="nav active" data-tab="home">Home</button>
     <button class="nav" data-tab="chat">AI Assistant</button>
+    <button class="nav" data-tab="documents">Documents</button>
     <button class="nav" data-tab="process" data-roles="admin reviewer">Process Email</button>
     <button class="nav" data-tab="all">Invoices</button>
     <button class="nav" data-tab="queue" data-roles="admin reviewer">Review Queue <span class="badge" id="qcount"></span></button>
@@ -316,17 +318,10 @@ async function submitReview(card, action) {
   if (!reviewer) { err.textContent = "Enter your name so the decision is recorded in the audit log."; return; }
   localStorage.setItem("reviewer", reviewer);
   const corrections = {};
-  let badAmount = false;
   card.querySelectorAll("[data-field]").forEach(i => {
     const v = i.value.trim();
-    if (v === i.dataset.orig || v === "") return;
-    if (i.dataset.field === "total_amount") {
-      const n = Number(v.replace(/,/g, ""));                   // parseFloat("1,250") is 1 and parseFloat("abc") is NaN, which JSON turns into null
-      if (!Number.isFinite(n)) { badAmount = true; return; }   // never drop a correction silently
-      corrections.total_amount = n;
-    } else corrections[i.dataset.field] = v;
+    if (v !== i.dataset.orig && v !== "") corrections[i.dataset.field] = i.dataset.field === "total_amount" ? parseFloat(v) : v;
   });
-  if (badAmount) { err.textContent = "Total amount must be a number, for example 1250.50."; return; }
   try {
     await api(`/invoices/${card.dataset.id}/review`, { method: "POST", body: JSON.stringify(
       { action, reviewer, comment: $(".comment", card).value, corrections: Object.keys(corrections).length ? corrections : null }) });
@@ -372,7 +367,7 @@ function demoEmails() {
   const num = () => "INV-" + (10000 + Math.floor(Math.random() * 89999));
   const iso = d => d.toISOString().slice(0, 10);
   const mk = (vendor, number, amount, opts = {}) => {
-    const d = new Date(Date.now() - (3 + Math.floor(Math.random() * 150)) * 86400000);   // relative to today: never in the future, never stale
+    const d = new Date(Date.UTC(2026, 2 + Math.floor(Math.random() * 5), 1 + Math.floor(Math.random() * 27)));
     const due = new Date(d.getTime() + 30 * 86400000);
     // random cents so loading the demo twice does not look like a resubmission of the same amount
     if (!opts.exact) amount += Math.floor(Math.random() * 100) / 100;
@@ -566,20 +561,21 @@ function chatFmt(text) {                                   // escape first, then
 function chatMeta(r) {
   if (!r) return "";
   const badge = r.blocked ? `<span class="pill red">Could not verify</span>`
-    : r.grounded && r.verified ? `<span class="pill green">&#10003; ${r.fact_checked ? "Checked against database records" : "Figures checked against database records"}</span>`
+    : r.grounded && r.verified ? `<span class="pill green">&#10003; ${(r.citations || []).length ? ((r.sources || []).some(x => !x.startsWith("document:")) ? "Checked against database records and cited documents" : "Checked against cited documents") : r.fact_checked ? "Checked against database records" : "Figures checked against database records"}</span>`
     : r.grounded ? `<span class="pill amber">Only partly checked</span>` : `<span class="pill gray">No database lookup</span>`;
   const src = (r.sources || []).slice(0, 12).map(x => { const m = /^invoice:(\d+)$/.exec(x);
     return m && can("admin reviewer") ? `<a href="#" class="pill gray" data-action="audit-id" data-id="${m[1]}">${esc(x)}</a>` : `<span class="pill gray">${esc(x)}</span>`; }).join("");
   const steps = (r.tools_used || []).map(t => `<li><b>${esc(t.tool)}</b> ${esc(JSON.stringify(t.arguments))} &rarr; ${esc(t.outcome)}${t.records ? ` (${t.records} record${t.records > 1 ? "s" : ""})` : ""}</li>`).join("");
   const warn = (r.warnings || []).map(w => `<span class="muted">${esc(w)}</span>`).join("");
-  return `<div class="msgmeta">${badge}${src}${warn}${steps ? `<details><summary>How this was answered (${r.tools_used.length} lookup${r.tools_used.length > 1 ? "s" : ""})</summary><ul>${steps}</ul></details>` : ""}</div>`;
+  const cites = (r.citations || []).map(c => `<details class="cite"><summary><span class="pill gray">${esc(c.ref)}</span> ${esc(c.title)}${c.page ? ` &middot; page ${esc(c.page)}` : ""}${c.section ? ` &middot; ${esc(c.section)}` : ""}</summary><blockquote>${esc(c.snippet)}</blockquote></details>`).join("");
+  return `<div class="msgmeta">${badge}${src}${warn}${cites}${steps ? `<details><summary>How this was answered (${r.tools_used.length} lookup${r.tools_used.length > 1 ? "s" : ""})</summary><ul>${steps}</ul></details>` : ""}</div>`;
 }
 function drawChat() {
   const log = $("#chatLog"); if (!log) return;
-  const chips = (CHAT_CHIPS[me ? me.role : "admin"] || CHAT_CHIPS.viewer).map(c => `<button class="chip" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
+  const chips = (CHAT_CHIPS[me ? me.role : "admin"] || CHAT_CHIPS.viewer).concat(chatStatus && chatStatus.documents ? ["What do our policies say about approval limits?"] : []).map(c => `<button class="chip" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
   log.innerHTML = chatLog.length ? chatLog.map(m => m.role === "user" ? `<div class="msg user">${esc(m.content).replace(/\n/g, "<br>")}</div>`
       : m.role === "error" ? `<div class="msg err">${esc(m.content)}</div>` : `<div class="msg bot">${chatFmt(m.content)}${chatMeta(m.meta)}</div>`).join("")
-    : `<div class="chatempty"><h3>Ask about your invoices</h3><div>Answers come only from your OpsPilot database, using the tools your role is allowed to use.</div><div class="chips" style="justify-content:center;margin-top:14px">${chips}</div></div>`;
+    : `<div class="chatempty"><h3>Ask about your invoices</h3><div>Answers come only from your OpsPilot database${chatStatus && chatStatus.documents ? " and the company documents you may read (with citations)" : ""}, using the tools your role is allowed to use.</div><div class="chips" style="justify-content:center;margin-top:14px">${chips}</div></div>`;
   if (chatBusy) log.insertAdjacentHTML("beforeend", `<div class="msg bot muted typing">Checking the records <span>.</span><span>.</span><span>.</span></div>`);
   $("#chatSend").disabled = chatBusy; log.scrollTop = log.scrollHeight;
 }
@@ -599,7 +595,7 @@ async function renderChat() {
       <div class="muted" style="font-size:12px">Read-only. It can only see what your role can see, and every lookup is audited.</div></div><button id="chatNew">New chat</button></div>
     <div class="chatlog" id="chatLog"></div>
     <div class="composer"><textarea id="chatIn" rows="1" maxlength="2000" placeholder="Ask about invoices, vendors, the review queue... (Enter to send, Shift+Enter for a new line)"></textarea><button class="primary" id="chatSend">Send</button></div>
-    <div class="muted" style="font-size:11px;margin-top:6px">Your question and the records needed to answer it are sent to Groq, the AI provider. Check important figures against the linked records.</div></div>`;
+    <div class="muted" style="font-size:11px;margin-top:6px">Your question and the records${chatStatus && chatStatus.documents ? " or document passages" : ""} needed to answer it are sent to Groq, the AI provider. Check important figures against the linked records.</div></div>`;
   const input = $("#chatIn");
   input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); const v = input.value; input.value = ""; sendChat(v); } });
   $("#chatSend").onclick = () => { const v = input.value; input.value = ""; sendChat(v); input.focus(); };
@@ -608,11 +604,54 @@ async function renderChat() {
   drawChat(); input.focus();
 }
 
+// ---------- Documents (RAG): what the assistant may quote. Visibility is enforced by the server; this page only shows what it returns.
+const DOC_VIS = { viewer: "Everyone signed in", reviewer: "Reviewers and admins", admin: "Admins only" };
+async function renderDocuments() {
+  const st = await api("/rag/status").catch(() => ({ enabled: false }));
+  if (!st.enabled) { $("#view").innerHTML = `<h2 class="hello">Documents</h2><div class="notice">Document search is not enabled on this server. An administrator can turn it on with <b>OPSPILOT_RAG_ENABLED</b> (see docs/RAG.md).</div>`; return; }
+  const list = await api("/rag/documents");
+  const admin = can("admin");
+  const health = admin && st.index_vectors != null ? `<div class="muted" style="margin-bottom:10px">Model <b>${esc(st.embedding_model)}</b> &middot; ${st.chunks} passages &middot; index ${st.index_in_sync ? "in sync" : `<span class="pill amber">out of sync</span> <button data-action="doc-reindex">Rebuild index</button>`}</div>` : "";
+  const form = admin ? `<h3>Add a document</h3><div class="muted" style="margin-bottom:8px">PDF, DOCX, TXT, MD, CSV or HTML (text-based; scanned PDFs are not supported). Passages the assistant finds are sent to Groq when a user asks about them.</div>
+    <div class="row"><input type="file" id="docFile" accept=".pdf,.docx,.txt,.md,.markdown,.csv,.html,.htm"><input id="docTitle" placeholder="title (optional)" maxlength="200">
+    <select id="docRole"><option value="viewer">Everyone signed in can read it</option><option value="reviewer">Reviewers and admins</option><option value="admin">Admins only</option></select>
+    <button class="primary" id="docUpload">Upload</button></div><div class="err" id="docErr"></div>` : "";
+  $("#view").innerHTML = `<h2 class="hello">Documents</h2><div class="muted" style="margin-bottom:12px">Policies, contracts and procedures the AI assistant can search and quote, with a citation on every answer. You only see documents your role may read.</div>` + health +
+    table(["Title", "Type", "Who can read it", "Pages", "Passages", ...(admin ? ["Held back", "Added by"] : []), "Added", ...(admin ? [""] : [])],
+      list.map(d => `<tr data-doc="${d.id}"><td>DOC-${d.id} &middot; ${esc(d.title)}<div class="muted" style="font-size:11px">${esc(d.filename)}</div></td><td>${esc(d.file_type)}</td><td>${esc(DOC_VIS[d.min_role] || d.min_role)}</td><td>${d.pages ?? "-"}</td><td>${d.chunks}</td>` +
+        (admin ? `<td>${d.quarantined_chunks ? `<span class="pill amber" title="Passages that looked like instructions to an AI were not indexed">${d.quarantined_chunks}</span>` : "0"}</td><td>${esc(d.uploaded_by)}</td>` : "") +
+        `<td>${day(d.created_at)}</td>` + (admin ? `<td><button data-action="doc-delete">Delete</button></td>` : "") + `</tr>`), "No documents yet.") +
+    form + `<h3>Try a search</h3><div class="muted" style="margin-bottom:8px">Shows the passages the assistant would be given for a question (only those your role may read).</div>
+    <div class="row"><input id="docQ" placeholder="e.g. approval limit for new vendors" maxlength="300" style="flex:1"><button id="docSearch">Search</button></div><div id="docHits" style="margin-top:10px"></div>`;
+}
+async function docUpload() {
+  const f = $("#docFile").files[0], err = $("#docErr"); err.textContent = "";
+  if (!f) { err.textContent = "Choose a file first."; return; }
+  const fd = new FormData(); fd.append("file", f); fd.append("min_role", $("#docRole").value); fd.append("title", $("#docTitle").value.trim());
+  const key = sessionStorage.getItem("opspilot_key"); $("#docUpload").disabled = true; err.textContent = "Uploading and indexing...";
+  try {
+    const r = await fetch("/rag/documents", { method: "POST", body: fd, headers: key ? { "X-API-Key": key } : {} });
+    if (r.status === 401 && authEnabled) { me = null; showLogin("Please sign in again."); return; }
+    const data = await r.json().catch(() => null);
+    if (!r.ok) throw new Error((data && typeof data.detail === "string" ? data.detail : JSON.stringify(data && data.detail)) || r.statusText);
+    renderDocuments();
+  } catch (e) { err.textContent = e.message; $("#docUpload").disabled = false; }
+}
+async function docSearch() {
+  const q = $("#docQ").value.trim(), out = $("#docHits"); if (q.length < 3) { out.innerHTML = `<div class="muted">Type at least 3 characters.</div>`; return; }
+  out.innerHTML = `<div class="muted">Searching...</div>`;
+  try {
+    const r = await api("/rag/search", { method: "POST", body: JSON.stringify({ query: q, limit: 5 }) });
+    out.innerHTML = r.passages.length ? r.passages.map(p => `<div class="item" style="margin-bottom:8px"><span class="pill gray">${esc(p.ref)}</span> <b>${esc(p.title)}</b>${p.page ? ` &middot; page ${esc(p.page)}` : ""}${p.section ? ` &middot; ${esc(p.section)}` : ""} <span class="muted">match ${esc(p.score.toFixed(2))}</span><div style="margin-top:6px;white-space:pre-wrap">${esc(p.text)}</div></div>`).join("")
+      : `<div class="empty">Nothing relevant in the documents you may read.</div>`;
+  } catch (e) { out.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+
 async function refresh() {
   try {
     await loadStats();
     const PAGES = { home: renderHome, process: renderProcess, queue: renderQueue, all: renderAll, vendors: renderVendors,
-                    reports: renderReports, chat: renderChat, models: renderModels, triage: renderTriage, users: renderUsers, audit: renderAudit, settings: renderSettings };
+                    reports: renderReports, chat: renderChat, documents: renderDocuments, models: renderModels, triage: renderTriage, users: renderUsers, audit: renderAudit, settings: renderSettings };
     await (PAGES[tab] || renderAll)();
   }
   catch (e) { $("#view").innerHTML = `<div class="empty">Could not reach the API: ${esc(e.message)}</div>`; }
@@ -627,6 +666,12 @@ document.addEventListener("click", e => {
   }
   else if (t.dataset.uact === "pw") { const pw = prompt("New password (at least 10 characters):"); if (pw) userAction(t.closest("tr"), "password", pw); }
   else if (t.dataset.action === "audit-id") { e.preventDefault(); showAudit(t.dataset.id); }
+  else if (t.id === "docUpload") docUpload();
+  else if (t.id === "docSearch") docSearch();
+  else if (t.dataset.action === "doc-delete") {
+    const row = t.closest("tr"); if (confirm("Delete this document? The assistant will no longer be able to quote it.")) api(`/rag/documents/${row.dataset.doc}`, { method: "DELETE" }).then(renderDocuments).catch(e => alert(e.message));
+  }
+  else if (t.dataset.action === "doc-reindex") { t.disabled = true; api("/rag/reindex", { method: "POST" }).then(renderDocuments).catch(e => { alert(e.message); t.disabled = false; }); }
   else if (t.dataset.action === "csv") downloadCsv();
   else if (t.dataset.action === "triage-convert") submitTriage(t.closest(".item"), "convert");
   else if (t.dataset.action === "triage-dismiss") submitTriage(t.closest(".item"), "dismiss");

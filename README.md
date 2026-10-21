@@ -315,6 +315,15 @@ the signed-in user's role, with every lookup audited and every figure in an answ
 Off by default (`OPSPILOT_CHAT_ENABLED=true` plus `OPSPILOT_GROQ_API_KEY`; requires authentication). Setup, what is sent to
 Groq, and the limits of the verification: [docs/CHAT.md](docs/CHAT.md).
 
+### Document search (RAG)
+
+The assistant can also answer from **uploaded company documents** (policies, contracts, procedures: PDF, DOCX, TXT, MD, CSV, HTML)
+with a citation on every statement, and combine them with live invoice data (still fetched through MCP). Retrieval is fully
+free and local: Sentence Transformers embeddings on the CPU, a FAISS index, MySQL as the source of truth. Visibility is per
+document and enforced server-side by role; uploads, searches and deletions are audited; when nothing relevant is found the
+assistant says so with a fixed message instead of guessing. Off by default (`OPSPILOT_RAG_ENABLED=true`, requires the assistant
+and authentication). Setup, the hallucination controls and their limits, and operations: [docs/RAG.md](docs/RAG.md).
+
 ## Mailbox integration
 
 `python -m app.ingestion.poll` reads a real IMAP inbox and sends each new email to `POST /emails`, so invoices arrive without anyone posting JSON by hand.
@@ -366,11 +375,12 @@ app/
   static/        dashboard (single HTML page)
   mcp_server/    MCP server: tools, role checks, redaction, audit, HTTP + stdio transports
   chat/          AI assistant: Groq client, tool bridge to MCP, answer verifier, chat audit
+  rag/           document search: extraction, chunking, local embeddings, FAISS index, retrieval, citation checks, /rag API
   main.py        FastAPI app
 scripts/         data generation, evaluation and benchmark scripts, migrate_sqlite_to_mysql.py
 data/            synthetic email datasets (easy, hard, shifted-wording test sets)
 docs/results/    saved benchmark reports (easy, hard, hard with true fields, extractors)
-docs/            MCP.md, CHAT.md, screenshots/
+docs/            MCP.md, CHAT.md, RAG.md, sample_documents/, screenshots/
 tests/           unit tests and API tests
 .github/         CI workflow (tests against a throwaway MySQL)
 Dockerfile, docker-compose.yml   container image and the MySQL + API + folder-watcher stack

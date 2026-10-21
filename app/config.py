@@ -71,6 +71,31 @@ class Settings(BaseSettings):
     chat_fact_check: bool = True                   # second model call that checks every statement against the records (more accurate, slower)
     chat_rate_limit_per_minute: int = 20           # questions per user per minute
 
+    # Retrieval-augmented generation over uploaded documents (policies, contracts, procedures). See docs/RAG.md. Off by default.
+    # Everything here is free and local: Sentence Transformers embeddings run on this machine, FAISS is an in-process library,
+    # and the only external call is the chat model on Groq that the assistant already uses.
+    rag_enabled: bool = False
+    rag_data_dir: str = "data/rag"                  # FAISS index + metadata live here (derived data: it can be rebuilt from MySQL)
+    rag_embedder: str = "sentence-transformers"     # "sentence-transformers" (real, semantic) | "hashing" (lexical stand-in for tests/dev; refused in production)
+    rag_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"   # free, Apache-2.0, 384 dimensions, ~90 MB, runs on CPU
+    rag_embedding_local_files_only: bool = False    # true = never contact Hugging Face (model must already be cached or be a local path)
+    rag_embedding_batch_size: int = 32
+    rag_query_prefix: str = ""                      # some models (e5, bge) want a prefix such as "query: " / "passage: "
+    rag_document_prefix: str = ""
+    rag_chunk_chars: int = 900                      # target chunk size (~220 tokens; fits MiniLM's 256-token window)
+    rag_chunk_overlap_chars: int = 150
+    rag_min_chunk_chars: int = 40
+    rag_top_k: int = 5                              # passages given to the model
+    rag_min_score: float = 0.30                     # cosine similarity floor: weaker matches are not evidence (tune with scripts/evaluate_retrieval.py)
+    rag_max_chunks_per_document: int = 3
+    rag_max_upload_bytes: int = 10_000_000
+    rag_max_documents: int = 500
+    rag_max_pdf_pages: int = 300
+    rag_max_extracted_chars: int = 2_000_000
+    rag_min_support: float = 0.40                   # share of an answer sentence's content words that must occur in the retrieved/returned data (0 = off)
+    rag_search_rate_limit_per_minute: int = 30      # document searches per user per minute (chat and /rag/search together)
+    rag_preload: bool = False                       # load the embedding model at start-up instead of on first use
+
     model_config = {"env_prefix": "OPSPILOT_", "env_file": os.environ.get("OPSPILOT_ENV_FILE", ".env"), "extra": "ignore"}
 
     @model_validator(mode="after")

@@ -33,26 +33,20 @@ services:
     environment:
       OPSPILOT_DEMO_MODE: "${OPSPILOT_DEMO_MODE:-false}"
       OPSPILOT_API_KEY: "${OPSPILOT_API_KEY:-}"
-      # Security and feature switches. The container has no .env file (it is in .dockerignore on purpose), so every setting
-      # the API needs must be passed here; without these lines OPSPILOT_AUTH_ENABLED=true in .env would silently do nothing.
-      OPSPILOT_ENV: "${OPSPILOT_ENV:-development}"
-      OPSPILOT_AUTH_ENABLED: "${OPSPILOT_AUTH_ENABLED:-false}"
-      OPSPILOT_JWT_SECRET: "${OPSPILOT_JWT_SECRET:-}"
-      OPSPILOT_COOKIE_SECURE: "${OPSPILOT_COOKIE_SECURE:-false}"
-      OPSPILOT_BOOTSTRAP_ADMIN_USER: "${OPSPILOT_BOOTSTRAP_ADMIN_USER:-}"
-      OPSPILOT_BOOTSTRAP_ADMIN_PASSWORD: "${OPSPILOT_BOOTSTRAP_ADMIN_PASSWORD:-}"
-      OPSPILOT_MCP_ENABLED: "${OPSPILOT_MCP_ENABLED:-false}"
-      OPSPILOT_MCP_SYSTEM_KEY: "${OPSPILOT_MCP_SYSTEM_KEY:-}"
-      OPSPILOT_MCP_ALLOWED_ORIGINS: "${OPSPILOT_MCP_ALLOWED_ORIGINS:-}"
-      OPSPILOT_CHAT_ENABLED: "${OPSPILOT_CHAT_ENABLED:-false}"
-      OPSPILOT_GROQ_API_KEY: "${OPSPILOT_GROQ_API_KEY:-}"
-      OPSPILOT_GROQ_MODEL: "${OPSPILOT_GROQ_MODEL:-openai/gpt-oss-120b}"
-      OPSPILOT_CHAT_FACT_CHECK: "${OPSPILOT_CHAT_FACT_CHECK:-true}"
       OPSPILOT_DB_HOST: "${OPSPILOT_DB_HOST_IN_DOCKER:-mysql}"
       OPSPILOT_DB_PORT: "${OPSPILOT_DB_PORT_IN_DOCKER:-3306}"
       OPSPILOT_DB_NAME: "${OPSPILOT_DB_NAME:-opspilot}"
       OPSPILOT_DB_USER: "${OPSPILOT_DB_USER:?set OPSPILOT_DB_USER in .env}"
       OPSPILOT_DB_PASSWORD: "${OPSPILOT_DB_PASSWORD:?set OPSPILOT_DB_PASSWORD in .env}"
+      # Document search (docs/RAG.md). It also needs OPSPILOT_AUTH_ENABLED=true and, for the assistant, the OPSPILOT_CHAT_* / GROQ
+      # settings: pass those through here the same way.
+      OPSPILOT_RAG_ENABLED: "${OPSPILOT_RAG_ENABLED:-false}"
+      OPSPILOT_RAG_DATA_DIR: "/app/data/rag"
+      OPSPILOT_RAG_MIN_SCORE: "${OPSPILOT_RAG_MIN_SCORE:-0.30}"
+      OPSPILOT_RAG_EMBEDDING_MODEL: "${OPSPILOT_RAG_EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}"
+      OPSPILOT_RAG_EMBEDDING_LOCAL_FILES_ONLY: "${OPSPILOT_RAG_EMBEDDING_LOCAL_FILES_ONLY:-false}"
+    volumes:
+      - rag-data:/app/data/rag          # the FAISS index (derived data: rebuildable from MySQL with POST /rag/reindex)
     depends_on:
       mysql:
         condition: service_healthy
@@ -96,3 +90,4 @@ services:
 
 volumes:
   mysql-data:
+  rag-data:

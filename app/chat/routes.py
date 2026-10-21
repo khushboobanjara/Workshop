@@ -21,6 +21,7 @@ from app.chat.groq_client import GroqClient
 from app.config import settings
 from app.mcp_server import rbac
 from app.mcp_server.server import server
+from app.rag import service as rag_service
 from app.security import WriteRateLimiter
 
 logger = logging.getLogger("opspilot.chat")
@@ -80,13 +81,17 @@ def startup_checks() -> None:
         raise RuntimeError("Refusing to start the AI assistant: " + "; ".join(problems))
 
 
+def _documents_on() -> bool:
+    return bool(settings.rag_enabled)
+
+
 @router.get("/status")
 def chat_status(principal: Principal = Depends(ANY)):
     """Lets the dashboard decide whether to show the chat. Reveals nothing about configuration beyond on/off and the tool names."""
     if not _ready():
         return {"enabled": False, "model": None, "tools": []}
     return {"enabled": True, "model": settings.groq_model,
-            "tools": [t.name for t in server.allowed_tools(principal)]}
+            "tools": [t.name for t in server.allowed_tools(principal)], "documents": _documents_on()}
 
 
 @router.post("")
@@ -104,8 +109,15 @@ def chat(payload: ChatIn, principal: Principal = Depends(ANY)):
     model = settings.groq_model
     started = time.perf_counter()
     try:
+        rag = None
+        if _documents_on():
+            try:
+                rag = rag_service.get_service()
+            except rag_service.RagError:
+                rag = None                                                # documents unavailable: answer from MCP data only
         result = service.answer(principal, payload.message, [t.model_dump() for t in payload.history],
-                                llm=make_client(), server=server, role_label=label, limits=service.Limits(fact_check=settings.chat_fact_check))
+                                llm=make_client(), server=server, role_label=label, rag=rag,
+                                limits=service.Limits(fact_check=settings.chat_fact_check, rag_min_support=settings.rag_min_support))
     except GroqError as exc:
         logger.warning("Groq request failed: code=%s detail=%s", exc.code, exc.detail)       # visible in the server console
         _audit_quietly(principal, "rate_limited" if exc.code == "rate_limited" else "failed", payload.message, model,

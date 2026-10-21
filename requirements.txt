@@ -3,7 +3,6 @@ sqlalchemy>=2.0
 pydantic>=2.0
 pydantic-settings>=2.0
 scikit-learn>=1.4
-scipy>=1.11               # app/anomaly/burst.py imports scipy.stats directly
 pandas>=2.0
 rapidfuzz>=3.0
 fastapi>=0.110
@@ -18,3 +17,10 @@ argon2-cffi>=23.1
 PyJWT>=2.8
 PyMySQL>=1.1                # MySQL driver (pure Python)
 cryptography>=42.0          # PyMySQL needs it for MySQL 8's default caching_sha2_password login
+
+# --- document search / RAG (docs/RAG.md): all free and local ---
+faiss-cpu>=1.8              # vector index (in-process, no server)
+sentence-transformers>=3.0  # local embeddings; pulls in PyTorch. On servers/CI install the small CPU build of torch FIRST:
+                            #   pip install torch --index-url https://download.pytorch.org/whl/cpu
+python-docx>=1.1            # read .docx files
+python-multipart>=0.0.9     # FastAPI file uploads

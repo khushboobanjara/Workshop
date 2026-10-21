@@ -81,6 +81,14 @@ something that is fine (the answer is then repaired or withheld). Neither replac
 tools that ran and the record ids (reviewers/admins can click an id to open its audit trail). The fact check costs one extra
 model call per answer; set `OPSPILOT_CHAT_FACT_CHECK=false` to turn it off if speed or the provider's rate limit matters more.
 
+## Documents (RAG)
+
+With `OPSPILOT_RAG_ENABLED=true` the model also gets a `search_documents` tool next to the MCP tools, so it can answer from uploaded
+policies, contracts and procedures, cite the passages it used, and combine them with live database records in one answer. The
+same loop, limits, figure verifier and audit apply; document text is untrusted input like e-mail bodies; and a question the
+documents cannot answer gets a fixed "not in the documents" reply instead of the model's guess. Everything about it is in
+[RAG.md](RAG.md). With RAG off, the assistant behaves exactly as described on this page.
+
 ## Audit
 
 * Per tool call: the existing MCP rows (`stage mcp`, `transport chat`, actor = the user, same `request_id`).

@@ -1,0 +1,14 @@
+{"question": "How many approvers does an invoice of 15,000 USD need?", "expect": "ap policy"}
+{"question": "Who can approve a small invoice under 2,000 dollars?", "expect": "ap policy"}
+{"question": "What are our standard payment terms?", "expect": "ap policy"}
+{"question": "What should we do when a vendor changes its bank account?", "expect": "ap policy"}
+{"question": "What forms must a new supplier submit before we pay them?", "expect": "vendor onboarding"}
+{"question": "How do we verify a vendor's bank account?", "expect": "vendor onboarding"}
+{"question": "When are inactive vendors deactivated?", "expect": "vendor onboarding"}
+{"question": "What is the hotel limit in New York?", "expect": "travel expense"}
+{"question": "How soon must expense claims be filed?", "expect": "travel expense"}
+{"question": "Is alcohol reimbursable?", "expect": "travel expense"}
+{"question": "What is the capital of France?", "expect": null}
+{"question": "Write me a poem about the sea", "expect": null}
+{"question": "What is our parental leave policy?", "expect": null}
+{"question": "How do I configure a Kubernetes ingress controller?", "expect": null}

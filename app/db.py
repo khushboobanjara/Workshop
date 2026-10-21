@@ -128,6 +128,43 @@ class ModelVersion(Base):
     registered_at: Mapped[datetime] = mapped_column(Timestamp, default=utcnow)
 
 
+class RagDocument(Base):
+    """An uploaded document the AI assistant may quote (policies, contracts, procedures). The original file is NOT kept:
+    only its cleaned text, as chunks (rag_chunks). `min_role` is who may retrieve it: viewer = every signed-in user,
+    reviewer = reviewers and admins, admin = admins only."""
+    __tablename__ = "rag_documents"
+    __table_args__ = (CheckConstraint("min_role IN ('admin','reviewer','viewer')", name="ck_rag_documents_min_role"), _MYSQL)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    filename: Mapped[str] = mapped_column(String(255))
+    file_type: Mapped[str] = mapped_column(String(10))                       # pdf | docx | txt | md | csv | html
+    sha256: Mapped[str] = mapped_column(String(64), unique=True)             # the same content cannot be uploaded twice
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    min_role: Mapped[str] = mapped_column(String(20), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    pages: Mapped[int | None] = mapped_column(Integer)
+    chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    quarantined_chunks: Mapped[int] = mapped_column(Integer, default=0)      # chunks held back because they look like instructions to an AI
+    embedding_model: Mapped[str | None] = mapped_column(String(200))
+    uploaded_by: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(Timestamp, default=utcnow)
+
+
+class RagChunk(Base):
+    """One retrievable passage. Its id is also its id in the FAISS index, so a search hit is always resolved through
+    this table (and the document's min_role) before anything is shown: a stale index can never leak a deleted document."""
+    __tablename__ = "rag_chunks"
+    __table_args__ = (_MYSQL,)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("rag_documents.id"), index=True)
+    chunk_index: Mapped[int] = mapped_column(Integer)                        # 1-based position inside the document
+    page: Mapped[int | None] = mapped_column(Integer)
+    section: Mapped[str | None] = mapped_column(String(200))
+    text: Mapped[str] = mapped_column(LongText)
+
+
 class AuditImmutableError(RuntimeError):
     pass
 

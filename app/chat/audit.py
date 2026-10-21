@@ -27,6 +27,11 @@ def record_turn(*, principal, outcome: str, question: str, model: str, result=No
             "retries": result.retries, "unsupported_count": len(result.unsupported), "groq_calls": result.groq_calls,
             "prompt_tokens": result.prompt_tokens, "completion_tokens": result.completion_tokens,
             "answer_chars": len(result.answer), "answer_sha256": hashlib.sha256(result.answer.encode("utf-8")).hexdigest()})
+    if result is not None and getattr(result, "rag", False):          # only turns where the document tool was offered
+        details.update({"documents": True, "document_searches": result.document_searches, "passages_retrieved": result.passages_retrieved,
+                        "citations": [c["ref"] for c in result.citations]})
+        if result.failed_checks:                                      # which check rejected an attempt (kinds only, no text)
+            details["failed_checks"] = list(result.failed_checks)
     if error_code:
         details["error_code"] = error_code
     if error_detail:

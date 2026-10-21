@@ -19,6 +19,7 @@ from app.auth_routes import router as auth_router
 from app.context import request_id_var
 from app.chat import routes as chat_routes
 from app.mcp_server import routes as mcp_routes
+from app.rag import routes as rag_routes
 from app.config import settings
 from app.db import Email, SessionLocal, init_db
 from app.pipeline.factory import build_pipeline
@@ -65,16 +66,14 @@ def create_app(pipeline_factory: Callable = build_pipeline) -> FastAPI:
         """Demo mode: wipe and reseed on a schedule so a public instance never accumulates junk."""
         while True:
             await asyncio.sleep(settings.demo_reset_minutes * 60)
-            try:
-                await asyncio.to_thread(demo.reset_and_seed, app.state.pipeline)
-            except Exception as exc:                   # keep the schedule alive; try again at the next interval
-                print(f"demo reset failed, will retry: {type(exc).__name__}: {exc}")
+            await asyncio.to_thread(demo.reset_and_seed, app.state.pipeline)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         auth.startup_checks_and_bootstrap_pre()
         mcp_routes.startup_checks()                  # no-op unless OPSPILOT_MCP_ENABLED=true
         chat_routes.startup_checks()                 # no-op unless OPSPILOT_CHAT_ENABLED=true
+        rag_routes.startup_checks()                  # no-op unless OPSPILOT_RAG_ENABLED=true
         init_db()
         auth.startup_checks_and_bootstrap()
         if settings.demo_mode and settings.auth_enabled:
@@ -84,6 +83,11 @@ def create_app(pipeline_factory: Callable = build_pipeline) -> FastAPI:
         except Exception as exc:                       # a bad metadata file must never stop the service starting
             print(f"model registry sync skipped: {type(exc).__name__}: {exc}")
         app.state.pipeline = pipeline_factory()
+        if settings.rag_enabled and settings.rag_preload:             # load the embedding model now instead of on the first question
+            try:
+                await asyncio.to_thread(rag_routes.get_service().ensure_ready)
+            except Exception as exc:                  # the service still starts; document search reports the problem when used
+                print(f"document search warm-up skipped: {type(exc).__name__}: {exc}")
         task = None
         if settings.demo_mode:
             with SessionLocal() as s:
@@ -115,6 +119,7 @@ def create_app(pipeline_factory: Callable = build_pipeline) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(mcp_routes.router)           # POST /mcp: answers 404 unless OPSPILOT_MCP_ENABLED=true
     app.include_router(chat_routes.router)          # POST /chat: answers 404 unless OPSPILOT_CHAT_ENABLED=true
+    app.include_router(rag_routes.router)           # /rag/*: answers 404 unless OPSPILOT_RAG_ENABLED=true
     ANY, REVIEWER, ADMIN = (require_roles("admin", "reviewer", "viewer"), require_roles("admin", "reviewer"),
                             require_roles("admin"))
     INGEST = require_roles("admin", "reviewer", "service")
