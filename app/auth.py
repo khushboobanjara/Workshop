@@ -84,11 +84,14 @@ def _principal_from_token(token: str) -> Principal | None:
 
 def resolve_principal(request: Request) -> Principal | None:
     header = request.headers.get("authorization", "")
-    token = header[7:] if header.lower().startswith("bearer ") else request.cookies.get(COOKIE)
+    bearer = header.lower().startswith("bearer ")
+    token = header[7:] if bearer else request.cookies.get(COOKIE)
     if token:
         p = _principal_from_token(token)
         if p:
-            return Principal(p.username, p.role, p.user_id, "bearer" if header else "session")
+            # "bearer" skips the Origin/CSRF check, so it must mean the token really came from the Authorization header;
+            # a cookie session stays "session" even if some proxy added a different Authorization header (e.g. Basic).
+            return Principal(p.username, p.role, p.user_id, "bearer" if bearer else "session")
     expected = settings.api_key.get_secret_value()
     supplied = request.headers.get("x-api-key", "")
     if expected and supplied and secrets.compare_digest(supplied.encode(), expected.encode()):

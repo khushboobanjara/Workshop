@@ -1,4 +1,5 @@
 """Pure human-review rules: which status changes are legal. No DB, no web framework."""
+import math
 
 REQUIRED_FIELDS = ["vendor_name", "invoice_number", "total_amount", "due_date"]
 EDITABLE_FIELDS = ["vendor_name", "invoice_number", "invoice_date", "due_date",
@@ -37,6 +38,6 @@ def plan_review(current_status: str, action: str, invoice_after_corrections: dic
     if missing:
         raise ReviewError(f"Cannot approve: missing required fields {missing}. Supply them in 'corrections'.", "invalid")
     amount = invoice_after_corrections["total_amount"]
-    if not isinstance(amount, (int, float)) or amount <= 0:
+    if isinstance(amount, bool) or not isinstance(amount, (int, float)) or not math.isfinite(amount) or amount <= 0:
         raise ReviewError("Cannot approve: total_amount must be a positive number", "invalid")
     return "approved"

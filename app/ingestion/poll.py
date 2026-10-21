@@ -14,7 +14,7 @@ from app.ingestion.mailbox import MailboxPoller, http_submit
 def cycle(submit) -> bool:
     """One connect-poll-disconnect pass (a fresh connection each time avoids stale idle sessions)."""
     try:
-        imap = imaplib.IMAP4_SSL(settings.imap_host, settings.imap_port)
+        imap = imaplib.IMAP4_SSL(settings.imap_host, settings.imap_port, timeout=60)
         imap.login(settings.imap_user, settings.imap_password.get_secret_value())
     except (imaplib.IMAP4.error, OSError) as exc:
         print(f"Could not connect/login to {settings.imap_host}: {type(exc).__name__}: {exc}")

@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from app.config import settings
-from app.ingestion.mailbox import PollStats, Rejected, Unavailable, build_payload, http_submit
+from app.ingestion.mailbox import PollStats, Unavailable, build_payload, http_submit
 
 
 def ingest_folder(folder: str | Path, submit, log=print) -> PollStats:
@@ -38,7 +38,11 @@ def ingest_folder(folder: str | Path, submit, log=print) -> PollStats:
 
 def _move(path: Path, dest_dir: Path) -> None:
     dest_dir.mkdir(exist_ok=True)
-    path.replace(dest_dir / path.name)
+    target, n = dest_dir / path.name, 1
+    while target.exists():                              # never overwrite an earlier file that has the same name
+        target = dest_dir / f"{path.stem}.{n}{path.suffix}"
+        n += 1
+    path.replace(target)
 
 
 def main() -> int:

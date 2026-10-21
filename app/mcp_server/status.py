@@ -13,7 +13,6 @@ from fastapi import Request
 from sqlalchemy import func
 
 from app import auth as app_auth
-from app.config import settings
 from app.db import AuditLog, SessionLocal
 from app.mcp_server import rbac
 from app.mcp_server.auth import bearer_token, principal_from_token

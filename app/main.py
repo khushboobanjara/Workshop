@@ -65,7 +65,10 @@ def create_app(pipeline_factory: Callable = build_pipeline) -> FastAPI:
         """Demo mode: wipe and reseed on a schedule so a public instance never accumulates junk."""
         while True:
             await asyncio.sleep(settings.demo_reset_minutes * 60)
-            await asyncio.to_thread(demo.reset_and_seed, app.state.pipeline)
+            try:
+                await asyncio.to_thread(demo.reset_and_seed, app.state.pipeline)
+            except Exception as exc:                   # keep the schedule alive; try again at the next interval
+                print(f"demo reset failed, will retry: {type(exc).__name__}: {exc}")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

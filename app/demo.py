@@ -1,5 +1,5 @@
 """Sample data for the public demo. Dates are relative to today, so the demo never looks stale
-(the validation rules flag invoices older than a year)."""
+(a hard-coded date would eventually look old, or lie in the future, next to the validation rules)."""
 import random
 from datetime import date, datetime, timedelta, timezone
 

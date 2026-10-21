@@ -187,7 +187,9 @@ def get_audit(invoice_id: int) -> list[dict]:
 def review_invoice(invoice_id: int, action: str, reviewer: str, comment: str = "",
                    corrections: dict | None = None) -> dict:
     with SessionLocal() as s:
-        inv = s.get(Invoice, invoice_id)
+        # FOR UPDATE: a second reviewer (or a double click) waits here and then sees the new status, so an invoice can
+        # never be approved and rejected at once. SQLite ignores the lock; MySQL/InnoDB holds it until commit.
+        inv = s.get(Invoice, invoice_id, with_for_update=True)
         if inv is None:
             raise NotFound(f"Invoice {invoice_id} not found")
 
@@ -294,6 +296,10 @@ def vendors() -> list[dict]:
     for name, cur, amt, risk, decision, status, dup, received in rows:
         a = agg.setdefault(name or "Unknown vendor", {"vendor": name or "Unknown vendor", "currency": cur, "invoices": 0,
                            "total_spend": 0.0, "pending": 0, "auto_approved": 0, "duplicates": 0, "_risk": [], "last_invoice": None})
+        if cur and a["currency"] and cur != a["currency"]:
+            a["currency"] = "MIXED"            # spend below adds amounts of different currencies: do not label it as one of them
+        elif cur and not a["currency"]:
+            a["currency"] = cur
         a["invoices"] += 1
         a["_risk"].append(risk or 0.0)
         if dup is not None:
@@ -377,7 +383,7 @@ def resolve_triage(pipeline, email_id: int, action: str, reviewer: str, comment:
     """dismiss = 'not an invoice'. convert = 'it is an invoice': run everything after the classifier and store the
     invoice, which then goes through the normal rules and review like any other."""
     with SessionLocal() as s:
-        email = s.get(Email, email_id)
+        email = s.get(Email, email_id, with_for_update=True)        # lock: two people cannot convert the same email twice
         if email is None:
             raise NotFound(f"Email {email_id} not found")
         if email.triage_status != "needs_triage":

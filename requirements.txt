@@ -3,6 +3,7 @@ sqlalchemy>=2.0
 pydantic>=2.0
 pydantic-settings>=2.0
 scikit-learn>=1.4
+scipy>=1.11               # app/anomaly/burst.py imports scipy.stats directly
 pandas>=2.0
 rapidfuzz>=3.0
 fastapi>=0.110
