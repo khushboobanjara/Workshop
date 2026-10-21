@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sanjeevani Clinic | MCP Console</title>
+  <style>
+    :root { --forest:#1e3a2b; --forest2:#142a1e; --sage:#e7f0e6; --gold:#b8823d; --paper:#fff; --bg:#f7f7f1; --ink:#20291f; --muted:#687064; --line:#dfe5db; --red:#a43b35; --green:#23673c; --blue:#315d8a; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,Segoe UI,Arial,sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:var(--forest); color:white; padding:18px clamp(18px,4vw,56px); display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.2px; }
+    .logo { width:40px; height:40px; display:grid; place-items:center; border-radius:12px; background:#ffffff20; font-size:19px; }
+    .header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    a { color:inherit; text-decoration:none; }
+    .top-link { border:1px solid #ffffff55; border-radius:10px; padding:9px 13px; font-size:13px; }
+    .container { width:min(1240px,94vw); margin:28px auto 56px; }
+    .intro { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+    .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); font-weight:800; }
+    h1 { font-size:clamp(28px,3vw,38px); margin:7px 0 8px; letter-spacing:-1px; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    p { color:var(--muted); line-height:1.55; }
+    .intro p { max-width:730px; margin:0; }
+    .role-pill { border:1px solid var(--line); background:white; border-radius:999px; padding:9px 13px; font-size:12px; font-weight:800; white-space:nowrap; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:13px; margin:22px 0; }
+    .stat,.panel { background:var(--paper); border:1px solid var(--line); border-radius:17px; padding:18px; box-shadow:0 5px 20px #102b1a08; }
+    .stat-label { color:var(--muted); font-size:12px; margin-bottom:9px; }
+    .stat-value { font-weight:800; font-size:20px; overflow-wrap:anywhere; }
+    .stat-note { color:var(--muted); font-size:11px; margin-top:7px; }
+    .status { display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:800; }
+    .dot { width:8px; height:8px; border-radius:50%; background:#8d958a; }
+    .status.ok { color:var(--green); } .status.ok .dot { background:#3b8b52; }
+    .status.bad { color:var(--red); } .status.bad .dot { background:#b94740; }
+    .status.warn { color:#8c5d16; } .status.warn .dot { background:#c18d28; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(310px,.75fr); gap:16px; align-items:start; }
+    .tool-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+    .tool-card { padding:14px; border:1px solid var(--line); border-radius:13px; background:#fff; display:flex; flex-direction:column; gap:9px; min-width:0; }
+    .tool-card.selected { border-color:var(--forest); box-shadow:0 0 0 2px #1e3a2b10; }
+    .tool-top { display:flex; justify-content:space-between; gap:8px; align-items:center; }
+    .tool-name { font:700 12px ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; }
+    .group { font-size:10px; font-weight:900; border-radius:6px; padding:4px 6px; letter-spacing:.4px; }
+    .group.USER { background:#e6efe6; color:#28573a; } .group.ADMIN { background:#f8edda; color:#805216; } .group.SYSTEM { background:#e5edf8; color:#2d5681; }
+    .tool-description { font-size:12px; color:var(--muted); line-height:1.45; flex:1; }
+    button { cursor:pointer; border:0; border-radius:10px; padding:10px 13px; background:var(--forest); color:white; font-weight:800; font-size:12px; }
+    button:hover { background:var(--forest2); } button:disabled { opacity:.55; cursor:not-allowed; }
+    .secondary { background:white; color:var(--forest); border:1px solid var(--line); }
+    .secondary:hover { background:#f0f4ed; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    .panel-head h2 { margin:0; }
+    .form-grid { display:grid; gap:12px; margin-top:14px; }
+    label { display:block; font-size:12px; font-weight:800; margin-bottom:6px; }
+    input { width:100%; border:1px solid #cfd7ce; border-radius:10px; padding:11px 12px; font:inherit; background:#fff; }
+    input:focus { outline:2px solid #9fbea1; border-color:#4d7854; }
+    .hint { font-size:11px; color:var(--muted); margin-top:8px; line-height:1.5; }
+    pre { background:#101a14; color:#e3f2e6; border-radius:12px; padding:14px; margin:0; overflow:auto; max-height:430px; font-size:12px; line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+    .result-wrap { margin-top:14px; display:grid; gap:8px; }
+    .small-title { color:var(--muted); font-weight:900; font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+    .wide { grid-column:1/-1; }
+    .usage-numbers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+    .usage-box { background:#f5f7f2; border:1px solid var(--line); border-radius:10px; padding:10px; }
+    .usage-box strong { display:block; font-size:17px; overflow-wrap:anywhere; }
+    .usage-box span { color:var(--muted); font-size:10px; }
+    .notice { border-left:3px solid var(--gold); padding:10px 12px; background:#fbf5e9; color:#75551d; border-radius:0 9px 9px 0; font-size:12px; line-height:1.5; margin-top:12px; }
+    .error { color:var(--red); }
+    @media(max-width:940px) { .layout { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:560px) { .stats,.tool-grid { grid-template-columns:1fr; } .container { width:92vw; } .usage-numbers { grid-template-columns:1fr 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">S</div><div>Sanjeevani Clinic <div style="font-size:11px;font-weight:500;opacity:.75;margin-top:3px">FastAPI + FastMCP Gateway</div></div></div>
+  <div class="header-actions"><a class="top-link" href="/">Home</a><a class="top-link" href="/profile">My Profile</a><a class="top-link" href="/logout">Logout</a></div>
+</header>
+<main class="container">
+  <section class="intro">
+    <div><div class="eyebrow">Model Context Protocol</div><h1>MCP Operations Console</h1><p>Run approved clinic tools, inspect role access, verify database readiness, and review LLM token usage. Tool results are retrieved from the clinic database; the MCP tools do not generate answers with an LLM.</p></div>
+    <div class="role-pill">Current role: <span id="currentRole">{{ mcp_role }}</span></div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-label">MCP endpoint</div><div class="stat-value" style="font-size:17px">/mcp/</div><div class="stat-note">Streamable HTTP · Bearer token required for external clients</div></div>
+    <div class="stat"><div class="stat-label">Registered tools</div><div class="stat-value" id="toolCount">10</div><div class="stat-note">5 USER · 3 ADMIN · 2 SYSTEM</div></div>
+    <div class="stat"><div class="stat-label">Clinic database</div><div id="dbStatus" class="status warn"><span class="dot"></span>Checking…</div><div class="stat-note" id="dbNote">Verifying SELECT 1</div></div>
+    <div class="stat"><div class="stat-label">LLM / token pricing</div><div class="stat-value" id="llmStatus" style="font-size:17px">Checking…</div><div class="stat-note" id="pricingNote">Price rates are environment-configured</div></div>
+  </section>
+
+  <section class="layout">
+    <div class="panel">
+      <div class="panel-head"><h2>Role-permitted tools</h2><button class="secondary" id="refreshTools">Refresh</button></div>
+      <p style="margin-top:0;font-size:12px">Only tools allowed for your authenticated application role are listed. Access is checked again by the server on each invocation.</p>
+      <div class="tool-grid" id="toolGrid"><div class="hint">Loading tools…</div></div>
+    </div>
+
+    <div style="display:grid;gap:16px">
+      <section class="panel">
+        <div class="panel-head"><h2 id="selectedToolTitle">Tool runner</h2><span class="group USER" id="selectedGroup">SELECT</span></div>
+        <div id="toolDescription" class="hint">Select a tool on the left to see its inputs and run it.</div>
+        <form id="toolForm" class="form-grid"></form>
+        <div class="result-wrap"><div class="small-title">Tool response</div><pre id="toolResult">No tool has been invoked in this session.</pre></div>
+        <div class="hint">Mutating admin tools require appropriate server-side role access. Tool calls never use the LLM to fabricate missing database results.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>LLM usage & cost</h2><button class="secondary" id="refreshUsage">Refresh</button></div>
+        <div class="hint">Counts are recorded when the clinic chatbot receives token-usage metadata from Groq. MCP database tool calls themselves use zero LLM tokens.</div>
+        <div class="usage-numbers">
+          <div class="usage-box"><strong id="promptTokens">0</strong><span>Input tokens</span></div>
+          <div class="usage-box"><strong id="completionTokens">0</strong><span>Output tokens</span></div>
+          <div class="usage-box"><strong id="totalTokens">0</strong><span>Total tokens</span></div>
+        </div>
+        <div class="usage-box"><span>Estimated cumulative cost</span><strong id="estimatedCost">Not configured</strong><span id="pricingRates"></span></div>
+        <div class="notice">Estimated cost = (uncached input tokens × input rate + cached input tokens × cached-input rate + output tokens × output rate) / 1,000,000. Verify the selected model’s rates in the provider price schedule before using estimates for billing.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Security posture</h2><span class="status ok"><span class="dot"></span>Fail-closed</span></div>
+        <p style="font-size:12px;margin-bottom:8px">Role groups: USER tools are read-only; ADMIN adds approval and aggregate metrics tools; SUPER_ADMIN can access all tools; SYSTEM is restricted to the two health/status tools.</p>
+        <div class="hint" id="tokenConfig">Checking configured role tokens…</div>
+        <div class="hint">For external MCP clients, configure distinct bearer secrets in .env. The browser uses its authenticated FastAPI session and never receives those secrets.</div>
+      </section>
+    </div>
+  </section>
+</main>
+<script>
+  let availableTools = [];
+  let selectedTool = null;
+  const grid = document.getElementById('toolGrid');
+  const form = document.getElementById('toolForm');
+  const resultBox = document.getElementById('toolResult');
+
+  function status(el, kind, text) {
+    el.className = 'status ' + kind;
+    el.innerHTML = '<span class="dot"></span>' + text;
+  }
+
+  function pretty(value) { return JSON.stringify(value, null, 2); }
+
+  async function getJson(url, options = {}) {
+    const response = await fetch(url, { credentials: 'same-origin', ...options });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || data.message || 'Request failed (' + response.status + ')');
+    return data;
+  }
+
+  function renderTools() {
+    grid.replaceChildren();
+    if (!availableTools.length) {
+      const message = document.createElement('div'); message.className = 'hint';
+      message.textContent = 'No MCP tools are available for the current role.'; grid.append(message); return;
+    }
+    availableTools.forEach(tool => {
+      const card = document.createElement('article'); card.className = 'tool-card' + (selectedTool && selectedTool.name === tool.name ? ' selected' : '');
+      const top = document.createElement('div'); top.className = 'tool-top';
+      const name = document.createElement('div'); name.className = 'tool-name'; name.textContent = tool.name;
+      const group = document.createElement('span'); group.className = 'group ' + tool.group; group.textContent = tool.group;
+      top.append(name, group);
+      const desc = document.createElement('div'); desc.className = 'tool-description'; desc.textContent = tool.description;
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = 'Select tool'; button.addEventListener('click', () => selectTool(tool));
+      card.append(top, desc, button); grid.append(card);
+    });
+  }
+
+  function selectTool(tool) {
+    selectedTool = tool; renderTools();
+    document.getElementById('selectedToolTitle').textContent = tool.name;
+    const group = document.getElementById('selectedGroup'); group.className = 'group ' + tool.group; group.textContent = tool.group;
+    document.getElementById('toolDescription').textContent = tool.description;
+    form.replaceChildren();
+    (tool.inputs || []).forEach(spec => {
+      const wrapper = document.createElement('div');
+      const label = document.createElement('label'); label.htmlFor = 'field-' + spec.name; label.textContent = spec.name + (spec.required ? ' *' : '');
+      const input = document.createElement('input'); input.id = 'field-' + spec.name; input.name = spec.name; input.type = spec.type || 'text'; input.required = !!spec.required; input.placeholder = spec.placeholder || '';
+      wrapper.append(label, input); form.append(wrapper);
+    });
+    const button = document.createElement('button'); button.type = 'submit'; button.textContent = 'Run tool'; button.id = 'runTool'; form.append(button);
+    if (!(tool.inputs || []).length) { const label = document.createElement('div'); label.className = 'hint'; label.textContent = 'This tool does not require input.'; form.prepend(label); }
+    resultBox.textContent = 'Ready to run ' + tool.name + '.';
+  }
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!selectedTool) return;
+    const argumentsObject = {};
+    for (const spec of (selectedTool.inputs || [])) {
+      const field = form.elements.namedItem(spec.name);
+      const raw = field ? field.value.trim() : '';
+      if (spec.required && !raw) { field?.focus(); return; }
+      if (raw === '') continue;
+      argumentsObject[spec.name] = spec.type === 'number' ? Number(raw) : raw;
+    }
+    if (selectedTool.name === 'admin_approve_doctor' && !window.confirm('Approve the doctor account ' + argumentsObject.email + '?')) return;
+    const runButton = document.getElementById('runTool');
+    runButton.disabled = true; runButton.textContent = 'Running…'; resultBox.textContent = 'Executing tool…';
+    try {
+      const result = await getJson('/api/mcp/invoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tool: selectedTool.name, arguments: argumentsObject }) });
+      resultBox.textContent = pretty(result);
+    } catch (error) {
+      resultBox.textContent = pretty({ ok: false, error: error.message });
+    } finally {
+      runButton.disabled = false; runButton.textContent = 'Run tool';
+      loadStatus();
+    }
+  });
+
+  async function loadTools() {
+    try {
+      const data = await getJson('/api/mcp/tools');
+      availableTools = data.tools || [];
+      document.getElementById('currentRole').textContent = data.role || 'UNASSIGNED';
+      document.getElementById('toolCount').textContent = '10 (' + availableTools.length + ' accessible)';
+      renderTools();
+    } catch (error) {
+      grid.textContent = error.message;
+    }
+  }
+
+  async function loadStatus() {
+    try {
+      const data = await getJson('/api/mcp/status');
+      if (data.database && data.database.available) {
+        status(document.getElementById('dbStatus'), 'ok', 'Reachable');
+        document.getElementById('dbNote').textContent = 'SELECT 1 succeeded';
+      } else {
+        status(document.getElementById('dbStatus'), 'bad', 'Unavailable');
+        document.getElementById('dbNote').textContent = 'AI answers are blocked while DB is unavailable';
+      }
+      document.getElementById('llmStatus').textContent = data.llm_configured ? data.llm_model : 'Not configured';
+      document.getElementById('pricingNote').textContent = data.pricing_configured ? 'Per-million-token rates configured' : 'Set input/output rates in .env';
+      const tokenRoles = data.external_role_tokens_configured || [];
+      document.getElementById('tokenConfig').textContent = tokenRoles.length ? 'External MCP tokens configured for: ' + tokenRoles.join(', ') : 'No external MCP bearer tokens are configured yet. Generate them with scripts/generate_mcp_tokens.py and add them to .env.';
+      document.getElementById('pricingRates').textContent = 'Input: ' + (data.pricing_rates.input_usd_per_million_tokens ?? 'not set') + ' · Cached input: ' + (data.pricing_rates.cached_input_usd_per_million_tokens ?? 'not set') + ' · Output: ' + (data.pricing_rates.output_usd_per_million_tokens ?? 'not set') + ' USD per 1M tokens';
+    } catch (error) {
+      status(document.getElementById('dbStatus'), 'bad', 'Status unavailable');
+      document.getElementById('dbNote').textContent = error.message;
+    }
+  }
+
+  async function loadUsage() {
+    try {
+      const data = await getJson('/api/mcp/usage');
+      document.getElementById('promptTokens').textContent = Number(data.prompt_tokens_total || 0).toLocaleString();
+      document.getElementById('completionTokens').textContent = Number(data.completion_tokens_total || 0).toLocaleString();
+      document.getElementById('totalTokens').textContent = Number(data.total_tokens || 0).toLocaleString();
+      document.getElementById('estimatedCost').textContent = data.pricing_configured ? '$' + Number(data.estimated_cost_usd || 0).toFixed(6) : (Number(data.priced_requests || 0) > 0 ? 'Partial: $' + Number(data.estimated_cost_usd || 0).toFixed(6) : 'Not configured');
+      const rates = data.pricing_rates || {};
+      document.getElementById('pricingRates').textContent = 'Input: ' + (rates.input_usd_per_million_tokens ?? 'not set') + ' · Cached input: ' + (rates.cached_input_usd_per_million_tokens ?? 'not set') + ' · Output: ' + (rates.output_usd_per_million_tokens ?? 'not set') + ' USD per 1M tokens';
+    } catch (error) {
+      document.getElementById('estimatedCost').textContent = 'Unavailable';
+    }
+  }
+
+  document.getElementById('refreshTools').addEventListener('click', loadTools);
+  document.getElementById('refreshUsage').addEventListener('click', loadUsage);
+  loadTools(); loadStatus(); loadUsage();
+</script>
+</body>
+</html>

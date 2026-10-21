@@ -1,0 +1,17 @@
+# Secrets and local environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Deployment / runtime
+.vercel/
+logs/
+.pytest_cache/
+backup/*.sql
+
+# Generated local credentials / local test outputs
+.env.*.local

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pharmacy Order | Sanjeevani Clinic</title>
+<style>body{font-family:Arial,sans-serif;background:#f7f8f5;color:#20312e;margin:0;padding:30px}.card{max-width:760px;margin:30px auto;background:#fff;border:1px solid #e6ece9;border-radius:16px;padding:28px;box-shadow:0 4px 15px #0f4c4510}h1{margin-top:0}.message{padding:12px;background:#f0f8f5;border-radius:8px;color:#315e55;margin:18px 0}.row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;border-bottom:1px solid #edf1ef}.muted{color:#71807c;font-size:14px}.total{font-weight:bold;font-size:19px}.btn{display:inline-block;margin:18px 10px 0 0;padding:12px 16px;background:#0f4c45;color:#fff;text-decoration:none;border-radius:8px}.btn.secondary{background:#e7f1ee;color:#0f4c45}</style>
+</head><body><main class="card">
+<h1>Pharmacy order #{{ order["order_id"] }}</h1>
+{% if payment_message %}<div class="message">{{ payment_message }}</div>{% endif %}
+<div class="row"><span class="muted">Order status</span><strong>{{ order["order_status"] }}</strong></div>
+<div class="row"><span class="muted">Payment method</span><strong>{{ order["payment_method"] }}</strong></div>
+<div class="row"><span class="muted">Payment status</span><strong>{{ order["payment_status"] }}</strong></div>
+<div class="row"><span class="muted">Delivery</span><strong>{{ order["delivery_method"]|replace("_", " ") }}</strong></div>
+{% if order["address"] %}<div class="row"><span class="muted">Address</span><strong>{{ order["address"] }}</strong></div>{% endif %}
+<h2>Items</h2>
+{% for item in order["items"] %}<div class="row"><span>{{ item["medicine_name"] }} <span class="muted">× {{ item["quantity"] }}</span></span><strong>₹{{ "%.2f"|format(item["item_total"]|float) }}</strong></div>{% endfor %}
+<div class="row total"><span>Total</span><span>₹{{ "%.2f"|format(order["total_amount"]|float) }}</span></div>
+{% if order["payment_method"] == "ONLINE" and order["payment_status"] != "PAID" %}<a class="btn" href="/pharmacy/checkout">Return to pharmacy</a>{% endif %}
+<a class="btn secondary" href="/pharmacy">Continue shopping</a><a class="btn secondary" href="/profile">My profile</a>
+</main></body></html>

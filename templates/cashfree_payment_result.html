@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Payment Status | Sanjeevani
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <style>
+
+        /* =====================================================
+           PAYMENT RESULT
+        ===================================================== */
+
+        .result-page {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+
+        .result-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: 24px;
+
+            box-shadow: var(--shadow);
+
+            padding: 45px;
+
+            text-align: center;
+        }
+
+
+        /* =====================================================
+           STATUS ICON
+        ===================================================== */
+
+        .result-icon {
+            width: 82px;
+            height: 82px;
+
+            margin: 0 auto 20px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 34px;
+
+            font-weight: 800;
+        }
+
+
+        .result-success {
+            background: #e1f5ed;
+
+            color: #16815f;
+        }
+
+
+        .result-failed {
+            background: #fff0ed;
+
+            color: #c45b49;
+        }
+
+
+        .result-pending {
+            background: #fff6df;
+
+            color: #a97818;
+        }
+
+
+        /* =====================================================
+           TITLE
+        ===================================================== */
+
+        .result-card h1 {
+            font-size: 29px;
+
+            font-weight: 800;
+
+            margin-bottom: 10px;
+        }
+
+
+        .result-message {
+            max-width: 600px;
+
+            margin: 0 auto 30px;
+
+            color: var(--text-light);
+
+            font-size: 13px;
+
+            line-height: 1.7;
+        }
+
+
+        /* =====================================================
+           APPOINTMENT DETAILS
+        ===================================================== */
+
+        .appointment-result-box {
+            max-width: 650px;
+
+            margin: 0 auto 30px;
+
+            background: #f7faf9;
+
+            border: 1px solid var(--border);
+
+            border-radius: 16px;
+
+            padding: 22px;
+
+            text-align: left;
+        }
+
+
+        .appointment-result-header {
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+
+            padding-bottom: 17px;
+
+            margin-bottom: 17px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+
+        .doctor-result-avatar {
+            width: 52px;
+            height: 52px;
+
+            flex-shrink: 0;
+
+            border-radius: 14px;
+
+            background: #dff3ee;
+
+            color: var(--primary);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-weight: 800;
+
+            font-size: 19px;
+        }
+
+
+        .doctor-result-info h2 {
+            font-size: 16px;
+
+            margin-bottom: 4px;
+        }
+
+
+        .doctor-result-info span {
+            color: var(--primary);
+
+            font-size: 10px;
+
+            font-weight: 700;
+        }
+
+
+        .result-details {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 14px;
+        }
+
+
+        .result-detail {
+            padding: 13px;
+
+            background: white;
+
+            border-radius: 10px;
+
+            border: 1px solid #edf1ef;
+        }
+
+
+        .result-detail span {
+            display: block;
+
+            color: var(--text-light);
+
+            font-size: 9px;
+
+            margin-bottom: 5px;
+        }
+
+
+        .result-detail strong {
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           PAYMENT STATUS
+        ===================================================== */
+
+        .payment-status-row {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .status-label {
+            color: var(--text-light);
+
+            font-size: 11px;
+        }
+
+
+        .status-badge {
+            display: inline-flex;
+
+            align-items: center;
+
+            padding: 7px 13px;
+
+            border-radius: 20px;
+
+            font-size: 10px;
+
+            font-weight: 800;
+        }
+
+
+        .status-paid {
+            background: #e1f5ed;
+
+            color: #16815f;
+        }
+
+
+        .status-failed {
+            background: #fff0ed;
+
+            color: #b34f40;
+        }
+
+
+        .status-pending {
+            background: #fff6df;
+
+            color: #987016;
+        }
+
+
+        /* =====================================================
+           ACTION BUTTONS
+        ===================================================== */
+
+        .result-actions {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .result-primary-btn,
+        .result-secondary-btn {
+            min-width: 170px;
+
+            padding: 12px 20px;
+
+            border-radius: 10px;
+
+            font-family: inherit;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            text-decoration: none;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+
+        .result-primary-btn {
+            background: var(--primary);
+
+            color: white;
+        }
+
+
+        .result-primary-btn:hover {
+            background: var(--primary-dark);
+        }
+
+
+        .result-secondary-btn {
+            background: white;
+
+            color: var(--primary);
+
+            border: 1px solid var(--border);
+        }
+
+
+        .result-secondary-btn:hover {
+            background: #f4f8f6;
+        }
+
+
+        /* =====================================================
+           SECURITY NOTE
+        ===================================================== */
+
+        .result-note {
+            margin-top: 25px;
+
+            color: var(--text-light);
+
+            font-size: 9px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 600px) {
+
+            .result-card {
+                padding: 28px 18px;
+            }
+
+
+            .result-card h1 {
+                font-size: 24px;
+            }
+
+
+            .result-details {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+
+    <nav class="sidebar-nav">
+
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                AI Health Chat
+            </span>
+
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Find Doctor
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item active"
+        >
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Appointments
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                □
+            </span>
+
+            <span>
+                My Profile
+            </span>
+
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Pharmacy
+            </span>
+
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ◌
+            </span>
+
+            <span>
+                Health Screening
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ?
+            </span>
+
+            <span>
+                Help & Support
+            </span>
+
+        </a>
+
+
+    </nav>
+
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+
+            <span>
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
+
+    <header class="topbar">
+
+
+        <div class="search-box">
+
+            <span>
+                ⌕
+            </span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+
+                    {{ user.full_name[0] | upper }}
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+
+        </div>
+
+
+    </header>
+
+
+
+    <!-- =================================================
+         RESULT CONTENT
+    ================================================== -->
+
+    <section class="dashboard-container result-page">
+
+
+        <div class="result-card">
+
+
+            <!-- =================================================
+                 STATUS ICON
+            ================================================== -->
+
+            {% if payment_status == "PAID" %}
+
+                <div class="result-icon result-success">
+                    ✓
+                </div>
+
+                <h1>
+                    Payment Successful
+                </h1>
+
+            {% elif payment_status == "FAILED" %}
+
+                <div class="result-icon result-failed">
+                    !
+                </div>
+
+                <h1>
+                    Payment Failed
+                </h1>
+
+            {% else %}
+
+                <div class="result-icon result-pending">
+                    …
+                </div>
+
+                <h1>
+                    Payment Pending
+                </h1>
+
+            {% endif %}
+
+
+
+            <!-- =================================================
+                 MESSAGE
+            ================================================== -->
+
+            <p class="result-message">
+
+                {{ message }}
+
+            </p>
+
+
+
+            {% if appointment %}
+
+
+                <!-- =================================================
+                     APPOINTMENT
+                ================================================== -->
+
+                <div class="appointment-result-box">
+
+
+                    <div class="appointment-result-header">
+
+
+                        <div class="doctor-result-avatar">
+
+                            {{ appointment["doctor_name"][0] | upper }}
+
+                        </div>
+
+
+                        <div class="doctor-result-info">
+
+                            <h2>
+                                {{ appointment["doctor_name"] }}
+                            </h2>
+
+                            <span>
+                                {{ appointment["specialization"] }}
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="result-details">
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                APPOINTMENT ID
+                            </span>
+
+                            <strong>
+                                #{{ appointment["appointment_id"] }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                PATIENT
+                            </span>
+
+                            <strong>
+                                {{ appointment["patient_name"] }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                DATE
+                            </span>
+
+                            <strong>
+                                {{ appointment["appointment_date"] }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                TIME
+                            </span>
+
+                            <strong>
+                                {{ appointment["appointment_time"] }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                CONSULTATION FEE
+                            </span>
+
+                            <strong>
+                                ₹{{ appointment["consultation_fee"] }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="result-detail">
+
+                            <span>
+                                PAYMENT METHOD
+                            </span>
+
+                            <strong>
+                                {{ appointment["payment_method"] }}
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     PAYMENT STATUS
+                ================================================== -->
+
+                <div class="payment-status-row">
+
+                    <span class="status-label">
+                        Payment Status:
+                    </span>
+
+
+                    {% if payment_status == "PAID" %}
+
+                        <span class="status-badge status-paid">
+                            PAID
+                        </span>
+
+                    {% elif payment_status == "FAILED" %}
+
+                        <span class="status-badge status-failed">
+                            FAILED
+                        </span>
+
+                    {% else %}
+
+                        <span class="status-badge status-pending">
+                            PENDING
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+            {% endif %}
+
+
+
+            <!-- =================================================
+                 ACTIONS
+            ================================================== -->
+
+            <div class="result-actions">
+
+
+                <a
+                    href="/profile#appointments"
+                    class="result-primary-btn"
+                >
+                    View My Appointments
+                </a>
+
+
+                <a
+                    href="/"
+                    class="result-secondary-btn"
+                >
+                    Back to Dashboard
+                </a>
+
+
+            </div>
+
+
+
+            <div class="result-note">
+
+                🔒 Payment status is verified through
+                the Cashfree payment gateway.
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+
+</main>
+
+
+
+<script>
+
+function openChatbot() {
+
+    /*
+       Connect shared chatbot component here.
+    */
+
+}
+
+</script>
+
+
+</body>
+
+</html>
