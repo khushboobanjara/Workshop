@@ -70,6 +70,13 @@ class Settings(BaseSettings):
     chat_temperature: float = 0.1
     chat_fact_check: bool = True                   # second model call that checks every statement against the records (more accurate, slower)
     chat_rate_limit_per_minute: int = 20           # questions per user per minute
+    # Groq's free tier caps TOKENS per minute per model (see your console's Limits page). A 429 carries "try again in N s":
+    # wait that long (up to the cap) and retry instead of failing the question. Leaner prompts keep a question under the cap.
+    chat_rate_limit_retries: int = 2
+    chat_rate_limit_max_wait_seconds: float = 12.0
+    chat_hardcode: bool = True                     # answer what fixed rules can (greetings, counts, lists, document quotes) WITHOUT the model
+    chat_history_turns: int = 6                    # earlier messages re-sent with each question (each one costs tokens every call)
+    chat_history_chars: int = 500                  # ... and how much of each one
 
     # Retrieval-augmented generation over uploaded documents (policies, contracts, procedures). See docs/RAG.md. Off by default.
     # Everything here is free and local: Sentence Transformers embeddings run on this machine, FAISS is an in-process library,
@@ -94,6 +101,8 @@ class Settings(BaseSettings):
     rag_max_extracted_chars: int = 2_000_000
     rag_min_support: float = 0.40                   # share of an answer sentence's content words that must occur in the retrieved/returned data (0 = off)
     rag_search_rate_limit_per_minute: int = 30      # document searches per user per minute (chat and /rag/search together)
+    rag_answer_mode: str = "auto"                   # auto = quote the documents when a sentence answers the question, else one model call; llm = always the model
+    rag_direct_min_overlap: float = 0.5             # share of the question's content words a quoted sentence must cover
     rag_preload: bool = False                       # load the embedding model at start-up instead of on first use
 
     model_config = {"env_prefix": "OPSPILOT_", "env_file": os.environ.get("OPSPILOT_ENV_FILE", ".env"), "extra": "ignore"}

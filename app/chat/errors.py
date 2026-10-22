@@ -18,5 +18,7 @@ PUBLIC_MESSAGES = {
 DEFAULT_PUBLIC_MESSAGE = "The AI provider is unavailable right now. Try again shortly."
 
 
-def public_message(code: str) -> str:
+def public_message(code: str, retry_after: int | None = None) -> str:
+    if code == "rate_limited" and retry_after:
+        return f"The AI provider is rate-limiting requests (its per-minute limit was reached). Try again in about {retry_after} seconds."
     return PUBLIC_MESSAGES.get(code, DEFAULT_PUBLIC_MESSAGE)

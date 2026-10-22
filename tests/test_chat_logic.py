@@ -411,3 +411,61 @@ def test_the_fact_check_is_skipped_for_greetings_and_when_disabled():
 def test_the_figure_check_runs_first_so_the_fact_checker_is_not_called_for_invented_numbers():
     r, llm, _ = judged([tc("get_invoice", {"invoice_id": 12}), say("Total $9,999.99"), say("Total USD 1,250.50"), JUDGE_OK])
     assert r.verified and [q["tools"] is None for q in llm.requests] == [False, False, False, True]
+
+
+# ---------------------------------------------------------------- Groq per-minute limits: wait and retry
+GROQ_429 = ("Rate limit reached for model `m` in organization `org_x` service tier `on_demand` on tokens per minute (TPM): "
+            "Limit 8000, Used 5008, Requested 3420. Please try again in {wait}. Need more tokens? Upgrade to Dev Tier today")
+
+
+def limited(wait: str, **headers):
+    return httpx.Response(429, headers=headers, json={"error": {"message": GROQ_429.format(wait=wait), "code": "rate_limit_exceeded"}})
+
+
+@pytest.mark.parametrize("response,expected", [
+    (limited("3.21s"), 3.21), (limited("850ms"), 0.85), (limited("1m5.2s"), 65.2), (limited("2s", **{"retry-after": "7"}), 7.0),
+    (httpx.Response(429, headers={"retry-after": "1.5"}), 1.5), (httpx.Response(429), None), (httpx.Response(429, json={"error": {"message": "slow down"}}), None)])
+def test_the_wait_groq_asks_for_is_understood(response, expected):
+    from app.chat.groq_client import retry_wait_seconds
+    got = retry_wait_seconds(response)
+    assert (got is None and expected is None) or abs(got - expected) < 1e-6
+
+
+def test_a_short_rate_limit_is_waited_out_and_the_question_still_succeeds():
+    replies, waits = iter([limited("3.21s"), limited("1.5s"), httpx.Response(200, json=ok_body("done"))]), []
+    c = client(lambda req: next(replies), rate_limit_retries=2, sleep=waits.append)
+    assert c.complete([{"role": "user", "content": "x"}])["content"] == "done"
+    assert waits == [3.21 + 0.25, 1.5 + 0.25]
+
+
+def test_a_rate_limit_that_lasts_too_long_is_reported_with_the_wait():
+    calls, waits = [], []
+    def handler(req):
+        calls.append(1)
+        return limited("45s")
+    with pytest.raises(GroqError) as e:
+        client(handler, rate_limit_retries=2, max_wait=12.0, sleep=waits.append).complete([{"role": "user", "content": "x"}])
+    assert e.value.code == "rate_limited" and e.value.retry_after == 45 and len(calls) == 1 and waits == []
+    from app.chat.errors import public_message
+    assert "45 seconds" in public_message("rate_limited", 45) and "org_x" not in public_message("rate_limited", 45)
+
+
+def test_retries_are_bounded_and_off_by_default():
+    calls = []
+    def handler(req):
+        calls.append(1)
+        return limited("1s")
+    with pytest.raises(GroqError):
+        client(handler, rate_limit_retries=2, sleep=lambda s: None).complete([{"role": "user", "content": "x"}])
+    assert len(calls) == 3                                                     # one try + two retries, then the error
+    calls.clear()
+    with pytest.raises(GroqError):
+        client(handler).complete([{"role": "user", "content": "x"}])           # default client (and every existing test): no waiting
+    assert len(calls) == 1
+
+
+def test_history_is_trimmed_per_message_when_the_route_asks_for_it():
+    hist = [{"role": "user" if i % 2 == 0 else "assistant", "content": "x" * 3000} for i in range(10)]
+    _, llm, _ = run([say("hello")], msg="hi", history=hist, limits=service.Limits(fact_check=False, history_turns=4, history_chars=300))
+    sent = llm.requests[0]["messages"]
+    assert len(sent) == 1 + 4 + 1 and all(len(m["content"]) <= 320 for m in sent[1:-1])

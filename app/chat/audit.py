@@ -32,6 +32,8 @@ def record_turn(*, principal, outcome: str, question: str, model: str, result=No
                         "citations": [c["ref"] for c in result.citations]})
         if result.failed_checks:                                      # which check rejected an attempt (kinds only, no text)
             details["failed_checks"] = list(result.failed_checks)
+    if result is not None and getattr(result, "route", "llm") != "llm":    # answered without (or with a single) model call
+        details["route"] = result.route
     if error_code:
         details["error_code"] = error_code
     if error_detail:

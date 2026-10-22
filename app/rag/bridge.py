@@ -33,7 +33,7 @@ DESCRIPTION = ("Searches the company's uploaded documents (policies, contracts, 
 class SearchDocumentsArgs(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     query: str = Field(min_length=3, max_length=300, description="What to look for, in plain words, e.g. 'approval limit for new vendors'.")
-    limit: int = Field(5, ge=1, le=MAX_TOP_K, description="Maximum number of passages to return.")
+    limit: int = Field(4, ge=1, le=MAX_TOP_K, description="Maximum number of passages to return.")
 
 
 class DocumentBridge:

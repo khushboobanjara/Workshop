@@ -54,7 +54,8 @@ class ChatIn(BaseModel):
 def make_client() -> GroqClient:
     return GroqClient(api_key=settings.groq_api_key.get_secret_value(), model=settings.groq_model,
                       base_url=settings.groq_base_url, timeout=settings.chat_timeout_seconds,
-                      temperature=settings.chat_temperature)
+                      temperature=settings.chat_temperature, rate_limit_retries=settings.chat_rate_limit_retries,
+                      max_wait=settings.chat_rate_limit_max_wait_seconds)
 
 
 def _ready() -> bool:
@@ -117,12 +118,15 @@ def chat(payload: ChatIn, principal: Principal = Depends(ANY)):
                 rag = None                                                # documents unavailable: answer from MCP data only
         result = service.answer(principal, payload.message, [t.model_dump() for t in payload.history],
                                 llm=make_client(), server=server, role_label=label, rag=rag,
-                                limits=service.Limits(fact_check=settings.chat_fact_check, rag_min_support=settings.rag_min_support))
+                                limits=service.Limits(fact_check=settings.chat_fact_check, rag_min_support=settings.rag_min_support,
+                                                      history_turns=settings.chat_history_turns, history_chars=settings.chat_history_chars,
+                                                      hardcode=settings.chat_hardcode, answer_mode=settings.rag_answer_mode,
+                                                      direct_min_overlap=settings.rag_direct_min_overlap))
     except GroqError as exc:
         logger.warning("Groq request failed: code=%s detail=%s", exc.code, exc.detail)       # visible in the server console
         _audit_quietly(principal, "rate_limited" if exc.code == "rate_limited" else "failed", payload.message, model,
                        error_code=exc.code, error_detail=exc.detail, started=started)
-        message = public_message(exc.code)
+        message = public_message(exc.code, exc.retry_after)
         if principal.role == "admin" and exc.detail:                          # admins get the provider's reason; others do not
             message += f" [admin details: {exc.detail}]"
         headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None

@@ -81,6 +81,10 @@ something that is fine (the answer is then repaired or withheld). Neither replac
 tools that ran and the record ids (reviewers/admins can click an id to open its audit trail). The fact check costs one extra
 model call per answer; set `OPSPILOT_CHAT_FACT_CHECK=false` to turn it off if speed or the provider's rate limit matters more.
 
+## Fixed rules first, the model last
+
+Many questions never reach the model: greetings, counts ("how many invoices are pending?"), lists ("invoices from Acme", "top vendors", "show the audit log"), role refusals, and document questions answered by quoting. The server calls the same read-only MCP tools and fills a template with their values. See [RAG.md](RAG.md#when-the-ai-model-is-and-is-not-used) for the full table; `OPSPILOT_CHAT_HARDCODE=false` restores the model-for-everything behaviour.
+
 ## Documents (RAG)
 
 With `OPSPILOT_RAG_ENABLED=true` the model also gets a `search_documents` tool next to the MCP tools, so it can answer from uploaded
@@ -98,6 +102,8 @@ documents cannot answer gets a fixed "not in the documents" reply instead of the
 * View: dashboard → Audit Logs, `GET /audit?stage=chat`, or ask the assistant as an admin.
 
 ## Troubleshooting
+
+**"HTTP 429 ... tokens per minute"**: Groq's free tier limits tokens per minute per model. The assistant already waits out short limits and retries; for the rest, start a **New chat** (history costs tokens), turn off `OPSPILOT_CHAT_FACT_CHECK`, or pick a model with higher limits. Details in [RAG.md](RAG.md#groqs-free-tier-token-limit-http-429--tokens-per-minute).
 
 | You see | Meaning |
 | --- | --- |

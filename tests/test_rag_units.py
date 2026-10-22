@@ -161,7 +161,7 @@ def test_headings_become_sections_and_stay_with_their_text():
     joined = "\n".join(c.text for c in chunks)
     assert "Approval limits" in joined and "Payment terms" in joined
     by_text = {("two approvers" in c.text): c for c in chunks}
-    assert by_text[True].section in ("1. Approval limits", "2. Payment terms", "Policy")
+    assert any(h in by_text[True].section for h in ("1. Approval limits", "2. Payment terms", "Policy"))
     assert heading_of("1. Submit invoices within 30 days.") is None and heading_of("3.2 Approval limits") == "3.2 Approval limits"
     assert heading_of("PAYMENT TERMS") == "PAYMENT TERMS" and heading_of("## Scope") == "Scope" and heading_of("Hello there.") is None
 
@@ -314,3 +314,18 @@ def test_the_mysql_ddl_for_the_new_tables_compiles():
     for model in (RagDocument, RagChunk):
         ddl = str(CreateTable(model.__table__).compile(dialect=mysql.dialect()))
         assert "utf8mb4" in ddl.lower() or "CREATE TABLE" in ddl
+
+
+def test_a_chunk_that_spans_sections_is_labelled_with_all_of_them():
+    md = "# Policy\n\n## 1. Purpose\n\nThis policy sets how invoices are paid and who approves them.\n\n## 2. Approval limits\n\nInvoices up to 2,000 USD may be approved by a single reviewer."
+    chunks = chunk_segments([Segment(md)], size=900, overlap=0, min_chars=10)
+    assert len(chunks) == 1
+    assert "1. Purpose" in chunks[0].section and "2. Approval limits" in chunks[0].section          # not just the first heading
+    assert len(chunks[0].section) <= 200
+
+
+def test_overlap_still_follows_a_section_that_continues_across_chunks():
+    long_section = "## 5. Rules\n\n" + " ".join(f"Sentence number {i} says something about the rules here." for i in range(60))
+    chunks = chunk_segments([Segment(long_section)], size=400, overlap=80)
+    assert len(chunks) > 2 and all("5. Rules" in c.section for c in chunks)
+    assert set(chunks[0].text.split()) & set(chunks[1].text.split())

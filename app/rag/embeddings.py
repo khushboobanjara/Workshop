@@ -60,7 +60,8 @@ class SentenceTransformerEmbedder:
             try:
                 kwargs = {"local_files_only": True} if self.local_files_only else {}
                 self._model = SentenceTransformer(self.name, device="cpu", **kwargs)
-                self._dim = int(self._model.get_sentence_embedding_dimension())
+                size = getattr(self._model, "get_embedding_dimension", None) or self._model.get_sentence_embedding_dimension   # renamed in newer versions
+                self._dim = int(size())
             except Exception as exc:
                 hint = " (offline mode is on: the model must already be cached)" if self.local_files_only else ""
                 raise EmbedderUnavailable(f"The embedding model '{self.name}' could not be loaded{hint}: {type(exc).__name__}") from None

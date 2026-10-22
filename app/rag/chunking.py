@@ -182,16 +182,19 @@ def chunk_segments(segments: list[Segment], size: int = 900, overlap: int = 150,
         for piece in _split_long(u.text, size):
             units.append(_Unit(piece, u.page, u.section, u.heading))
 
-    chunks: list[tuple[str, int | None, str | None, bool]] = []      # body, page, section, ended_by_size
+    # (text, page, label, ended_by_size, first section, last section). The label lists EVERY section the chunk touches, so a
+    # chunk that spans "1. Purpose" and "2. Approval limits" is not cited as just "1. Purpose".
+    chunks: list[tuple[str, int | None, str | None, bool, str | None, str | None]] = []
     body: list[str] = []
+    secs: list[str] = []
     body_len, page, section = 0, None, None
 
     def emit(by_size: bool):
-        nonlocal body, body_len
+        nonlocal body, body_len, secs
         text = "\n\n".join(body).strip()
         if text:
-            chunks.append((text, page, section, by_size))
-        body, body_len = [], 0
+            chunks.append((text, page, (" / ".join(secs)[:200] or None), by_size, secs[0] if secs else None, secs[-1] if secs else None))
+        body, body_len, secs = [], 0, []
 
     for u in units:
         sep = 2 if body else 0
@@ -203,23 +206,25 @@ def chunk_segments(segments: list[Segment], size: int = 900, overlap: int = 150,
             page, section = u.page, u.section
         body.append(u.text)
         body_len += sep + len(u.text)
+        if u.section and u.section not in secs:
+            secs.append(u.section)
     if body:
         emit(False)
 
     # tiny trailing/leading chunks are folded into a neighbour instead of being indexed as noise
     folded: list[list] = []
-    for text, pg, sec, by_size in chunks:
+    for text, pg, label, by_size, first, last in chunks:
         if folded and len(text) < min_chars:
             folded[-1][0] += "\n\n" + text
             continue
-        folded.append([text, pg, sec, by_size])
+        folded.append([text, pg, label, by_size, first, last])
 
     out: list[Chunk] = []
-    for i, (text, pg, sec, _) in enumerate(folded):
+    for i, (text, pg, label, _, first, _last) in enumerate(folded):
         prefix = ""
-        if i > 0 and overlap and folded[i - 1][3] and folded[i - 1][2] == sec:
+        if i > 0 and overlap and folded[i - 1][3] and folded[i - 1][5] == first:
             prefix = _overlap_tail(folded[i - 1][0], overlap)
-        out.append(Chunk(len(out) + 1, (prefix + "\n" + text) if prefix else text, pg, sec))
+        out.append(Chunk(len(out) + 1, (prefix + "\n" + text) if prefix else text, pg, label))
     return out
 
 

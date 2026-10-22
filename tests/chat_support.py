@@ -68,6 +68,7 @@ def chat(world, monkeypatch):
     monkeypatch.setattr(settings, "groq_model", "test-model")
     monkeypatch.setattr(settings, "chat_rate_limit_per_minute", 1000)
     monkeypatch.setattr(settings, "chat_fact_check", False)       # tests that need the fact checker switch it on and script its verdicts
+    monkeypatch.setattr(settings, "chat_hardcode", False)         # the fixed-rules layer has its own tests (test_chat_rules.py); older tests script the model
     chat_routes.chat_limiter.hits.clear()
     monkeypatch.setattr(chat_routes, "make_client", lambda: GroqClient(GROQ_KEY, "test-model", transport=httpx.MockTransport(fake)))
     return ChatWorld(world, fake)

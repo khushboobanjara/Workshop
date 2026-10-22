@@ -37,7 +37,7 @@ from app.security import WriteRateLimiter
 logger = logging.getLogger("opspilot.rag")
 MAX_TOP_K = 8
 MAX_QUERY_CHARS = 300
-PASSAGE_CHARS = 1_200
+PASSAGE_CHARS = 1_000
 LEXICAL_WEIGHT = 0.10                     # ranking bonus for query words found verbatim; the relevance FLOOR uses the cosine only
 search_limiter = WriteRateLimiter()
 

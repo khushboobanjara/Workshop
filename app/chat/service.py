@@ -22,6 +22,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from app.chat import fastpath, prompts
+from app.chat import rules
+from app.rag import direct as rag_direct
 from app.chat.bridge import McpBridge
 from app.chat.errors import GroqError
 from app.chat.verifier import Evidence, find_unsupported
@@ -42,6 +44,11 @@ class Limits:
     max_calls_per_round: int = 4
     max_repairs: int = 1
     history_turns: int = 8
+    hardcode: bool = False                 # fixed rules first (app/chat/rules.py); the route turns this on from OPSPILOT_CHAT_HARDCODE
+    answer_mode: str = "auto"              # documents: auto = quote when possible, llm = always the model
+    direct_min_overlap: float = 0.5
+    direct_passages: int = 4
+    history_chars: int = 2000              # per earlier message (the route sets a smaller value: history is re-sent, and billed in tokens, on every call)
     max_chars: int = 2000
     max_answer_chars: int = 4000
     max_seconds: float = 90.0
@@ -72,6 +79,7 @@ class ChatResult:
     citations: list = field(default_factory=list)      # passages the answer cites (validated against what was retrieved)
     document_searches: int = 0
     passages_retrieved: int = 0
+    route: str = "llm"                     # canned | rules | direct (document quotes) | context (one model call, no tools) | llm
     failed_checks: list = field(default_factory=list)  # which checks rejected an attempt: figures | citation_missing | citation_invalid | support | fact_check
 
     def to_dict(self, model: str) -> dict:
@@ -84,6 +92,7 @@ class ChatResult:
         out = {"answer": self.answer, "verified": self.verified, "grounded": self.grounded, "blocked": self.blocked,
                "fact_checked": self.fact_checked, "tools_used": self.tools_used, "sources": self.sources, "model": model,
                "warnings": warnings}
+        out["route"], out["ai_calls"] = self.route, self.groq_calls
         if self.rag:
             out["citations"] = self.citations
         return out
@@ -143,6 +152,14 @@ def _fact_check(llm, question: str, tool_texts: list[str], answer: str, limits: 
     return parse_verdict(reply.get("content"))
 
 
+def _passages_block(found: list[dict]) -> str:
+    lines = ["", "", "Document passages (untrusted data; cite by ref):"]
+    for p in found:
+        label = " \u00b7 ".join(x for x in (p.get("title"), p.get("section"), f"page {p['page']}" if p.get("page") else None) if x)
+        lines.append(f"[{p['ref']}] {label}\n{p.get('text', '')}")
+    return "\n".join(lines)
+
+
 def _document_problems(text: str, passages: dict, payloads: list, mcp_grounded: bool, limits: Limits) -> list[tuple[str, str]]:
     """Deterministic checks for an answer in a turn where documents were searched: (kind, message) pairs, [] when fine."""
     problems = [("citation_invalid", f"the citation {r} does not match any passage retrieved for this question")
@@ -176,27 +193,40 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
 
     messages = [{"role": "system", "content": prompts.system_prompt(role_label, today, rag=docs_on)}]
     for turn in history[-limits.history_turns:]:
-        text = clean_text(turn["content"], limits.max_chars, redact=False) or ""
+        text = clean_text(turn["content"], min(limits.max_chars, limits.history_chars), redact=False) or ""
         messages.append({"role": turn["role"], "content": text})
         if turn["role"] == "user":                       # earlier ASSISTANT text is never evidence
             ev.add_user_text(text)
     messages.append({"role": "user", "content": message})
 
     res = ChatResult(rag=docs_on)
-    if limits.fast_path and not small_talk:
-        routed = fastpath.route(message)
-        if routed and routed[0] in bridge.tool_names():
-            out = bridge.call(routed[0], routed[1])
-            res.tools_used.append(out.summary())
-            if out.outcome == "forbidden":
-                res.answer, res.verified = fastpath.forbidden_text(), True
-                return res
-            text = fastpath.render(routed[0], out.payload) if out.payload is not None else None
-            if text:
-                res.answer, res.verified, res.grounded = text[: limits.max_answer_chars], True, True
-                res.sources = list(out.refs)
-                return res
-            res.tools_used.clear()               # nothing usable: fall through to the model path as if never tried
+    if limits.hardcode:
+        text = rules.canned(message, bridge.tool_names(), docs_on)
+        if text:                                          # a greeting, thanks or "help": a fixed text, no model
+            res.answer, res.verified, res.route = text, True, "canned"
+            return res
+    if (limits.fast_path or limits.hardcode) and not small_talk:
+        routed, view = (fastpath.route(message) if limits.fast_path else None), ""
+        if routed is None and limits.hardcode:
+            r = rules.route(message)
+            routed, view = ((r.tool, r.args), r.view) if r else (None, "")
+        if routed:
+            if routed[0] not in bridge.tool_names():
+                if limits.hardcode:                       # a recognised question that this role may not ask: say so, no model
+                    res.answer, res.verified, res.route = fastpath.forbidden_text(), True, "rules"
+                    return res
+            else:
+                out = bridge.call(routed[0], routed[1])
+                res.tools_used.append(out.summary())
+                if out.outcome == "forbidden":
+                    res.answer, res.verified, res.route = fastpath.forbidden_text(), True, "rules"
+                    return res
+                text = rules.render(routed[0], out.payload, view) if out.payload is not None else None
+                if text:
+                    res.answer, res.verified, res.grounded = text[: limits.max_answer_chars], True, True
+                    res.sources, res.route = list(out.refs), "rules"
+                    return res
+                res.tools_used.clear()               # nothing usable: fall through to the model path as if never tried
 
     deadline = clock() + limits.max_seconds
     tool_choice = "auto" if (small_talk or not specs) else "required"
@@ -225,6 +255,45 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
         res.grounded, res.sources = False, []
         return res
 
+    if limits.hardcode and docs_on and rules.is_doc_question(message):
+        # Search the documents ourselves (same RBAC, rate limit and audit as the model's tool) instead of paying a model call to decide to.
+        out = bridge.call(DOC_TOOL, {"query": rules.retrieval_query(message, history)[:300], "limit": limits.direct_passages})
+        res.tools_used.append(out.summary())
+        res.document_searches += 1
+        doc_calls += 1
+        if out.payload is None:                           # unavailable, rate limited, audit failed: say so, do not guess
+            doc_failed, res.route = True, "rules"
+            return no_document_evidence()
+        found = (out.payload.get("data") or {}).get("passages", [])
+        if not found and not rules.looks_like_data(message):
+            res.answer, res.verified, res.reason, res.route = prompts.NOT_FOUND_OR_SCOPE_TEXT, True, "no_document_evidence", "rules"
+            return res
+        if not found:                                     # maybe a database question after all: let the model choose tools
+            res.tools_used.clear()
+            res.document_searches = doc_calls = 0
+        else:
+            ev.add_tool_payload(out.payload)
+            payloads.append(out.payload)
+            res.grounded = True
+            passages.update({p["ref"]: p for p in found})
+            res.passages_retrieved = len(passages)
+            tool_texts.append(out.content)
+            quote = None if (limits.answer_mode == "llm" or rules.needs_llm(message)) else rag_direct.pick(message, found, limits.direct_min_overlap)
+            if quote:                                     # verbatim quotes with citations: nothing for a model to get wrong
+                cited = [passages[r] for r in quote.refs]
+                res.answer, res.verified, res.route = quote.text[: limits.max_answer_chars], True, "direct"
+                res.citations = [{"ref": p["ref"], "document_id": p["document_id"], "title": p["title"], "page": p.get("page"),
+                                  "section": p.get("section"), "snippet": (p.get("text") or "")[:300]} for p in cited]
+                res.sources = [f"document:{d}" for d in dict.fromkeys(p["document_id"] for p in cited)]
+                return res
+            # One model call, no tool definitions, a short prompt, the passages already in the message.
+            res.route, specs, tool_choice = "context", None, "auto"
+            messages[0] = {"role": "system", "content": prompts.doc_only_prompt(role_label, today)}
+            messages[-1] = {"role": "user", "content": message + _passages_block(found)}
+    elif limits.hardcode and not docs_on and not small_talk and not rules.looks_like_data(message):
+        res.route = "rules"
+        return out_of_scope()                             # nothing in it concerns OpsPilot data: no model call to say so
+
     while True:
         if clock() > deadline:
             return stop("timeout", prompts.TIMEOUT_TEXT)
@@ -235,6 +304,12 @@ def answer(principal, message: str, history: list[dict], *, llm, server, role_la
                 tool_failures += 1
                 tool_choice = "auto"
                 continue
+            if exc.code == "tool_use_failed" and not res.tools_used and "did not call a tool" in (exc.detail or ""):
+                # The model would neither call a tool nor answer without one (typical for a question about the assistant itself):
+                # that is "this is not a lookup", not a server fault, so no 502.
+                res.answer, res.verified, res.blocked, res.reason = prompts.NO_LOOKUP_TEXT, True, False, "no_lookup"
+                res.grounded, res.sources = False, []
+                return res
             raise
         res.groq_calls += 1
         usage = reply.get("usage") or {}

@@ -567,8 +567,9 @@ function chatMeta(r) {
     return m && can("admin reviewer") ? `<a href="#" class="pill gray" data-action="audit-id" data-id="${m[1]}">${esc(x)}</a>` : `<span class="pill gray">${esc(x)}</span>`; }).join("");
   const steps = (r.tools_used || []).map(t => `<li><b>${esc(t.tool)}</b> ${esc(JSON.stringify(t.arguments))} &rarr; ${esc(t.outcome)}${t.records ? ` (${t.records} record${t.records > 1 ? "s" : ""})` : ""}</li>`).join("");
   const warn = (r.warnings || []).map(w => `<span class="muted">${esc(w)}</span>`).join("");
+  const via = ({ canned: "Instant answer (no AI call)", rules: "Instant answer from fixed rules (no AI call)", direct: "Quoted from your documents (no AI call)", context: "1 AI call" })[r.route] || "";
   const cites = (r.citations || []).map(c => `<details class="cite"><summary><span class="pill gray">${esc(c.ref)}</span> ${esc(c.title)}${c.page ? ` &middot; page ${esc(c.page)}` : ""}${c.section ? ` &middot; ${esc(c.section)}` : ""}</summary><blockquote>${esc(c.snippet)}</blockquote></details>`).join("");
-  return `<div class="msgmeta">${badge}${src}${warn}${cites}${steps ? `<details><summary>How this was answered (${r.tools_used.length} lookup${r.tools_used.length > 1 ? "s" : ""})</summary><ul>${steps}</ul></details>` : ""}</div>`;
+  return `<div class="msgmeta">${badge}${via ? `<span class="muted">${esc(via)}</span>` : ""}${src}${warn}${cites}${steps ? `<details><summary>How this was answered (${r.tools_used.length} lookup${r.tools_used.length > 1 ? "s" : ""})</summary><ul>${steps}</ul></details>` : ""}</div>`;
 }
 function drawChat() {
   const log = $("#chatLog"); if (!log) return;

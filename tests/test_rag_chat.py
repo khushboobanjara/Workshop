@@ -320,3 +320,13 @@ def test_premises_are_off_by_default_in_the_verifier():
     ev.allow_premises = True
     assert find_unsupported("It is 12,000 with a risk of 0.10 (10%).", ev) == []
     assert find_unsupported("It is 13,000.", ev) == ["13,000"]
+
+
+def test_the_document_instructions_stay_small(rag):
+    """Every model call re-sends the system prompt, and Groq's free tier is limited in tokens per minute: keep it lean."""
+    assert len(prompts.RAG_RULES) < 1800 and "[DOC-3-C2]" in prompts.RAG_RULES
+    ask(rag, "hi", [say("Hello!")])
+    first = rag.fake.requests[0]["body"]
+    assert len(first["messages"][0]["content"]) < 4000
+    from app.rag.bridge import SearchDocumentsArgs
+    assert SearchDocumentsArgs(query="abc").limit == 4

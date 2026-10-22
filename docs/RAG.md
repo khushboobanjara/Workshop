@@ -110,6 +110,8 @@ What this does **not** guarantee: that a retrieved passage is itself correct or 
 
 ## Operations
 
+* **Hugging Face notice at start-up** ("unauthenticated requests to the HF Hub"): harmless. It only appears while the embedding model is loaded; for fewer network calls set `OPSPILOT_RAG_EMBEDDING_LOCAL_FILES_ONLY=true` once the model has been downloaded (a free `HF_TOKEN` is optional).
+
 * **Backups:** MySQL is the source of truth; back it up as before. The FAISS folder (`OPSPILOT_RAG_DATA_DIR`, default `data/rag`) is derived data. If it is lost, corrupted, or built with a different embedding model, it is rebuilt automatically from the stored text on first use (or on demand with `POST /rag/reindex` / the **Rebuild index** button). On first use after a restart the index is also reconciled with MySQL: vectors with no row are dropped, rows with no vector are embedded and added.
 * **Changing the model** (`OPSPILOT_RAG_EMBEDDING_MODEL`): restart; the mismatch is detected and the index is rebuilt. Models that expect prefixes (e5, bge) use `OPSPILOT_RAG_QUERY_PREFIX` / `OPSPILOT_RAG_DOCUMENT_PREFIX`. Re-run the evaluation script and re-tune the floor.
 * **Offline / air-gapped:** run `python -m scripts.download_embedding_model` once while online (the Docker image does this at build time), then set `OPSPILOT_RAG_EMBEDDING_LOCAL_FILES_ONLY=true`, or point `OPSPILOT_RAG_EMBEDDING_MODEL` at a local folder.
@@ -117,6 +119,33 @@ What this does **not** guarantee: that a retrieved passage is itself correct or 
 * **Scale:** exact search is instantaneous up to tens of thousands of chunks (a few hundred documents). Beyond that, move to an approximate FAISS index (which cannot delete in place) or a vector server.
 * **Several worker processes:** each worker keeps its own in-memory index; they notice each other's changes through the index file's timestamp and reconcile with MySQL, so an upload becomes searchable in the other workers within seconds. Access control never depends on this.
 * **Docker:** the image uses CPU-only PyTorch and pre-downloads the model; `docker-compose.yml` keeps the index on a volume and passes the `OPSPILOT_RAG_*` variables. Auth and chat settings must be passed through the same way (the compose file only forwards the variables it lists).
+
+## When the AI model is (and is not) used
+
+The model is the most expensive and least predictable part, so the assistant uses it **last**. A question is handled by the first tier that can answer it (`app/chat/rules.py`, `app/rag/direct.py`, `app/chat/service.py`):
+
+| Tier | Examples | Model calls |
+|---|---|---|
+| **1. Canned** | "hi", "thanks", "help" | 0 |
+| **2. Fixed rules + MCP** | "how many invoices are pending review?", "show the review queue", "invoices from Acme", "rejected invoices", "top 5 vendors", "metrics", "which models are active?", "system status", "what can I access?", "show the audit log", "list users", "invoice 12", "audit trail for invoice 12" | 0: the server calls the right MCP tool and fills a template with the tool's own values |
+| **3a. Document quote** | "What is the standard payment term?", "Can the AI Assistant approve an invoice?" | 0: the server searches the documents and quotes the sentences that answer, verbatim, with citations |
+| **3b. Document + reasoning** | a what-if with numbers, "explain…", "compare…", "why…", "should…", or a quote that doesn't cover the question | 1: passages already in the prompt, no tool definitions, a short prompt (about 1/4 of the tokens) |
+| **4. Model with tools** | anything mixing records and documents, ambiguous or multi-part questions, an invoice identifier plus a policy | 2 or more, as before |
+| Declined | a question with nothing to do with OpsPilot (and, with documents, nothing found) | 0: a fixed message |
+
+Rules are **conservative on purpose**: a question is routed only if every word of it is understood (known filler, a known keyword, a number or name in a known slot). A clause that is not understood ("last month", "over 5000", "and why") sends it to the model instead, so a wrongly routed question is rarer than an unrouted one. Role limits still apply: a role that may not ask gets a fixed refusal, still without a model call. Requests for the assistant to *change* something ("approve invoice 12", "can you delete invoices?") get a fixed read-only reply. If the model, forced to call a tool, answers in text instead (Groq's "Tool choice is required, but model did not call a tool"), the user gets a short "I couldn't turn that into a lookup" message instead of a 502. Quoted answers carry a footer saying how to get an AI-written one ("explain" or "summarise").
+
+Settings: `OPSPILOT_CHAT_HARDCODE=false` turns tiers 1-3 off (everything goes to the model, as in the first version); `OPSPILOT_RAG_ANSWER_MODE=llm` keeps the server-side search but always uses one model call for documents instead of quoting; `OPSPILOT_RAG_DIRECT_MIN_OVERLAP` (0.5) is how much of the question's content words a quoted sentence must cover. Each answer shows how it was produced ("Instant answer", "Quoted from your documents", "1 AI call") and the chat audit row records `route`.
+
+What this costs in quality: a quote is the document's own wording, so it can be terse or include a neighbouring clause, and it never reasons. If a question could be a data question you phrased loosely, the fixed rules may not recognise it, and it simply goes to the model.
+
+## Groq's free-tier token limit ("HTTP 429 ... tokens per minute")
+
+Groq's free tier caps **tokens per minute (TPM) per model**, and every model call re-sends the instructions, the tool definitions, the conversation so far and (for documents) the retrieved passages. Before the fixed-rules tiers existed, a document question made two or more calls, so with an 8,000 TPM model one question could use most of a minute, and a second question straight afterwards is refused with `HTTP 429`. What the application does about it:
+
+* **Waits and retries.** Groq's 429 says how long to wait ("try again in 3.21s"). The client waits that long (plus a moment) and asks again, up to `OPSPILOT_CHAT_RATE_LIMIT_RETRIES` (2) times, for waits of at most `OPSPILOT_CHAT_RATE_LIMIT_MAX_WAIT_SECONDS` (12). Longer waits are reported to the user with the number of seconds instead of a vague "try again".
+* **Sends fewer tokens.** Only the last `OPSPILOT_CHAT_HISTORY_TURNS` (6) messages are re-sent, each cut to `OPSPILOT_CHAT_HISTORY_CHARS` (500) characters; the document instructions are short; the search returns 4 passages of at most 1,000 characters by default.
+* **What you can still do.** Click **New chat** between unrelated questions (history is re-sent every call); set `OPSPILOT_CHAT_FACT_CHECK=false` to save one model call per question (the figure, citation and word-support checks still run); choose a model whose free limits are higher (limits differ per model and change over time: see the Limits page of your Groq console); or move to Groq's paid tier, which is optional and not required by this project.
 
 ## Configuration
 
