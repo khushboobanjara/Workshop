@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 sqlalchemy>=2.0
 pydantic>=2.0
@@ -24,3 +25,22 @@ sentence-transformers>=3.0  # local embeddings; pulls in PyTorch. On servers/CI 
                             #   pip install torch --index-url https://download.pytorch.org/whl/cpu
 python-docx>=1.1            # read .docx files
 python-multipart>=0.0.9     # FastAPI file uploads
+=======
+pandas
+numpy
+scikit-learn
+fastapi
+uvicorn
+Jinja2
+python-multipart
+nltk
+gensim
+groq
+python-dotenv
+bcrypt
+mysql-connector-python
+cashfree-pg
+itsdangerous
+requests
+fastmcp>=2.14.5,<3
+>>>>>>> 7054a180b5f6da5609ab045ecaa17bd840c09873

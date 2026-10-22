@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ medicine.medicine_name }} - Sanjeevani Pharmacy</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            margin: 50px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .price {
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .available {
+            color: green;
+            font-weight: bold;
+        }
+
+        .prescription {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>
+            {{ medicine.medicine_name }}
+        </h1>
+
+        <p>
+            <strong>Generic Name:</strong>
+            {{ medicine.generic_name or "N/A" }}
+        </p>
+
+        <p>
+            <strong>Category:</strong>
+            {{ medicine.category or "N/A" }}
+        </p>
+
+        <p>
+            <strong>Manufacturer:</strong>
+            {{ medicine.manufacturer or "N/A" }}
+        </p>
+
+        <p>
+            <strong>Description:</strong>
+            {{ medicine.description or "No description available." }}
+        </p>
+
+        <p class="price">
+            ₹{{ medicine.price }}
+        </p>
+
+        {% if medicine.stock_quantity > 0 %}
+
+            <p class="available">
+                Available — {{ medicine.stock_quantity }} units
+            </p>
+
+        {% else %}
+
+            <p>
+                Out of Stock
+            </p>
+
+        {% endif %}
+
+        {% if medicine.prescription_required %}
+
+            <p class="prescription">
+                Prescription Required
+            </p>
+
+        {% else %}
+
+            <p>
+                Prescription Not Required
+            </p>
+
+        {% endif %}
+
+        <a href="/pharmacy" class="back">
+            Back to Pharmacy
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

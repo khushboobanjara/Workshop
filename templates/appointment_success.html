@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Appointment Confirmed | Sanjeevani Clinic
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <style>
+
+        /* ================================
+           SUCCESS PAGE
+        ================================= */
+
+        .success-page {
+            min-height: calc(100vh - 80px);
+            padding: 50px 7%;
+            background: var(--paper);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .success-container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+
+        .success-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+
+            padding: 40px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(20, 56, 50, 0.08);
+
+            text-align: center;
+        }
+
+
+        /* ================================
+           SUCCESS ICON
+        ================================= */
+
+        .success-icon {
+            width: 75px;
+            height: 75px;
+
+            margin: 0 auto 20px;
+
+            border-radius: 50%;
+
+            background: var(--leaf-100);
+            color: var(--leaf-500);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 38px;
+            font-weight: 700;
+        }
+
+
+        /* ================================
+           HEADING
+        ================================= */
+
+        .success-card h1 {
+            margin: 0 0 10px;
+
+            color: var(--teal-900);
+
+            font-size: 32px;
+        }
+
+
+        .success-message {
+            margin: 0 auto 30px;
+
+            max-width: 550px;
+
+            color: var(--ink-soft);
+
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+
+        /* ================================
+           APPOINTMENT INFORMATION
+        ================================= */
+
+        .appointment-info {
+            text-align: left;
+
+            background: var(--sage-100);
+
+            border-radius: var(--radius-sm);
+
+            padding: 25px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .appointment-info h2 {
+            margin: 0 0 20px;
+
+            color: var(--teal-900);
+
+            font-size: 20px;
+        }
+
+
+        .info-row {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 12px 0;
+
+            border-bottom: 1px solid var(--line);
+        }
+
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+
+        .info-label {
+            color: var(--ink-soft);
+
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        .info-value {
+            color: var(--teal-900);
+
+            font-size: 14px;
+            font-weight: 700;
+
+            text-align: right;
+        }
+
+
+        /* ================================
+           PAYMENT STATUS
+        ================================= */
+
+        .payment-note {
+            background: var(--clay-100);
+
+            color: var(--clay-500);
+
+            border-radius: var(--radius-sm);
+
+            padding: 14px 16px;
+
+            margin-bottom: 25px;
+
+            font-size: 13px;
+
+            line-height: 1.5;
+
+            text-align: left;
+        }
+
+
+        .payment-note strong {
+            font-weight: 700;
+        }
+
+
+        /* ================================
+           BUTTONS
+        ================================= */
+
+        .success-actions {
+            display: flex;
+
+            justify-content: center;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+        }
+
+
+        .success-button {
+            display: inline-block;
+
+            padding: 12px 20px;
+
+            border-radius: var(--radius-sm);
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            font-weight: 700;
+
+            transition: 0.2s ease;
+        }
+
+
+        .primary-button {
+            background: var(--teal-700);
+
+            color: white;
+        }
+
+
+        .primary-button:hover {
+            background: var(--teal-900);
+        }
+
+
+        .secondary-button {
+            background: var(--sage-100);
+
+            color: var(--teal-700);
+
+            border: 1px solid var(--sage-200);
+        }
+
+
+        .secondary-button:hover {
+            background: var(--teal-700);
+
+            color: white;
+        }
+
+
+        /* ================================
+           RESPONSIVE
+        ================================= */
+
+        @media (max-width: 600px) {
+
+            .success-page {
+                padding: 30px 5%;
+            }
+
+
+            .success-card {
+                padding: 25px 20px;
+            }
+
+
+            .success-card h1 {
+                font-size: 27px;
+            }
+
+
+            .info-row {
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 5px;
+            }
+
+
+            .info-value {
+                text-align: left;
+            }
+
+
+            .success-actions {
+                flex-direction: column;
+            }
+
+
+            .success-button {
+                width: 100%;
+
+                box-sizing: border-box;
+
+                text-align: center;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =================================
+         NAVBAR
+    ================================== -->
+
+    <header class="site-header">
+
+        <div class="brand">
+
+            <a
+                href="/"
+                class="brand-link"
+            >
+
+                <span class="brand-mark">
+                    S
+                </span>
+
+
+                <div>
+
+                    <div class="brand-name">
+                        Sanjeevani
+                    </div>
+
+                    <div class="brand-subtitle">
+                        Clinic
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+
+        <nav class="main-nav">
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/#screening">
+                Screening
+            </a>
+
+            <a href="/doctors">
+                Doctors
+            </a>
+
+            <a href="/pharmacy">
+                Pharmacy
+            </a>
+
+            <a href="/profile">
+                My Profile
+            </a>
+
+            <a href="/logout">
+                Logout
+            </a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =================================
+         SUCCESS PAGE
+    ================================== -->
+
+    <main class="success-page">
+
+        <div class="success-container">
+
+            <div class="success-card">
+
+
+                <!-- SUCCESS ICON -->
+
+                <div class="success-icon">
+                    ✓
+                </div>
+
+
+                <!-- HEADING -->
+
+                <h1>
+                    Appointment Booked
+                </h1>
+
+
+                <p class="success-message">
+
+                    Your appointment has been successfully
+                    booked with Sanjeevani Clinic.
+
+                    Please keep your appointment ID for
+                    future reference.
+
+                </p>
+
+
+                <!-- =================================
+                     APPOINTMENT DETAILS
+                ================================== -->
+
+                <div class="appointment-info">
+
+                    <h2>
+                        Appointment Details
+                    </h2>
+
+
+                    <!-- Appointment ID -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Appointment ID
+                        </span>
+
+                        <span class="info-value">
+                            #{{ appointment_id }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Doctor -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Doctor
+                        </span>
+
+                        <span class="info-value">
+                            {{ doctor.doctor_name }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Specialization -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Specialization
+                        </span>
+
+                        <span class="info-value">
+                            {{ doctor.specialization }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Patient -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Patient
+                        </span>
+
+                        <span class="info-value">
+                            {{ patient_name }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Phone -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Phone
+                        </span>
+
+                        <span class="info-value">
+                            {{ phone }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Date -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Appointment Date
+                        </span>
+
+                        <span class="info-value">
+                            {{ appointment_date }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Time -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Appointment Time
+                        </span>
+
+                        <span class="info-value">
+                            {{ appointment_time }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Consultation Fee -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Consultation Fee
+                        </span>
+
+                        <span class="info-value">
+                            ₹{{ doctor.consultation_fee }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Payment Method -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Payment Method
+                        </span>
+
+                        <span class="info-value">
+                            {{ payment_method }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- Payment Status -->
+
+                    <div class="info-row">
+
+                        <span class="info-label">
+                            Payment Status
+                        </span>
+
+                        <span class="info-value">
+                            PENDING
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================
+                     PAYMENT MESSAGE
+                ================================== -->
+
+                {% if payment_method == "CASH" %}
+
+                    <div class="payment-note">
+
+                        <strong>
+                            Cash Payment:
+                        </strong>
+
+                        Please pay the consultation fee
+                        at the clinic during your appointment.
+
+                    </div>
+
+                {% elif payment_method == "ONLINE" %}
+
+                    <div class="payment-note">
+
+                        <strong>
+                            Online Payment:
+                        </strong>
+
+                        Your appointment has been created.
+                        Online payment has not been completed yet.
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- =================================
+                     ACTION BUTTONS
+                ================================== -->
+
+                <div class="success-actions">
+
+                    <a
+                        href="/profile"
+                        class="success-button primary-button"
+                    >
+                        View My Appointments
+                    </a>
+
+
+                    <a
+                        href="/doctors"
+                        class="success-button secondary-button"
+                    >
+                        Find Another Doctor
+                    </a>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =================================
+         CHATBOT BUTTON
+    ================================== -->
+
+    <button
+        id="chatbot-toggle"
+        class="chatbot-toggle"
+        onclick="openChatbot()"
+        aria-label="Open AI Assistant"
+    >
+        💬
+    </button>
+
+
+    <!-- =================================
+         CHATBOT WINDOW
+    ================================== -->
+
+    <div
+        id="chatbot-window"
+        class="chatbot-window"
+    >
+
+
+        <div class="chatbot-header">
+
+            <div>
+
+                <strong>
+                    Sanjeevani Assistant
+                </strong>
+
+                <span>
+                    AI Health Assistant
+                </span>
+
+            </div>
+
+
+            <button
+                type="button"
+                onclick="closeChatbot()"
+                class="chatbot-close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="chatbot-messages"
+            class="chatbot-messages"
+        >
+
+            <div class="chat-message bot-message">
+
+                Hello {{ user.full_name }}.
+
+                <br><br>
+
+                How can I help you today?
+
+            </div>
+
+        </div>
+
+
+        <div class="chatbot-input-area">
+
+            <input
+                type="text"
+                id="chatbot-input"
+                placeholder="Type your message..."
+                autocomplete="off"
+                onkeydown="handleChatKey(event)"
+            >
+
+            <button
+                type="button"
+                onclick="sendMessage()"
+            >
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================
+         CHATBOT JAVASCRIPT
+    ================================== -->
+
+    <script>
+
+        const chatbotWindow =
+            document.getElementById(
+                "chatbot-window"
+            );
+
+
+        const chatbotInput =
+            document.getElementById(
+                "chatbot-input"
+            );
+
+
+        const chatbotMessages =
+            document.getElementById(
+                "chatbot-messages"
+            );
+
+
+        function openChatbot() {
+
+            chatbotWindow.classList.add(
+                "open"
+            );
+
+
+            setTimeout(function () {
+
+                chatbotInput.focus();
+
+            }, 100);
+
+        }
+
+
+        function closeChatbot() {
+
+            chatbotWindow.classList.remove(
+                "open"
+            );
+
+        }
+
+
+        function handleChatKey(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                sendMessage();
+
+            }
+
+        }
+
+
+        function addMessage(
+            message,
+            sender
+        ) {
+
+            const messageElement =
+                document.createElement(
+                    "div"
+                );
+
+
+            messageElement.classList.add(
+                "chat-message"
+            );
+
+
+            if (sender === "user") {
+
+                messageElement.classList.add(
+                    "user-message"
+                );
+
+            } else {
+
+                messageElement.classList.add(
+                    "bot-message"
+                );
+
+            }
+
+
+            messageElement.innerText =
+                message;
+
+
+            chatbotMessages.appendChild(
+                messageElement
+            );
+
+
+            chatbotMessages.scrollTop =
+                chatbotMessages.scrollHeight;
+
+        }
+
+
+        async function sendMessage() {
+
+            const message =
+                chatbotInput.value.trim();
+
+
+            if (!message) {
+
+                return;
+
+            }
+
+
+            addMessage(
+                message,
+                "user"
+            );
+
+
+            chatbotInput.value = "";
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/chat",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                message: message
+                            })
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                addMessage(
+                    data.response ||
+                    "Sorry, I could not process your request.",
+                    "bot"
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Chatbot error:",
+                    error
+                );
+
+
+                addMessage(
+                    "I'm having trouble connecting to the assistant right now. Please try again.",
+                    "bot"
+                );
+
+            }
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>

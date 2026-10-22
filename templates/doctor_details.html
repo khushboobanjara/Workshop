@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {{ doctor["doctor_name"] }} | Sanjeevani
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <div class="brand-logo">
+            S
+        </div>
+
+        <div class="brand-text">
+
+            <h2>
+                Sanjeevani
+            </h2>
+
+            <span>
+                Healthcare AI
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+        <a
+            href="/"
+            class="nav-item"
+        >
+            <span class="nav-icon">
+                ▦
+            </span>
+
+            <span>
+                Dashboard
+            </span>
+        </a>
+
+
+        <button
+            type="button"
+            class="nav-item nav-button"
+            onclick="openChatbot()"
+        >
+
+            <span class="nav-icon">
+                ◉
+            </span>
+
+            <span>
+                AI Health Chat
+            </span>
+
+        </button>
+
+
+        <a
+            href="/doctors"
+            class="nav-item active"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Find Doctor
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile#appointments"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ▣
+            </span>
+
+            <span>
+                Appointments
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                □
+            </span>
+
+            <span>
+                My Profile
+            </span>
+
+        </a>
+
+
+        <a
+            href="/pharmacy"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                +
+            </span>
+
+            <span>
+                Pharmacy
+            </span>
+
+        </a>
+
+
+        <a
+            href="/predict"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ◌
+            </span>
+
+            <span>
+                Health Screening
+            </span>
+
+        </a>
+
+
+        <a
+            href="/profile"
+            class="nav-item"
+        >
+
+            <span class="nav-icon">
+                ?
+            </span>
+
+            <span>
+                Help & Support
+            </span>
+
+        </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+        <a
+            href="/logout"
+            class="logout-link"
+        >
+
+            <span>
+                ↪
+            </span>
+
+            Logout
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main-content">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================== -->
+
+    <header class="topbar">
+
+        <div class="search-box">
+
+            <span>
+                ⌕
+            </span>
+
+            <input
+                type="text"
+                placeholder="Search doctors, medicines, services..."
+            >
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <button
+                type="button"
+                class="notification-btn"
+            >
+                ♢
+            </button>
+
+
+            <a
+                href="/profile"
+                class="user-chip"
+            >
+
+                <div class="user-avatar">
+
+                    {{ user.full_name[0] | upper }}
+
+                </div>
+
+
+                <div class="user-details">
+
+                    <strong>
+                        {{ user.full_name }}
+                    </strong>
+
+                    <span>
+                        Patient
+                    </span>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         PAGE CONTENT
+    ================================================== -->
+
+    <section class="dashboard-container doctor-details-page">
+
+
+        <!-- BACK -->
+
+        <a
+            href="/doctors"
+            class="details-back-link"
+        >
+            ← Back to Doctors
+        </a>
+
+
+
+        <!-- =================================================
+             DOCTOR PROFILE
+        ================================================== -->
+
+        <div class="details-profile-card">
+
+
+            <div class="details-avatar">
+
+                {{ doctor["doctor_name"][0] | upper }}
+
+            </div>
+
+
+            <div class="details-profile-info">
+
+
+                <span class="section-label">
+                    DOCTOR PROFILE
+                </span>
+
+
+                <h1>
+                    {{ doctor["doctor_name"] }}
+                </h1>
+
+
+                <p class="details-specialization">
+
+                    {{ doctor["specialization"] }}
+
+                </p>
+
+
+                <div class="details-profile-stats">
+
+
+                    <div>
+
+                        <span>
+                            Experience
+                        </span>
+
+                        <strong>
+                            {{ doctor["experience"] }}
+                            years
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Consultation Fee
+                        </span>
+
+                        <strong>
+                            ₹{{ doctor["consultation_fee"] }}
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Status
+                        </span>
+
+
+                        {% if doctor["available"] %}
+
+                            <strong class="available-text">
+                                Available
+                            </strong>
+
+                        {% else %}
+
+                            <strong class="unavailable-text">
+                                Unavailable
+                            </strong>
+
+                        {% endif %}
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             APPOINTMENT SECTION
+        ================================================== -->
+
+        <div class="details-section-heading">
+
+            <span class="section-label">
+                APPOINTMENT BOOKING
+            </span>
+
+
+            <h2>
+                Available appointment slots
+            </h2>
+
+
+            <p>
+                Choose a date and time that works for you.
+            </p>
+
+        </div>
+
+
+
+        {% if availability and doctor["available"] %}
+
+
+            <div class="details-slots-grid">
+
+
+                {% for slot in availability %}
+
+
+                    <div class="details-slot-card">
+
+
+                        <div class="details-slot-icon">
+                            ▣
+                        </div>
+
+
+                        <div class="details-slot-content">
+
+
+                            <span>
+                                Available Date
+                            </span>
+
+
+                            <h3>
+
+                                {{ slot["available_date"] }}
+
+                            </h3>
+
+
+                            <p>
+
+                                {{ slot["start_time"] }}
+
+                                –
+
+                                {{ slot["end_time"] }}
+
+                            </p>
+
+                        </div>
+
+
+                        <a
+                            href="/appointments/book?doctor_id={{ doctor['doctor_id'] }}&availability_id={{ slot['availability_id'] }}"
+                            class="details-book-btn"
+                        >
+
+                            Book Appointment
+
+                            <span>
+                                →
+                            </span>
+
+                        </a>
+
+
+                    </div>
+
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 NO AVAILABILITY
+            ================================================== -->
+
+            <div class="details-empty-state">
+
+
+                <div class="details-empty-icon">
+                    ▣
+                </div>
+
+
+                <h3>
+                    No available schedules
+                </h3>
+
+
+                <p>
+                    There are currently no available
+                    appointment slots for this doctor.
+                </p>
+
+
+                <a
+                    href="/doctors"
+                    class="details-book-btn"
+                >
+
+                    Find Another Doctor →
+
+                </a>
+
+
+            </div>
+
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             BOOKING INFORMATION
+        ================================================== -->
+
+        <div class="details-help-card">
+
+
+            <div>
+
+                <span class="section-label">
+                    BOOKING INFORMATION
+                </span>
+
+
+                <h3>
+                    What happens next?
+                </h3>
+
+
+                <p>
+                    Select an available appointment slot.
+                    You will then enter your patient details
+                    and choose Cash or Online payment.
+                </p>
+
+            </div>
+
+
+            <a
+                href="/profile#appointments"
+            >
+                My Appointments →
+            </a>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="dashboard-footer">
+
+        <span>
+            © 2026 Sanjeevani Clinic
+        </span>
+
+        <span>
+            Digital Healthcare Assistance Platform
+        </span>
+
+    </footer>
+
+</main>
+
+
+
+<!-- =====================================================
+     FLOATING CHATBOT
+===================================================== -->
+
+<button
+    type="button"
+    class="chatbot-floating-btn"
+    onclick="openChatbot()"
+    aria-label="Open AI Health Assistant"
+>
+
+    <span class="chatbot-icon">
+        ◉
+    </span>
+
+    <span class="chatbot-label">
+        AI Health
+    </span>
+
+</button>
+
+
+
+<!-- =====================================================
+     CHATBOT
+===================================================== -->
+
+<div
+    id="chatbot"
+    class="chatbot"
+>
+
+
+    <div class="chatbot-header">
+
+        <div>
+
+            <strong>
+                Sanjeevani AI
+            </strong>
+
+            <span>
+                Health Assistant
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            onclick="closeChatbot()"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <div
+        id="chatMessages"
+        class="chatbot-messages"
+    >
+
+        <div class="chat-message bot-message">
+
+            Hello {{ user.full_name }}.
+
+            <br><br>
+
+            How can I help you today?
+
+        </div>
+
+    </div>
+
+
+    <div class="chatbot-input-area">
+
+        <input
+            type="text"
+            id="chatInput"
+            placeholder="Type your message..."
+            autocomplete="off"
+        >
+
+
+        <button
+            type="button"
+            onclick="sendMessage()"
+        >
+            →
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+function openChatbot() {
+
+    const chatbot =
+        document.getElementById("chatbot");
+
+    chatbot.classList.add("open");
+
+    setTimeout(function () {
+
+        const input =
+            document.getElementById("chatInput");
+
+        if (input) {
+            input.focus();
+        }
+
+    }, 200);
+}
+
+
+function closeChatbot() {
+
+    document
+        .getElementById("chatbot")
+        .classList.remove("open");
+
+}
+
+
+async function sendMessage() {
+
+    const input =
+        document.getElementById("chatInput");
+
+    const messages =
+        document.getElementById("chatMessages");
+
+    const message =
+        input.value.trim();
+
+
+    if (!message) {
+        return;
+    }
+
+
+    const userMessage =
+        document.createElement("div");
+
+    userMessage.className =
+        "chat-message user-message";
+
+    userMessage.textContent =
+        message;
+
+    messages.appendChild(
+        userMessage
+    );
+
+
+    input.value = "";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/chat",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        message: message
+                    })
+                }
+            );
+
+
+        if (response.status === 401) {
+
+            window.location.href =
+                "/login";
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const botMessage =
+            document.createElement("div");
+
+        botMessage.className =
+            "chat-message bot-message";
+
+
+        botMessage.textContent =
+            data.response ||
+            data.message ||
+            "Sorry, I could not process your request.";
+
+
+        messages.appendChild(
+            botMessage
+        );
+
+
+        messages.scrollTop =
+            messages.scrollHeight;
+
+
+    } catch (error) {
+
+        const errorMessage =
+            document.createElement("div");
+
+        errorMessage.className =
+            "chat-message bot-message";
+
+        errorMessage.textContent =
+            "Unable to connect to the AI assistant right now.";
+
+        messages.appendChild(
+            errorMessage
+        );
+
+    }
+
+}
+
+
+document
+    .getElementById("chatInput")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                sendMessage();
+
+            }
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>
